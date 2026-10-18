@@ -1,24 +1,210 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PageIndex • إدارة كتالوج المتجر</title><style>
-:root{--bg:#f6f7f9;--ink:#182c29;--muted:#74817e;--green:#177e65;--line:#e3e9e6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px Tahoma,Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:12px 18px;background:var(--green);color:white}button:disabled{opacity:.5;cursor:wait}.secondary{background:#edf4f1;color:var(--ink)}input,select{border:1px solid var(--line);background:white;border-radius:9px;padding:12px;color:var(--ink);max-width:100%}aside{position:fixed;right:0;top:0;bottom:0;width:242px;background:#112f29;color:#d1dfda;padding:34px 22px}.brand{font:700 25px Arial;letter-spacing:-1px;color:white;direction:ltr;text-align:right}.brand span{color:#8bd4ae}.subbrand{font-size:11px;color:#9bb6ab;margin:12px 0 42px}nav button{display:block;width:100%;text-align:right;margin:7px 0;background:none;color:#acc4b9}nav button.active{background:#25483d;color:white}aside footer{position:absolute;bottom:30px;font-size:12px;color:#9bb6ab;line-height:2}main{margin-right:242px;padding:32px 44px;max-width:1700px}.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:22px;gap:16px}.eyebrow{font-size:11px;color:var(--muted);letter-spacing:1px}.top strong{display:block;margin-top:8px}h1{font-size:30px;letter-spacing:-1px;margin:0 0 12px}h2{font-size:18px;margin:0}p{line-height:1.9;color:var(--muted)}.intro{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:36px 0 24px}.intro p{margin:0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card,.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:23px}.card label{color:var(--muted);font-size:12px}.card b{font-size:28px;display:block;margin:18px 0 10px}.card small{font-size:11px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#36a078;margin-left:7px}.panel{margin-top:22px}.panelhead,.filters{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.filters{margin:20px 0}.filters input{min-width:250px;flex:1}.tag{font-size:11px;border-radius:6px;padding:5px 9px;background:#edf6f1;color:#237657}.warn{background:#fff5e5;color:#9a6b21}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;text-align:right;white-space:nowrap}th{font-size:11px;color:var(--muted);background:#f8faf9;font-weight:normal;padding:15px}td{border-bottom:1px solid #eff2f0;padding:16px 12px;font-size:13px}.product{display:flex;align-items:center;gap:12px}.product img,.placeholder{width:48px;height:58px;object-fit:cover;border-radius:7px;background:#f0f3f1}.product small{display:block;color:var(--muted);margin-top:7px}.product a{color:var(--ink);text-decoration:none}.pager{display:flex;gap:14px;justify-content:center;align-items:center;padding-top:20px}.empty{text-align:center;padding:48px 20px;color:var(--muted);line-height:2}.note{padding:14px 18px;background:#eef5f1;color:#527b68;border-radius:10px;font-size:12px;line-height:1.9;margin-top:20px}.hidden{display:none!important}#login{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(at top left,#dbeee3,transparent 65%),#f5f7f6}#login .panel{width:420px;padding:38px}#login input,#login button{width:100%;margin-top:16px}#login .brand{color:var(--ink);text-align:center;font-size:32px}#toast{position:fixed;bottom:24px;left:24px;z-index:10;max-width:420px;padding:17px 24px;background:#193e32;color:white;border-radius:12px;box-shadow:0 8px 35px #102f2925;line-height:1.7}#searchResults{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}.result{border:1px solid var(--line);padding:14px;border-radius:12px}.result img{width:100%;height:200px;object-fit:contain;background:#f7f8f7}.result h3{font-size:14px}.result a{color:var(--green)}.progress{margin-top:16px;border-radius:8px;height:5px;background:#e4eee8;overflow:hidden}.progress div{height:100%;background:var(--green);width:20%;transition:width .4s}#error{color:#a33c35;font-size:13px;line-height:1.8}button:focus-visible,a:focus-visible{outline:3px solid #cbb567;outline-offset:3px}@media(max-width:900px){aside{position:static;width:auto;padding:20px}aside footer,.subbrand{display:none}nav{display:flex;margin-top:12px}nav button{width:auto;font-size:12px;padding:10px}main{margin:0;padding:20px}.stats{grid-template-columns:1fr 1fr}.card:last-child{grid-column:span 2}.intro{align-items:flex-start}h1{font-size:23px}#searchResults{grid-template-columns:1fr 1fr}}@media(max-width:500px){.intro{display:block}.intro button{margin-top:16px}.top{display:block}.top select{margin-top:14px;width:100%}.stats{gap:8px}.card{padding:16px}.card b{font-size:22px}#searchResults{grid-template-columns:1fr}}
-</style></head><body>
-<section id="login"><form class="panel" id="loginForm"><div class="brand">Page<span>Index</span></div><p style="text-align:center">مساحة واحدة لإدارة كتالوجك وتجربة البحث.</p><h2>أهلًا بك مجددًا</h2><p>أدخل كلمة مرور الإدارة للمتابعة.</p><label for="password">كلمة المرور</label><input id="password" type="password" required autocomplete="current-password" placeholder="كلمة مرور لوحة التحكم"><button id="loginButton">دخول آمن ←</button><p id="error" role="alert"></p><small style="color:#84958d">بيانات المتجر متاحة للمسؤول فقط.</small></form></section>
-<div id="app" class="hidden"><aside><div class="brand">Page<span>Index</span><small style="font-size:10px;letter-spacing:2px;display:block;margin-top:8px">MERCHANT WORKSPACE</small></div><div class="subbrand">إدارة الكتالوج • متصل بسلة</div><nav><button class="active" data-tab="catalog">▦ &nbsp; نظرة عامة والمنتجات</button><button data-tab="search">⌕ &nbsp; تجربة البحث</button><button data-tab="activity">◷ &nbsp; سجل المزامنة</button></nav><footer>كتالوجك، في مكان واحد.<br>PageIndex · لوحة الإدارة<br><button class="secondary" id="logout">تسجيل الخروج</button></footer></aside>
-<main><header class="top"><div><span class="eyebrow">مساحة عمل المتجر</span><strong>إدارة البيانات والبحث</strong></div><select id="store" aria-label="اختر المتجر"></select></header><div class="intro"><div><span class="eyebrow">الكتالوج / لوحة التحكم</span><h1 id="heading">كل منتجاتك. رؤية أوضح.</h1><p id="subtitle">زامن منتجات متجرك، وراجع تفاصيلها، واختبر الوصول إليها.</p></div><button id="sync">↻ &nbsp; مزامنة المنتجات</button></div>
-<section class="stats"><article class="card"><label>إجمالي المنتجات المحفوظة</label><b id="count">—</b><small>الكتالوج المحلي المتصل بمتجرك</small></article><article class="card"><label>حالة ربط سلة</label><b id="connection">—</b><small id="merchant">—</small></article><article class="card"><label>آخر مزامنة ناجحة</label><b id="last" style="font-size:19px">لم تبدأ بعد</b><small>يُحدّث بعد اكتمال جميع الصفحات</small></article></section>
-<div id="syncState" class="note hidden" role="status"></div>
-<section id="catalog" class="panel tab"><div class="panelhead"><h2>كتالوج المنتجات</h2><span class="tag">بيانات فعلية من سلة</span></div><div class="filters"><input id="filter" placeholder="ابحث باسم المنتج أو SKU…" aria-label="البحث في المنتجات"><select id="status" aria-label="حالة المنتج"><option value="">جميع الحالات</option><option value="sale">معروض للبيع</option><option value="hidden">مخفي</option><option value="out">نفدت الكمية</option><option value="out-and-notify">نفدت مع التنبيه</option></select></div><div class="tablewrap"><table><thead><tr><th>المنتج</th><th>SKU</th><th>السعر</th><th>الكمية</th><th>الحالة</th><th>آخر تحديث</th></tr></thead><tbody id="rows"></tbody></table></div><div id="empty" class="empty hidden"></div><div class="pager"><button class="secondary" id="prev">السابق</button><span id="pageLabel"></span><button class="secondary" id="next">التالي</button></div></section>
-<section id="search" class="panel tab hidden"><div class="panelhead"><h2>مختبر البحث</h2><span class="tag warn">بحث نصي</span></div><p>جرّب كلمات موجودة في اسم المنتج أو وصفه أو رقمه.</p><form id="searchForm" class="filters"><input id="query" placeholder="مثل: فستان أسود، أو رقم SKU" aria-label="عبارة البحث" required maxlength="200"><button>اختبار البحث ←</button></form><div class="note">هذه النسخة تستخدم البحث النصي في الكتالوج. محرك PageIndex للبحث الذكي وواجهة بحث العملاء لم يُفعّلا بعد.</div><div id="searchResults"></div></section>
-<section id="activity" class="panel tab hidden"><div class="panelhead"><h2>سجل المزامنة</h2><button class="secondary" id="refreshJobs">تحديث السجل</button></div><p>نتيجة كل عملية، وعدد المنتجات التي تمت معالجتها.</p><div class="tablewrap"><table><thead><tr><th>بداية العملية</th><th>الحالة</th><th>المنتجات</th><th>التفاصيل</th></tr></thead><tbody id="jobs"></tbody></table></div></section><div class="note">المزامنة تقرأ المنتجات من سلة ولا تغيّر أسعارها أو مخزونها. تحديثات المنتجات عبر Webhooks تعمل عند الاشتراك في أحداثها في إعدادات التطبيق.</div></main></div><div id="toast" class="hidden" role="status"></div>
-<script>
-const $=s=>document.querySelector(s);let stores=[],merchant='',page=1,pages=1,poll,timer;const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const url=s=>{try{let u=new URL(s);return u.protocol==='https:'?u.href:''}catch{return ''}};const date=s=>s?new Date(s).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'}):'لم تبدأ بعد';const labels={sale:'معروض للبيع',hidden:'مخفي',out:'نفدت الكمية','out-and-notify':'نفدت مع التنبيه',queued:'في الانتظار',running:'قيد التنفيذ',success:'مكتملة',failed:'لم تكتمل'};
-function toast(s){$('#toast').textContent=s;$('#toast').classList.remove('hidden');setTimeout(()=>$('#toast').classList.add('hidden'),7000)}
-async function api(path,options={}){let r=await fetch('/dashboard-api/'+path,{...options,headers:{'Content-Type':'application/json','X-Dashboard-Request':'1',...options.headers},cache:'no-store'});let d=await r.json();if(!r.ok){if(r.status===401&&!path.startsWith('login')){clearInterval(poll);$('#app').classList.add('hidden');$('#login').classList.remove('hidden')}throw Error(typeof d.detail==='string'?d.detail:'تعذر تنفيذ الطلب. حاول مجددًا.')}return d}
-async function boot(){stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
-async function load(){let s=stores.find(s=>s.merchant_id===merchant);$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);await Promise.all([loadProducts(),loadJobs()])}
-async function loadProducts(){let current=merchant;let d=await api('products?'+new URLSearchParams({merchant,q:$('#filter').value,status:$('#status').value,page}));if(current!==merchant)return;pages=d.pages;$('#rows').innerHTML=d.items.map(p=>`<tr><td><div class="product">${url(p.image)?`<img loading="lazy" src="${esc(url(p.image))}" alt="">`:'<div class="placeholder"></div>'}<div>${url(p.url)?`<a href="${esc(url(p.url))}" target="_blank" rel="noopener noreferrer">${esc(p.title)} ↗</a>`:esc(p.title)}<small>#${esc(p.product_id)}</small></div></div></td><td dir="ltr">${esc(p.sku)||'—'}</td><td>${p.price===null?'—':Number(p.price).toLocaleString('ar',{maximumFractionDigits:2})} ${esc(p.currency)}</td><td>${p.quantity===null?'—':esc(p.quantity)}</td><td><span class="tag ${p.status!=='sale'?'warn':''}">${esc(labels[p.status]||p.status||'—')}</span></td><td>${date(p.updated_at)}</td></tr>`).join('');$('#empty').classList.toggle('hidden',d.items.length>0);$('#empty').textContent=Number(stores.find(s=>s.merchant_id===merchant).product_count)?'لا توجد منتجات تطابق البحث.':'كتالوجك ينتظر أول مزامنة. اضغط «مزامنة المنتجات» للبدء.';$('#pageLabel').textContent=`${page} / ${pages} · ${d.total} منتج`;$('#prev').disabled=page<=1;$('#next').disabled=page>=pages}
-async function loadJobs(){let data=await api('jobs?'+new URLSearchParams({merchant}));$('#jobs').innerHTML=data.map(j=>`<tr><td>${date(j.started_at)}</td><td><span class="tag ${j.state==='failed'?'warn':''}">${esc(labels[j.state])}</span></td><td>${j.processed}${j.total!==null?' / '+j.total:''}</td><td style="white-space:normal;min-width:220px">${esc(j.message||'جارٍ جلب البيانات…')}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">لم تُنفّذ أي مزامنة بعد.</td></tr>';let active=data.find(j=>['queued','running'].includes(j.state)&&Date.now()-new Date(j.started_at)<3600000);$('#sync').disabled=!!active;$('#syncState').classList.toggle('hidden',!active);if(active){$('#syncState').textContent=`المزامنة جارية · ${active.processed} منتج${active.total?' من '+active.total:''}. يمكنك متابعة العمل هنا.`;if(!poll)poll=setInterval(()=>loadJobs().catch(e=>toast(e.message)),4000)}else if(poll){clearInterval(poll);poll=null;stores=await api('stores');await load();toast('انتهت العملية. راجع سجل المزامنة لمعرفة النتيجة.')}}
-$('#loginForm').onsubmit=async e=>{e.preventDefault();$('#loginButton').disabled=true;$('#error').textContent='';try{await api('login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await boot()}catch(e){$('#error').textContent=e.message}finally{$('#loginButton').disabled=false}};
-$('#logout').onclick=async()=>{await api('logout',{method:'POST'});location.reload()};$('#store').onchange=()=>{clearInterval(poll);poll=null;merchant=$('#store').value;page=1;$('#searchResults').innerHTML='';load().catch(e=>toast(e.message))};$('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync?'+new URLSearchParams({merchant}),{method:'POST'});await loadJobs();toast('بدأت المزامنة. ستظهر النتيجة هنا تلقائيًا.')}catch(e){toast(e.message);$('#sync').disabled=false}};
-$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('hidden',t.id!==b.dataset.tab))});
-$('#searchForm').onsubmit=async e=>{e.preventDefault();$('#searchResults').textContent='جارٍ البحث…';try{let d=await api('products?'+new URLSearchParams({merchant,q:$('#query').value}));$('#searchResults').innerHTML=d.items.map(p=>`<article class="result">${url(p.image)?`<img src="${esc(url(p.image))}" alt="${esc(p.title)}">`:''}<h3>${esc(p.title)}</h3><p>${esc(p.sku)||'بدون SKU'} · ${p.price===null?'—':esc(p.price)} ${esc(p.currency)}</p>${url(p.url)?`<a href="${esc(url(p.url))}" target="_blank" rel="noopener noreferrer">عرض في المتجر ↗</a>`:''}</article>`).join('')||'<p>لا توجد نتائج مطابقة. جرّب كلمة أقصر أو رقم المنتج.</p>'}catch(e){$('#searchResults').textContent=e.message}};boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message});
-</script></body></html>
+"""Private single-operator dashboard for the existing Render FastAPI service."""
+import hashlib, hmac, html, json, os, re, secrets, time, uuid
+from contextlib import closing
+from pathlib import Path
+from decimal import Decimal
+import psycopg2
+from psycopg2.extras import RealDictCursor, Json
+import requests
+from fastapi import APIRouter, Request, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, Field
+
+router = APIRouter()
+API = 'https://api.salla.dev/admin/v2'
+
+def db():
+    return psycopg2.connect(os.environ['DATABASE_URL'], connect_timeout=10)
+
+def query(sql, args=(), one=False):
+    with closing(db()) as conn, conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(sql,args)
+        if cur.description:
+            rows=cur.fetchall()
+            return (dict(rows[0]) if rows else None) if one else [dict(x) for x in rows]
+
+def initialize():
+    query('''CREATE TABLE IF NOT EXISTS dashboard_catalog (
+        merchant_id TEXT NOT NULL, product_id TEXT NOT NULL, title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '', sku TEXT NOT NULL DEFAULT '', price NUMERIC,
+        currency TEXT NOT NULL DEFAULT 'SAR', image TEXT, url TEXT, status TEXT,
+        quantity NUMERIC, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (merchant_id,product_id))''')
+    query('''CREATE TABLE IF NOT EXISTS dashboard_jobs (
+        id TEXT PRIMARY KEY, merchant_id TEXT NOT NULL, state TEXT NOT NULL,
+        processed INTEGER NOT NULL DEFAULT 0, total INTEGER, message TEXT,
+        started_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ)''')
+    query('CREATE INDEX IF NOT EXISTS dashboard_jobs_store_time ON dashboard_jobs(merchant_id, started_at DESC)')
+    query('''CREATE TABLE IF NOT EXISTS dashboard_login_limits (
+        key TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_start TIMESTAMPTZ NOT NULL)''')
+
+
+def signing_key():
+    key=os.getenv('DASHBOARD_SESSION_SECRET','')
+    if len(key)<32 or len(os.getenv('DASHBOARD_PASSWORD',''))<12:
+        raise HTTPException(503,'أضف إعدادات دخول لوحة التحكم في Render أولًا.')
+    return key.encode()
+
+def authenticated(request:Request):
+    key=signing_key()
+    value=request.cookies.get('dashboard_session','')
+    try:
+        expiry,nonce,sig=value.split('.')
+        expected=hmac.new(key,f'{expiry}.{nonce}'.encode(),hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig,expected) or int(expiry)<time.time(): raise ValueError()
+    except (ValueError,TypeError):
+        raise HTTPException(401,'يرجى تسجيل الدخول.')
+    if request.method not in ('GET','HEAD') and request.headers.get('x-dashboard-request')!='1':
+        raise HTTPException(403,'طلب غير موثق.')
+
+class Login(BaseModel):
+    password:str=Field(max_length=512)
+
+@router.get('/dashboard',include_in_schema=False)
+def dashboard_page():
+    return FileResponse(Path(__file__).parent/'static/dashboard.html',headers={'Cache-Control':'no-store'})
+
+@router.post('/dashboard-api/login')
+def login(body:Login,request:Request):
+    key=signing_key()
+    # Shared throttling survives restarts; passwords and tokens never enter logs.
+    ip=request.client.host if request.client else 'unknown'
+    ipkey=hmac.new(key,ip.encode(),hashlib.sha256).hexdigest()
+    row=query('''INSERT INTO dashboard_login_limits VALUES (%s,1,now())
+        ON CONFLICT(key) DO UPDATE SET
+        attempts=CASE WHEN dashboard_login_limits.window_start < now()-interval '15 minutes' THEN 1 ELSE dashboard_login_limits.attempts+1 END,
+        window_start=CASE WHEN dashboard_login_limits.window_start < now()-interval '15 minutes' THEN now() ELSE dashboard_login_limits.window_start END
+        RETURNING attempts''',(ipkey,),one=True)
+    if row['attempts']>20: raise HTTPException(429,'محاولات كثيرة. حاول بعد 15 دقيقة.')
+    if not hmac.compare_digest(body.password.encode(),os.environ['DASHBOARD_PASSWORD'].encode()):
+        raise HTTPException(401,'كلمة المرور غير صحيحة.')
+    value=f'{int(time.time())+28800}.{secrets.token_hex(24)}'
+    value+='.'+hmac.new(key,value.encode(),hashlib.sha256).hexdigest()
+    response=JSONResponse({'ok':True})
+    response.set_cookie('dashboard_session',value,secure=True,httponly=True,samesite='strict',max_age=28800,path='/')
+    return response
+
+@router.post('/dashboard-api/logout',dependencies=[Depends(authenticated)])
+def logout():
+    response=JSONResponse({'ok':True}); response.delete_cookie('dashboard_session',path='/'); return response
+
+@router.get('/dashboard-api/stores',dependencies=[Depends(authenticated)])
+def stores():
+    return query('''SELECT merchant_id,store_name,
+        COALESCE(access_token,'')<>'' AS connected,
+        (SELECT count(*) FROM dashboard_catalog c WHERE c.merchant_id=s.merchant_id) AS product_count,
+        (SELECT max(finished_at) FROM dashboard_jobs j WHERE j.merchant_id=s.merchant_id AND j.state='success') AS last_sync
+        FROM stores s ORDER BY merchant_id''')
+
+def require_store(merchant):
+    if not query('SELECT merchant_id FROM stores WHERE merchant_id=%s',(merchant,),True):
+        raise HTTPException(404,'المتجر غير موجود.')
+
+@router.get('/dashboard-api/products',dependencies=[Depends(authenticated)])
+def products(merchant:str,q:str='',status:str='',page:int=1):
+    require_store(merchant)
+    if page<1 or len(q)>200: raise HTTPException(400,'معايير بحث غير صالحة.')
+    clauses=['merchant_id=%s']; args=[merchant]
+    if q.strip():
+        for word in q.split()[:10]:
+            clauses.append("(title ILIKE %s OR sku ILIKE %s OR description ILIKE %s)")
+            word=word.replace('\\','\\\\').replace('%','\\%').replace('_','\\_')
+            args.extend(['%'+word+'%']*3)
+    if status: clauses.append('status=%s'); args.append(status)
+    where=' AND '.join(clauses)
+    total=query('SELECT count(*) AS n FROM dashboard_catalog WHERE '+where,args,True)['n']
+    rows=query('SELECT * FROM dashboard_catalog WHERE '+where+' ORDER BY title,product_id LIMIT 24 OFFSET %s',args+[(page-1)*24])
+    return {'items':rows,'total':total,'page':page,'pages':max(1,(total+23)//24),'mode':'keyword'}
+
+@router.get('/dashboard-api/jobs',dependencies=[Depends(authenticated)])
+def jobs(merchant:str):
+    require_store(merchant)
+    return query('SELECT * FROM dashboard_jobs WHERE merchant_id=%s ORDER BY started_at DESC LIMIT 20',(merchant,))
+
+def salla_get(path, token, params=None):
+    for attempt in range(3):
+        r=requests.get(API+path,headers={'Authorization':'Bearer '+token,'Accept':'application/json'},params=params,timeout=(5,20),allow_redirects=False)
+        if r.status_code==429 or r.status_code>=500:
+            if attempt<2: time.sleep(2**attempt); continue
+        if r.status_code==401: raise RuntimeError('انتهت صلاحية رمز الوصول. أعد إرسال رمز الوصول من سلة ثم أعد المزامنة.')
+        if r.status_code==403: raise RuntimeError('سلة رفضت الوصول. تحقق من صلاحية قراءة المنتجات في التطبيق.')
+        if r.status_code!=200: raise RuntimeError(f'تعذر جلب المنتجات من سلة (HTTP {r.status_code}).')
+        data=r.json()
+        if not isinstance(data,dict) or data.get('success') is False: raise RuntimeError('استجابة غير صالحة من سلة.')
+        return data
+
+def normalize(p,merchant):
+    pid=p.get('id')
+    if isinstance(pid,bool) or not str(pid).isdigit(): raise RuntimeError('منتج بدون معرّف صالح.')
+    price=p.get('price') or {}
+    amount=price.get('amount') if isinstance(price,dict) else price
+    currency=price.get('currency','SAR') if isinstance(price,dict) else 'SAR'
+    desc=html.unescape(re.sub('<[^>]+>',' ',str(p.get('description') or '')))
+    return (str(merchant),str(pid),str(p.get('name') or pid),desc,str(p.get('sku') or ''),amount,currency,
+            p.get('main_image'),p.get('url') or (p.get('urls') or {}).get('customer'),p.get('status'),p.get('quantity'))
+
+UPSERT='''INSERT INTO dashboard_catalog (merchant_id,product_id,title,description,sku,price,currency,image,url,status,quantity)
+VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT(merchant_id,product_id) DO UPDATE SET
+ title=EXCLUDED.title,description=EXCLUDED.description,sku=EXCLUDED.sku,price=EXCLUDED.price,
+ currency=EXCLUDED.currency,image=EXCLUDED.image,url=EXCLUDED.url,status=EXCLUDED.status,quantity=EXCLUDED.quantity,updated_at=now()'''
+
+def sync(merchant,job):
+    processed=0
+    try:
+        with closing(db()) as conn, conn, conn.cursor() as cur:
+            cur.execute('SELECT pg_try_advisory_xact_lock(hashtext(%s))',('catalog:'+merchant,))
+            if not cur.fetchone()[0]: raise RuntimeError('توجد مزامنة أخرى لهذا المتجر. انتظر اكتمالها.')
+            row=query('SELECT access_token FROM stores WHERE merchant_id=%s',(merchant,),True)
+            if not row or not row['access_token']: raise RuntimeError('المتجر غير مربوط.')
+            query("UPDATE dashboard_jobs SET state='running' WHERE id=%s",(job,))
+            page=1; seen=set()
+            while True:
+                result=salla_get('/products',row['access_token'],{'page':page,'per_page':50})
+                items=result.get('data')
+                if not isinstance(items,list): raise RuntimeError('قائمة المنتجات الواردة غير صالحة.')
+                pagination=result.get('pagination') or {}
+                totalpages=pagination.get('totalPages')
+                if not isinstance(totalpages,int) or totalpages<0: raise RuntimeError('معلومات صفحات سلة غير مكتملة؛ لم يتم استبدال الكتالوج.')
+                for p in items:
+                    record=normalize(p,merchant)
+                    if record[1] in seen: raise RuntimeError('تكرار غير متوقع بين صفحات سلة. أعد المزامنة.')
+                    seen.add(record[1]); cur.execute(UPSERT,record); processed+=1
+                query('UPDATE dashboard_jobs SET processed=%s,total=%s WHERE id=%s',(processed,pagination.get('total'),job))
+                if page>=totalpages: break
+                if not items or page>=2000: raise RuntimeError('لم تكتمل صفحات المنتجات؛ أعد المحاولة.')
+                page+=1
+            expected_total=pagination.get('total')
+            if not isinstance(expected_total,int) or expected_total!=processed:
+                raise RuntimeError('تغير عدد المنتجات أثناء المزامنة؛ أعد المحاولة. تم الاحتفاظ بالكتالوج السابق.')
+            # Only a complete successful snapshot removes stale local entries.
+            cur.execute('DELETE FROM dashboard_catalog WHERE merchant_id=%s AND NOT (product_id=ANY(%s))',(merchant,list(seen)))
+        query("UPDATE dashboard_jobs SET state='success',processed=%s,finished_at=now(),message='اكتملت المزامنة' WHERE id=%s",(processed,job))
+    except Exception as exc:
+        message=str(exc) if isinstance(exc,RuntimeError) else 'تعذر إكمال المزامنة. تحقق من الاتصال بقاعدة البيانات وسلة ثم أعد المحاولة.'
+        query("UPDATE dashboard_jobs SET state='failed',message=%s,finished_at=now() WHERE id=%s",(message,job))
+
+def enqueue(merchant,tasks):
+    require_store(merchant)
+    job=uuid.uuid4().hex
+    query("INSERT INTO dashboard_jobs(id,merchant_id,state) VALUES (%s,%s,'queued')",(job,merchant))
+    tasks.add_task(sync,merchant,job)
+    return {'job_id':job}
+
+@router.post('/dashboard-api/sync',dependencies=[Depends(authenticated)],status_code=202)
+def start_sync(merchant:str,tasks:BackgroundTasks):
+    return enqueue(merchant,tasks)
+
+# Product webhook updates use a fresh complete Salla representation; no secret data returned.
+def update_product_event(merchant,event,data):
+    product_id=data.get('id') if isinstance(data,dict) else None
+    if not str(product_id).isdigit(): raise HTTPException(400,'Invalid product ID')
+    with closing(db()) as conn, conn, conn.cursor() as cur:
+        cur.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',('catalog:'+merchant,))
+        if event=='product.deleted':
+            cur.execute('DELETE FROM dashboard_catalog WHERE merchant_id=%s AND product_id=%s',(merchant,str(product_id)))
+        else:
+            row=query('SELECT access_token FROM stores WHERE merchant_id=%s',(merchant,),True)
+            if not row: raise HTTPException(404,'Unknown merchant')
+            p=salla_get('/products/'+str(product_id),row['access_token']).get('data')
+            if not isinstance(p,dict): raise HTTPException(502,'Invalid product response')
+            cur.execute(UPSERT,normalize(p,merchant))
