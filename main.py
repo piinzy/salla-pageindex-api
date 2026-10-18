@@ -1,14 +1,20 @@
 from contextlib import closing
+import hmac
 import logging
 import os
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, HTTPException
+from starlette.concurrency import run_in_threadpool
 import psycopg2
 from dotenv import load_dotenv
 import requests
 
-load_dotenv()
+# Render environment wins; Neon CLI writes .env.local unless .env exists.
+PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(PROJECT_ROOT / ".env.local", override=False)
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 app = FastAPI(title="Salla PageIndex AI Search")
 logger = logging.getLogger("salla_backend")
@@ -41,7 +47,8 @@ def response_json(response, label):
 
 # إنشاء الجداول إذا لم تكن موجودة، دون حذف البيانات الحالية.
 def init_db():
-    database_url = os.getenv("DATABASE_URL")
+    # Schema setup uses a direct connection; requests use pooled DATABASE_URL.
+    database_url = os.getenv("DATABASE_URL_UNPOOLED") or os.getenv("DATABASE_URL")
     if not database_url:
         logger.error("DATABASE_URL is not set")
         return
@@ -231,9 +238,41 @@ def auth_callback(code: str = None, error: str = None):
     }
 
 
+def save_webhook_authorization(merchant_id, access_token, refresh_token):
+    database_url = required_env("DATABASE_URL")
+    try:
+        with closing(psycopg2.connect(database_url, connect_timeout=10)) as conn:
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO stores (merchant_id, access_token, refresh_token, store_name)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (merchant_id) DO UPDATE SET
+                            access_token = EXCLUDED.access_token,
+                            refresh_token = EXCLUDED.refresh_token;
+                    """, (merchant_id, access_token, refresh_token, merchant_id))
+    except psycopg2.Error as exc:
+        logger.error("Webhook authorization save failed: %s", type(exc).__name__)
+        raise HTTPException(status_code=503, detail="Could not save store authorization") from None
+
+
 @app.post("/webhook")
 async def salla_webhook(request: Request):
-    # يستقبل الأحداث ويسجل أسماءها فقط؛ مزامنة المنتجات لم تُنفذ بعد.
+    # Token security mode: use the webhook secret, NOT the OAuth client secret.
+    secret = required_env("SALLA_WEBHOOK_SECRET")
+    strategy = request.headers.get("x-salla-security-strategy", "Token").lower()
+    if strategy != "token":
+        raise HTTPException(status_code=401, detail="Expected Token webhook security strategy")
+    authorization = request.headers.get("authorization", "")
+    if authorization.lower().startswith("bearer "):
+        authorization = authorization[7:]
+    candidates = (
+        request.headers.get("x-salla-token", ""),
+        request.headers.get("x-salla-signature", ""),
+        authorization,
+    )
+    if not any(hmac.compare_digest(value.encode(), secret.encode()) for value in candidates):
+        raise HTTPException(status_code=401, detail="Invalid webhook authentication")
     try:
         payload = await request.json()
     except ValueError:
@@ -241,8 +280,25 @@ async def salla_webhook(request: Request):
     if not isinstance(payload, dict):
         raise HTTPException(status_code=400, detail="Webhook payload must be a JSON object")
     event = payload.get("event")
-    logger.info("Received Salla webhook event: %s", event)
-    return {"status": "success", "event_received": event}
+    if not isinstance(event, str) or not event or len(event) > 150:
+        raise HTTPException(status_code=400, detail="Invalid webhook event")
+    if event != "app.store.authorize":
+        return {"status": "ignored", "event_received": event}
+    merchant_id = payload.get("merchant")
+    if (isinstance(merchant_id, bool) or not isinstance(merchant_id, (str, int))
+            or not str(merchant_id).isascii() or not str(merchant_id).isdigit()
+            or len(str(merchant_id)) > 30 or int(merchant_id) <= 0):
+        raise HTTPException(status_code=400, detail="Invalid merchant ID")
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Missing authorization data")
+    access_token, refresh_token = data.get("access_token"), data.get("refresh_token")
+    if not all(isinstance(t, str) and t.strip() for t in (access_token, refresh_token)):
+        raise HTTPException(status_code=400, detail="Missing access or refresh token")
+    merchant_id = str(merchant_id)
+    await run_in_threadpool(save_webhook_authorization, merchant_id, access_token, refresh_token)
+    logger.info("Store authorization saved for merchant %s", merchant_id)
+    return {"status": "success", "event_received": event, "merchant_id": merchant_id}
 
 
 @app.get("/")
