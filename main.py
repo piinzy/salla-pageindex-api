@@ -1,141 +1,121 @@
-from fastapi import FastAPI, Request, HTTPException
-import os
-import psycopg2
-from dotenv import load_dotenv
-import requests
+    if not valid_uri:
+        raise HTTPException(
+            status_code=500,
+            detail="SALLA_REDIRECT_URI must be the plain HTTPS URL ending in /auth/callback",
+        )
 
-load_dotenv()
-
-app = FastAPI(title="Salla PageIndex AI Search")
-
-# دالة مساعدة للاتصال بقاعدة بيانات Neon وإنشاء الجداول إذا لم تكن موجودة
-def init_db():
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        return
-    try:
-        conn = psycopg2.connect(database_url)
-        cur = conn.cursor()
-        # جدول لتخزين بيانات المتاجر ورمز الوصول (Access Token)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS stores (
-                merchant_id TEXT PRIMARY KEY,
-                access_token TEXT,
-                refresh_token TEXT,
-                store_name TEXT
-            );
-        """)
-        # جدول لتخزين المنتجات المستخرجة
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS products (
-                product_id TEXT PRIMARY KEY,
-                merchant_id TEXT,
-                title TEXT,
-                description TEXT,
-                price NUMERIC,
-                url TEXT
-            );
-        """)
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"Database Init Error: {e}")
-
-# تشغيل إنشاء الجداول عند بدء تشغيل التطبيق
-@app.on_event("startup")
-def startup_event():
-    init_db()
-
-@app.get("/api/test-db")
-def test_db():
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise HTTPException(status_code=500, detail="DATABASE_URL is not set")
-    try:
-        conn = psycopg2.connect(database_url)
-        cur = conn.cursor()
-        cur.execute("SELECT version();")
-        db_version = cur.fetchone()
-        cur.close()
-        conn.close()
-        return {
-            "status": "success", 
-            "message": "Connected to Neon Database successfully!",
-            "postgres_version": db_version[0]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/auth/callback")
-def auth_callback(code: str = None):
-    """
-    مسار استقبال رمز المصادقة (Authorization Code) من سلة عند تثبيت التطبيق
-    """
-    if not code:
-        raise HTTPException(status_code=400, detail="Authorization code not found")
-    
-    client_id = os.getenv("SALLA_CLIENT_ID")
-    client_secret = os.getenv("SALLA_CLIENT_SECRET")
-    redirect_uri = os.getenv("SALLA_REDIRECT_URI")
-    
-    # طلب Access Token من سلة باستخدام الكود المؤقت
-    token_url = "https://accounts.salla.sa/oauth2/token"
     payload = {
         "client_id": client_id,
         "client_secret": client_secret,
         "grant_type": "authorization_code",
         "redirect_uri": redirect_uri,
-        "code": code
+        "code": code,
     }
-    
-    response = requests.post(token_url, data=payload)
-    if response.status_code != 200:
-        raise HTTPException(status_code=400, detail=f"Failed to get token from Salla: {response.text}")
-    
-    token_data = response.json()
-    access_token = token_data.get("access_token")
-    refresh_token = token_data.get("refresh_token")
-    
-    # جلب معلومات التاجر أو المتجر الحالي
-    headers = {"Authorization": f"Bearer {access_token}"}
-    merchant_res = requests.get("https://api.salla.dev/admin/v2/oauth2/user/info", headers=headers)
-    
-    merchant_id = "default_merchant"
-    store_name = "My Salla Store"
-    if merchant_res.status_code == 200:
-        user_info = merchant_res.json().get("data", {})
-        merchant_id = str(user_info.get("id", "default_merchant"))
-        store_name = user_info.get("name", "My Salla Store")
-        
-    # حفظ التوكن في قاعدة بيانات Neon
-    database_url = os.getenv("DATABASE_URL")
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO stores (merchant_id, access_token, refresh_token, store_name)
-        VALUES (%s, %s, %s, %s)
-        ON CONFLICT (merchant_id) 
-        DO UPDATE SET access_token = EXCLUDED.access_token, refresh_token = EXCLUDED.refresh_token, store_name = EXCLUDED.store_name;
-    """, (merchant_id, access_token, refresh_token, store_name))
-    conn.commit()
-    cur.close()
-    conn.close()
-    
+
+    try:
+        token_res = requests.post(
+            TOKEN_URL,
+            data=payload,
+            headers={"Accept": "application/json"},
+            timeout=HTTP_TIMEOUT,
+            allow_redirects=False,
+        )
+        if token_res.status_code != 200:
+            # لا نعيد محتوى استجابة التوكن الخام إلى المتصفح.
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    f"Salla token request failed (HTTP {token_res.status_code}). "
+                    "Check the app credentials and matching Redirect URI, then start a new authorization."
+                ),
+            )
+
+        token_data = response_json(token_res, "token endpoint")
+        access_token = token_data.get("access_token")
+        refresh_token = token_data.get("refresh_token")
+        if not isinstance(access_token, str) or not access_token.strip():
+            raise HTTPException(status_code=502, detail="Salla did not return an access token")
+        if not isinstance(refresh_token, str) or not refresh_token.strip():
+            raise HTTPException(
+                status_code=502,
+                detail="Salla did not return a refresh token. Include offline_access and authorize again.",
+            )
+
+        merchant_res = requests.get(
+            USER_INFO_URL,
+            headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
+            timeout=HTTP_TIMEOUT,
+            allow_redirects=False,
+        )
+    except requests.Timeout:
+        raise HTTPException(status_code=504, detail="The request to Salla timed out") from None
+    except requests.RequestException:
+        raise HTTPException(status_code=502, detail="Could not connect to Salla") from None
+
+    if merchant_res.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not fetch Salla store information (HTTP {merchant_res.status_code})",
+        )
+
+    user_response = response_json(merchant_res, "user information endpoint")
+    user_info = user_response.get("data")
+    merchant = user_info.get("merchant") if isinstance(user_info, dict) else None
+    merchant_id = merchant.get("id") if isinstance(merchant, dict) else None
+
+    # data.id يخص المستخدم؛ معرّف المتجر الصحيح هو data.merchant.id.
+    # لا نحفظ التوكن باسم default_merchant عند فشل تحديد المتجر.
+    if (
+        user_response.get("success") is False
+        or isinstance(merchant_id, bool)
+        or not isinstance(merchant_id, (str, int))
+        or not str(merchant_id).isdigit()
+        or int(merchant_id) <= 0
+    ):
+        raise HTTPException(status_code=502, detail="Salla response is missing a valid merchant ID")
+
+    merchant_id = str(merchant_id)
+    store_name = merchant.get("name")
+    if not isinstance(store_name, str) or not store_name.strip():
+        store_name = merchant_id
+
+    try:
+        with closing(psycopg2.connect(database_url, connect_timeout=10)) as conn:
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO stores (merchant_id, access_token, refresh_token, store_name)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (merchant_id)
+                        DO UPDATE SET
+                            access_token = EXCLUDED.access_token,
+                            refresh_token = EXCLUDED.refresh_token,
+                            store_name = EXCLUDED.store_name;
+                    """, (merchant_id, access_token, refresh_token, store_name))
+    except psycopg2.Error as exc:
+        logger.error("Store authorization save failed: %s", type(exc).__name__)
+        raise HTTPException(status_code=500, detail="Could not save the store authorization") from None
+
     return {
         "status": "success",
-        "message": f"App installed and connected successfully for store: {store_name}!"
+        "merchant_id": merchant_id,
+        "message": f"App installed and connected successfully for store: {store_name}!",
     }
+
 
 @app.post("/webhook")
 async def salla_webhook(request: Request):
+    # يستقبل الأحداث ويسجل أسماءها فقط؛ مزامنة المنتجات لم تُنفذ بعد.
     try:
         payload = await request.json()
-        event = payload.get("event")
-        print(f"Received Salla Webhook Event: {event}")
-        return {"status": "success", "event_received": event}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid webhook JSON") from None
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Webhook payload must be a JSON object")
+    event = payload.get("event")
+    logger.info("Received Salla webhook event: %s", event)
+    return {"status": "success", "event_received": event}
+
 
 @app.get("/")
 def read_root():
