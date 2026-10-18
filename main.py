@@ -16,7 +16,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 load_dotenv(PROJECT_ROOT / ".env.local", override=False)
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 
+from dashboard import router as dashboard_router, initialize as initialize_dashboard, update_product_event
+
 app = FastAPI(title="Salla PageIndex AI Search")
+app.include_router(dashboard_router)
 logger = logging.getLogger("salla_backend")
 
 CALLBACK_PATH = "/auth/callback"
@@ -82,6 +85,7 @@ def init_db():
 @app.on_event("startup")
 def startup_event():
     init_db()
+    initialize_dashboard()
 
 
 @app.get("/api/test-db")
@@ -282,6 +286,12 @@ async def salla_webhook(request: Request):
     event = payload.get("event")
     if not isinstance(event, str) or not event or len(event) > 150:
         raise HTTPException(status_code=400, detail="Invalid webhook event")
+    if event.startswith("product."):
+        merchant = payload.get("merchant")
+        if isinstance(merchant, bool) or not str(merchant).isdigit():
+            raise HTTPException(status_code=400, detail="Invalid merchant ID")
+        await run_in_threadpool(update_product_event, str(merchant), event, payload.get("data"))
+        return {"status": "success", "event_received": event}
     if event != "app.store.authorize":
         return {"status": "ignored", "event_received": event}
     merchant_id = payload.get("merchant")
