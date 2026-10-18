@@ -18,8 +18,10 @@ load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 from dashboard import router as dashboard_router, initialize as initialize_dashboard, update_product_event
 
-app = FastAPI(title="Salla PageIndex AI Search")
+app = FastAPI(title="Salla Product Size Guides")
+from size_guides import router as size_router, initialize as initialize_size_guides
 app.include_router(dashboard_router)
+app.include_router(size_router)
 logger = logging.getLogger("salla_backend")
 
 CALLBACK_PATH = "/auth/callback"
@@ -86,6 +88,7 @@ def init_db():
 def startup_event():
     init_db()
     initialize_dashboard()
+    initialize_size_guides()
 
 
 @app.get("/api/test-db")
@@ -313,4 +316,4 @@ async def salla_webhook(request: Request):
 
 @app.get("/")
 def read_root():
-    return {"message": "Salla PageIndex Backend with Neon is running successfully!"}
+    return {"message": "Salla Size Guide Backend with Neon is running successfully!"}
