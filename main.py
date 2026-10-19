@@ -1,3 +1,4 @@
+"""Salla size guides: store authorization, product events and app entry points."""
 from contextlib import closing
 import hmac
 import logging
@@ -11,7 +12,7 @@ import psycopg2
 from dotenv import load_dotenv
 import requests
 
-# Render environment wins; Neon CLI writes .env.local unless .env exists.
+# Hosting environment values take precedence over local development files.
 PROJECT_ROOT = Path(__file__).resolve().parent
 load_dotenv(PROJECT_ROOT / ".env.local", override=False)
 load_dotenv(PROJECT_ROOT / ".env", override=False)
@@ -22,16 +23,17 @@ app = FastAPI(title="Salla Product Size Guides")
 from size_guides import router as size_router, initialize as initialize_size_guides
 app.include_router(dashboard_router)
 app.include_router(size_router)
+from button_settings import router as button_router, initialize as initialize_button_settings
+app.include_router(button_router)
+from embedded import router as embedded_router, RedactTokenQuery
+app.include_router(embedded_router)
+logging.getLogger('uvicorn.access').addFilter(RedactTokenQuery())
 logger = logging.getLogger("salla_backend")
 
 CALLBACK_PATH = "/auth/callback"
 TOKEN_URL = "https://accounts.salla.sa/oauth2/token"
 USER_INFO_URL = "https://accounts.salla.sa/oauth2/user/info"
 HTTP_TIMEOUT = (10, 30)
-
-# في Render وفي لوحة مطوري سلة، استخدم القيمة نفسها:
-# https://salla-pageindex-api.onrender.com/auth/callback
-
 
 def required_env(name):
     value = os.getenv(name, "").strip()
@@ -69,16 +71,6 @@ def init_db():
                             store_name TEXT
                         );
                     """)
-                    cur.execute("""
-                        CREATE TABLE IF NOT EXISTS products (
-                            product_id TEXT PRIMARY KEY,
-                            merchant_id TEXT,
-                            title TEXT,
-                            description TEXT,
-                            price NUMERIC,
-                            url TEXT
-                        );
-                    """)
     except psycopg2.Error as exc:
         # لا نطبع سلسلة الاتصال أو كلمات المرور في السجلات.
         logger.error("Database initialization failed: %s", type(exc).__name__)
@@ -89,24 +81,21 @@ def startup_event():
     init_db()
     initialize_dashboard()
     initialize_size_guides()
+    initialize_button_settings()
 
 
-@app.get("/api/test-db")
-def test_db():
+@app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
+def health():
     database_url = required_env("DATABASE_URL")
     try:
         with closing(psycopg2.connect(database_url, connect_timeout=10)) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT version();")
-                db_version = cur.fetchone()[0]
-        return {
-            "status": "success",
-            "message": "Connected to Neon Database successfully!",
-            "postgres_version": db_version,
-        }
+                cur.execute("SELECT 1;")
+                cur.fetchone()
+        return {"status": "ok", "service": "salla-size-guides"}
     except psycopg2.Error as exc:
         logger.error("Database check failed: %s", type(exc).__name__)
-        raise HTTPException(status_code=500, detail="Database connection failed") from None
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable") from None
 
 
 @app.get(CALLBACK_PATH)
@@ -314,6 +303,6 @@ async def salla_webhook(request: Request):
     return {"status": "success", "event_received": event, "merchant_id": merchant_id}
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
-    return {"message": "Salla Size Guide Backend with Neon is running successfully!"}
+    return {"status": "ok", "service": "salla-size-guides"}

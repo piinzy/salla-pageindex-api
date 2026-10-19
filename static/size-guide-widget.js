@@ -1,16 +1,76 @@
 (() => {
-'use strict';
-const script=document.currentScript;
-const base=(script?.dataset.base||new URL(script.src).origin).replace(/\/$/,'');
-const merchant=script?.dataset.merchant;
-if(!/^\d+$/.test(merchant||''))return;
-window.__sizeGuideWidgets=window.__sizeGuideWidgets||new Set();if(window.__sizeGuideWidgets.has(merchant))return;window.__sizeGuideWidgets.add(merchant);
-let current='',host=null,loading=false;
-function context(){const s=window.salla;const get=k=>{try{return s?.config?.get(k,'')}catch{return ''}};const slug=get('page.slug'),pid=String(get('page.id')||'');const match=location.pathname.match(/\/p(\d+)\/?$/);let id=match?.[1]||pid;if(!/^\d+$/.test(id))return null;let options=document.querySelector(`salla-product-options[product-id="${id}"]`);if(!match&&slug!=='product.single'&&!options)return null;return {id,options}}
-async function loadRenderer(){if(window.SizeGuideUI)return;if(!window.__sizeGuideRenderer){window.__sizeGuideRenderer=new Promise((resolve,reject)=>{let s=document.createElement('script');s.src=base+'/size-guide-renderer.js';s.onload=resolve;s.onerror=()=>{window.__sizeGuideRenderer=null;reject(Error('renderer'))};document.head.append(s)})}await window.__sizeGuideRenderer}
-async function getGuide(id){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);try{let r=await fetch(`${base}/public/size-guides/${merchant}/${id}`,{credentials:'omit',cache:'no-store',signal:controller.signal});if(r.status===404)return null;if(!r.ok)throw Error('guide');return await r.json()}finally{clearTimeout(timeout)}}
-async function mount(){if(loading)return;const ctx=context();const key=ctx?location.pathname+':'+ctx.id:'';if(key===current&&(!host||host.isConnected))return;current=key;host?.remove();host=null;if(!ctx)return;loading=true;try{const data=await getGuide(ctx.id);if(!data||current!==key||context()?.id!==ctx.id)return;host=document.createElement('span');host.id='product-size-guide';const root=host.attachShadow({mode:'open'}),style=document.createElement('style');style.textContent=':host{display:block;margin:12px 0;direction:rtl}button{display:inline-flex;align-items:center;gap:8px;border:1px solid #d9e3dc;border-radius:8px;background:white;color:#243c30;font:14px Tahoma,Arial,sans-serif;cursor:pointer;padding:11px 16px}button:hover{background:#f2f7f2}button:focus-visible{outline:3px solid #c9ae67;outline-offset:3px}button:disabled{opacity:.6}';const button=document.createElement('button');button.type='button';button.textContent='↔ '+data.guide.button_label;button.setAttribute('aria-haspopup','dialog');root.append(style,button);
-const anchor=document.querySelector('[data-size-guide-anchor]')||ctx.options||document.querySelector(`salla-add-product-button[product-id="${ctx.id}"]`);if(anchor)anchor.before(host);else{host.style.cssText='position:fixed;left:16px;bottom:24px;z-index:9999';document.body.append(host)}button.onclick=async()=>{button.disabled=true;try{const [fresh]=await Promise.all([getGuide(ctx.id),loadRenderer()]);if(!fresh){host?.remove();return}window.SizeGuideUI.open(fresh.guide,fresh.product_name)}catch{button.textContent='تعذر التحميل، اضغط للمحاولة مجددًا'}finally{button.disabled=false}};
-}catch{/* Do not interrupt shopping when the guide service is unavailable. */}finally{loading=false}}
-let timer;const schedule=()=>{clearTimeout(timer);timer=setTimeout(mount,250)};function start(){mount();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});window.addEventListener('popstate',schedule);setTimeout(schedule,2000)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  'use strict';
+  const script=document.currentScript;
+  if (!script?.src) return;
+  const base=(script.dataset.base||new URL(script.src).origin).replace(/\/$/,'');
+  const merchant=script.dataset.merchant;
+  if (!/^\d+$/.test(merchant||'')) return;
+  window.__sizeGuideWidgets=window.__sizeGuideWidgets||new Set();
+  if (window.__sizeGuideWidgets.has(merchant)) return;
+  window.__sizeGuideWidgets.add(merchant);
+  let current='',host=null,loading=false,timer;
+  function context() {
+    const get=key=>{try{return window.salla?.config?.get(key,'')}catch{return ''}};
+    const match=location.pathname.match(/\/p(\d+)\/?$/),id=match?.[1]||String(get('page.id')||'');
+    if (!/^\d+$/.test(id)) return null;
+    const options=document.querySelector(`salla-product-options[product-id="${id}"]`);
+    if (!match && get('page.slug')!=='product.single' && !options) return null;
+    return {id,options,key:location.pathname+':'+id};
+  }
+  const tasks={};
+  function loadAsset(name,globalName) {
+    if (window[globalName]) return Promise.resolve();
+    if (!tasks[name]) tasks[name]=new Promise((resolve,reject)=>{
+      const asset=document.createElement('script');asset.src=base+'/'+name;
+      asset.onload=()=>{if(window[globalName])resolve();else{delete tasks[name];reject(Error('asset'));}};
+      asset.onerror=()=>{asset.remove();delete tasks[name];reject(Error('asset'));};document.head.append(asset);
+    });
+    return tasks[name];
+  }
+  async function getGuide(id) {
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+    try {const response=await fetch(`${base}/public/size-guides/${merchant}/${id}`,{
+      credentials:'omit',cache:'no-store',signal:controller.signal});
+      if (response.status===404) return null;if (!response.ok) throw Error('guide');return await response.json();
+    } finally {clearTimeout(timeout);}
+  }
+  function place(target,ctx,settings) {
+    const anchor=document.querySelector('[data-size-guide-anchor]')||ctx.options||document.querySelector(`salla-add-product-button[product-id="${ctx.id}"]`);
+    if (settings.design==='floating'||!anchor) {
+      target.style.cssText='position:fixed;left:max(16px,env(safe-area-inset-left));bottom:calc(24px + env(safe-area-inset-bottom));z-index:9999;max-width:calc(100vw - 32px);width:max-content';
+      document.body.append(target);
+    } else {target.style.cssText='display:block;margin:12px 0;max-width:100%';anchor.before(target);}
+  }
+  async function mount() {
+    if (loading) return;
+    const ctx=context(),key=ctx?.key||'';
+    if (key===current&&(!host||host.isConnected)) return;
+    current=key;host?.remove();host=null;if(!ctx)return;
+    loading=true;
+    try {
+      const data=await getGuide(ctx.id);if(!data||context()?.key!==key)return;
+      await loadAsset('size-guide-button.js','SizeGuideButton');if(context()?.key!==key)return;
+      const target=document.createElement('span');target.id='product-size-guide';host=target;
+      let rendered;
+      const activate=async()=>{
+        const button=rendered.button;button.disabled=true;button.setAttribute('aria-busy','true');
+        try {
+          const [fresh]=await Promise.all([getGuide(ctx.id),loadAsset('size-guide-renderer.js','SizeGuideUI')]);
+          if (context()?.key!==key||!target.isConnected) return;
+          if (!fresh){target.remove();return;}
+          rendered=window.SizeGuideButton.render(target,fresh.button_settings,fresh.guide,activate);
+          place(target,context(),rendered.settings);rendered.button.focus();
+          window.SizeGuideUI.open(fresh.guide,fresh.product_name);
+        } catch {button.querySelector('.label').textContent='تعذر التحميل، اضغط للمحاولة مجددًا';}
+        finally {button.disabled=false;button.removeAttribute('aria-busy');}
+      };
+      rendered=window.SizeGuideButton.render(target,data.button_settings,data.guide,activate);
+      place(target,context(),rendered.settings);
+    } catch {current='';/* Retry on the next scheduled update without interrupting shopping. */}
+    finally {loading=false;if((context()?.key||'')!==key)schedule();}
+  }
+  function schedule(){clearTimeout(timer);timer=setTimeout(mount,250);}
+  function start(){mount();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+    window.addEventListener('popstate',schedule);setTimeout(schedule,2000);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

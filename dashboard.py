@@ -1,10 +1,9 @@
-"""Private single-operator dashboard for the existing Render FastAPI service."""
-import hashlib, hmac, html, json, os, re, secrets, time, uuid
+"""Product catalog for size guides; scoped merchant and operator dashboard access."""
+import hashlib, hmac, html, os, re, secrets, time, uuid
 from contextlib import closing
 from pathlib import Path
-from decimal import Decimal
 import psycopg2
-from psycopg2.extras import RealDictCursor, Json
+from psycopg2.extras import RealDictCursor
 import requests
 from fastapi import APIRouter, Request, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse
@@ -46,6 +45,23 @@ def signing_key():
     return key.encode()
 
 def authenticated(request:Request):
+    authorization=request.headers.get('authorization','')
+    embedded=request.headers.get('x-size-guide-embedded')=='1'
+    if authorization or embedded:
+        # An invalid embedded session must never fall back to an operator cookie.
+        from embedded_auth import verify_session
+        if not authorization.startswith('Bearer '):
+            raise HTTPException(401,'جلسة التطبيق مطلوبة.')
+        identity=verify_session(authorization[7:])
+        merchant=str(identity['merchant_id'])
+        if any(value!=merchant for value in request.query_params.getlist('merchant')):
+            raise HTTPException(403,'لا يمكنك الوصول إلى بيانات متجر آخر.')
+        if not query("SELECT merchant_id FROM stores WHERE merchant_id=%s AND COALESCE(access_token,'')<>''",(merchant,),True):
+            raise HTTPException(403,'هذا المتجر غير مربوط بالتطبيق.')
+        if request.method not in ('GET','HEAD') and request.headers.get('x-dashboard-request')!='1':
+            raise HTTPException(403,'طلب غير موثق.')
+        request.state.dashboard_merchant=merchant
+        return identity
     key=signing_key()
     value=request.cookies.get('dashboard_session','')
     try:
@@ -89,12 +105,14 @@ def logout():
     response=JSONResponse({'ok':True}); response.delete_cookie('dashboard_session',path='/'); return response
 
 @router.get('/dashboard-api/stores',dependencies=[Depends(authenticated)])
-def stores():
+def stores(request:Request):
+    merchant=getattr(request.state,'dashboard_merchant',None)
     return query('''SELECT merchant_id,store_name,
         COALESCE(access_token,'')<>'' AS connected,
         (SELECT count(*) FROM dashboard_catalog c WHERE c.merchant_id=s.merchant_id) AS product_count,
         (SELECT max(finished_at) FROM dashboard_jobs j WHERE j.merchant_id=s.merchant_id AND j.state='success') AS last_sync
-        FROM stores s ORDER BY merchant_id''')
+        FROM stores s '''+('WHERE s.merchant_id=%s ' if merchant else '')+'ORDER BY merchant_id',
+        (merchant,) if merchant else ())
 
 def require_store(merchant):
     if not query('SELECT merchant_id FROM stores WHERE merchant_id=%s',(merchant,),True):
@@ -114,7 +132,7 @@ def products(merchant:str,q:str='',status:str='',page:int=1):
     where=' AND '.join(clauses)
     total=query('SELECT count(*) AS n FROM dashboard_catalog WHERE '+where,args,True)['n']
     rows=query('SELECT * FROM dashboard_catalog WHERE '+where+' ORDER BY title,product_id LIMIT 24 OFFSET %s',args+[(page-1)*24])
-    return {'items':rows,'total':total,'page':page,'pages':max(1,(total+23)//24),'mode':'keyword'}
+    return {'items':rows,'total':total,'page':page,'pages':max(1,(total+23)//24)}
 
 @router.get('/dashboard-api/jobs',dependencies=[Depends(authenticated)])
 def jobs(merchant:str):

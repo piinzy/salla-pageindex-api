@@ -8,6 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from psycopg2.extras import Json
 from dashboard import query, authenticated, require_store
+from button_settings import ButtonSettings
 
 router=APIRouter()
 PUBLIC_HEADERS={'Access-Control-Allow-Origin':'*','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}
@@ -120,12 +121,14 @@ def unpublish(product_id:str,merchant:str,body:Version):
 def public_guide(merchant:str,product_id:str):
     if not re.fullmatch(r'[0-9]{1,30}',merchant) or not re.fullmatch(r'[0-9]{1,30}',product_id):
         return JSONResponse({'detail':'Not found'},status_code=404,headers=PUBLIC_HEADERS)
-    row=query('''SELECT g.published AS guide,c.title AS product_name
+    row=query('''SELECT g.published AS guide,c.title AS product_name,b.settings AS button_settings
         FROM product_size_guides g JOIN dashboard_catalog c USING(merchant_id,product_id)
         JOIN stores s ON s.merchant_id=g.merchant_id
+        LEFT JOIN size_guide_button_settings b ON b.merchant_id=g.merchant_id
         WHERE g.merchant_id=%s AND g.product_id=%s AND g.published IS NOT NULL
         AND c.status IN ('sale','out','out-and-notify') AND COALESCE(s.access_token,'')<>'' ''',(merchant,product_id),True)
     if not row:return JSONResponse({'detail':'Not found'},status_code=404,headers=PUBLIC_HEADERS)
+    row['button_settings']=row.get('button_settings') or ButtonSettings().model_dump()
     return JSONResponse(jsonable_encoder(row),headers=PUBLIC_HEADERS)
 
 @router.get('/size-guide-widget.js',include_in_schema=False)
