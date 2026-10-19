@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from psycopg2.extras import Json
 from dashboard import authenticated, query, require_store
 
@@ -12,7 +12,32 @@ HEX = r'^#[0-9a-fA-F]{6}$'
 
 class ButtonSettings(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
-    design: Literal['link', 'outline', 'pill', 'band', 'floating', 'card'] = 'outline'
+    design: Literal['link', 'outline', 'solid', 'pill', 'soft', 'dashed', 'split',
+                    'band', 'card', 'icon', 'row', 'tile'] = 'outline'
+    placement: Literal['above_price', 'below_price', 'below_title', 'before_options',
+                       'beside_size', 'above_cart', 'beside_cart', 'image_top_right',
+                       'image_top_left', 'image_bottom_right', 'image_bottom_left',
+                       'floating_left', 'floating_right', 'side_tab', 'mobile_bar'] = 'above_price'
+    mobile_placement: Literal['inherit', 'above_price', 'below_price', 'below_title',
+                              'before_options', 'beside_size', 'above_cart', 'beside_cart',
+                              'image_top_right', 'image_top_left', 'image_bottom_right',
+                              'image_bottom_left', 'floating_left', 'floating_right',
+                              'side_tab', 'mobile_bar'] = 'inherit'
+    alignment: Literal['start', 'center', 'end'] = 'start'
+    size: Literal['small', 'medium', 'large'] = 'medium'
+    edge_offset: int = Field(default=16, ge=0, le=48, strict=True)
+    bottom_offset: int = Field(default=88, ge=0, le=240, strict=True)
+
+    @model_validator(mode='before')
+    @classmethod
+    def migrate_legacy_floating(cls, value):
+        if isinstance(value, dict) and value.get('design') == 'floating':
+            value = dict(value)
+            value['design'] = 'pill'
+            value.setdefault('placement', 'floating_left')
+            # Preserve the previous floating button's bottom spacing.
+            value.setdefault('bottom_offset', 24)
+        return value
     label: str = Field(default='', max_length=40)
     subtitle: str = Field(default='اختاري مقاسك بثقة', max_length=80)
     background_color: str = Field(default='#ffffff', pattern=HEX)
@@ -68,4 +93,16 @@ def button_script():
 def settings_admin_script():
     return FileResponse(Path(__file__).parent / 'static/button-settings-admin.js',
                         media_type='application/javascript',
+                        headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})
+
+@router.get('/size-guide-placement.js', include_in_schema=False)
+def placement_script():
+    return FileResponse(Path(__file__).parent / 'static/size-guide-placement.js',
+                        media_type='application/javascript',
+                        headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})
+
+@router.get('/button-studio.css', include_in_schema=False)
+def studio_styles():
+    return FileResponse(Path(__file__).parent / 'static/button-studio.css',
+                        media_type='text/css',
                         headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})
