@@ -30,6 +30,18 @@ class SizeGuideTests(unittest.TestCase):
         cats=re.findall(r"\{id:'([a-z]+)',name:'[^']+',emblem",script)
         self.assertEqual(set(themes),set(sg.Guide.model_fields['theme'].annotation.__args__))
         self.assertEqual(set(cats),set(sg.Guide.model_fields['category'].annotation.__args__))
+    def test_every_starter_template_is_a_valid_guide(self):
+        import json, pathlib, shutil, subprocess
+        if not shutil.which('node'):self.skipTest('node is not installed')
+        script=("const fs=require('fs');const w={};new Function('window',fs.readFileSync('static/size-guide-catalog.js','utf8'))(w);"
+                "console.log(JSON.stringify(w.SizeGuideCatalog.templates.map(t=>w.SizeGuideCatalog.fresh(t.id))))")
+        out=subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout
+        guides=json.loads(out);self.assertGreaterEqual(len(guides),20)
+        for guide in guides:
+            with self.subTest(category=guide['category'],columns=len(guide['columns'])):
+                parsed=sg.Guide(**guide)  # every key the editor produces is accepted by the server
+                self.assertTrue(parsed.calculator)
+        self.assertEqual(set(guides[0]),set(sg.Guide.model_fields),'the editor and the server agree on every field')
     def test_catalog_script_is_served(self):
         import button_settings as bs
         app=FastAPI();app.include_router(bs.router);r=TestClient(app).get('/size-guide-catalog.js')

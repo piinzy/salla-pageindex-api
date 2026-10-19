@@ -128,3 +128,9 @@ def catalog_script():
     return FileResponse(Path(__file__).parent / 'static/size-guide-catalog.js',
                         media_type='application/javascript',
                         headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})
+
+@router.get('/size-guide-import.js', include_in_schema=False)
+def import_script():
+    return FileResponse(Path(__file__).parent / 'static/size-guide-import.js',
+                        media_type='application/javascript',
+                        headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})

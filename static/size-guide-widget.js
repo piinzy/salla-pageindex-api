@@ -34,6 +34,8 @@
       if (response.status===404) return null;if (!response.ok) throw Error('guide');return await response.json();
     } finally {clearTimeout(timeout);}
   }
+  // Counters carry no cookies, body or personal data: the server only adds one to a per-day total.
+  function track(id,type){try{fetch(`${base}/public/size-guides/${merchant}/${id}/event?t=${type}`,{method:'POST',keepalive:true,credentials:'omit',mode:'cors'}).catch(()=>{});}catch{/* analytics never blocks shopping */}}
   // One slot per configured button: the main one plus up to three extras, each with its own placement engine.
   let slots=[];
   function teardown(){for(const slot of slots){slot.engine.reset();slot.host.remove();}slots=[];host=null;}
@@ -67,6 +69,7 @@
           if (context()?.key!==key||!host?.isConnected) return;
           if (!fresh){teardown();return;}
           build(fresh,context(),activate);slots[0].rendered.button.focus();
+          window.SizeGuideUI.onEvent=type=>track(ctx.id,type);track(ctx.id,'open');
           window.SizeGuideUI.open(fresh.guide,fresh.product_name);
         } catch {
           const message='تعذر التحميل، اضغط للمحاولة مجددًا';

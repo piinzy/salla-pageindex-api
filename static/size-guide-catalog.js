@@ -12,6 +12,8 @@ const templates=[
     tips:'الطول الداخلي من نقطة التقاء الساقين حتى الحافة السفلية. الطول الخارجي من أعلى الخصر حتى الحافة السفلية.'},
   {id:'women-skirts',category:'women',name:'تنانير',columns:[m('محيط الخصر'),m('محيط الأرداف'),m('طول القطعة')],sizes:LETTERS,
     tips:'طول القطعة من أعلى الخصر حتى الحافة السفلية للتنورة.'},
+  {id:'women-lingerie',category:'women',name:'ملابس داخلية',columns:[m('محيط الصدر'),m('محيط تحت الصدر'),t('حجم الكأس')],sizes:['70','75','80','85','90'],
+    tips:'محيط تحت الصدر: مباشرة تحت الصدر بشريط مشدود. محيط الصدر: عند أعرض نقطة.'},
   {id:'women-abaya',category:'women',name:'عبايات',columns:[m('الطول'),m('عرض الكتف'),m('طول الكم'),m('محيط الصدر')],sizes:ADULT,
     tips:'الطول من أعلى الكتف حتى الحافة السفلية. طول الكم من نهاية الكتف حتى طرف الكم.'},
   {id:'men-shirts',category:'men',name:'قمصان وتيشيرتات',columns:[m('محيط الصدر'),m('عرض الكتف'),m('طول القطعة'),m('طول الكم')],sizes:ADULT,
@@ -42,18 +44,29 @@ const templates=[
     tips:'محيط الصدر عند أعرض نقطة خلف الأرجل الأمامية.'},
   {id:'pets-bed',category:'pets',name:'أسرّة وبيوت',columns:[m('الطول'),m('العرض'),t('الوزن الأقصى (كجم)')],sizes:['S','M','L','XL'],
     tips:'قيسي الحيوان وهو ممدد من الأنف إلى أسفل الظهر، وأضيفي بضعة سنتيمترات للراحة.'},
+  {id:'acc-rings',category:'accessories',name:'خواتم',columns:[m('القطر الداخلي'),m('المحيط'),t('US'),t('EU')],sizes:['6','7','8','9'],
+    tips:'قيسي محيط الإصبع عند القاعدة بخيط رفيع، أو قيسي القطر الداخلي لخاتم يناسبك.'},
+  {id:'acc-bracelets',category:'accessories',name:'أساور وساعات',columns:[m('محيط المعصم'),m('طول السوار')],sizes:['S','M','L'],
+    tips:'لفّي شريطًا رفيعًا حول المعصم عند مكان السوار، وأضيفي مساحة للراحة إن رغبتِ.'},
+  {id:'acc-belts',category:'accessories',name:'أحزمة',columns:[m('محيط الخصر'),m('الطول الكلي'),t('المقاس')],sizes:['S','M','L','XL'],
+    tips:'قس الطول الكلي للحزام من طرف الإبزيم حتى الثقب المستخدم.'},
+  {id:'acc-hats',category:'accessories',name:'قبعات',columns:[m('محيط الرأس'),t('المقاس')],sizes:['S','M','L'],
+    tips:'قس محيط الرأس فوق الحاجبين مباشرة وحول الجزء الأعرض من الجمجمة.'},
   {id:'general-basic',category:'general',name:'جدول عام',columns:[m('القياس الأول'),m('القياس الثاني'),m('القياس الثالث')],sizes:['S','M','L','XL'],tips:''},
 ];
 const defaults={general:{theme:'classic',color:'#177e65'},women:{theme:'rose',color:'#b4456a'},men:{theme:'tailor',color:'#23375b'},
-  kids:{theme:'mint',color:'#1b8f7c'},shoes:{theme:'sport',color:'#d9480f'},pets:{theme:'paws',color:'#d9701a'}};
+  kids:{theme:'mint',color:'#1b8f7c'},shoes:{theme:'sport',color:'#d9480f'},pets:{theme:'paws',color:'#d9701a'},accessories:{theme:'gold',color:'#a8812c'}};
 const forCategory=category=>templates.filter(item=>item.category===category);
+/* Style fields every guide has; guides saved before they existed read as these values (the finder stays off for them). */
+const styleDefaults={category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
+  size_style:'chip',header_style:'auto',border_style:'auto',font_scale:'medium',sticky_size:true,size_label:'',header_bg:'',header_text:'',row_alt:'',
+  border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_video:'',logo_url:''};
 /* A new guide for a category; blank cells keep the "enter your own numbers" rule. */
 function fresh(templateId,category='general'){
   const item=templates.find(x=>x.id===templateId)||forCategory(category)[0]||templates[templates.length-1],base=defaults[item.category]||defaults.general;
-  return {title:'دليل المقاسات',button_label:'دليل المقاسات',unit:'cm',measurement_type:'garment',
+  return {...JSON.parse(JSON.stringify(styleDefaults)),title:'دليل المقاسات',button_label:'دليل المقاسات',unit:'cm',measurement_type:'garment',
     columns:item.columns.map(c=>({...c})),rows:item.sizes.map(size=>({size,values:item.columns.map(()=> '')})),
-    notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,
-    table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true};
+    notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true};
 }
-window.SizeGuideCatalog={templates,defaults,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
+window.SizeGuideCatalog={templates,defaults,styleDefaults,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
 })();

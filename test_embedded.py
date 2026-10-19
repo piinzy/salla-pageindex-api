@@ -119,7 +119,7 @@ class EmbeddedTests(unittest.TestCase):
 
     def test_own_product_guide_can_be_saved(self):
         with patch.object(d,'query',return_value={'merchant_id':'123'}), \
-             patch.object(sg,'query',side_effect=[{'product_id':'42','title':'اختبار'}, {'version':1,'is_published':True}]) as query:
+             patch.object(sg,'query',side_effect=[{'product_id':'42','title':'اختبار'}, None, {'version':1,'is_published':True}]) as query:
             r=self.client.put('/dashboard-api/size-guides/42?merchant=123',
                               json={'version':0,'guide':G,'action':'publish'},headers=self.headers)
         self.assertEqual(r.status_code,200)
