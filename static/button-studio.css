@@ -1,0 +1,83 @@
+/* Scoped to the studio; inherits Salla's light/dark dashboard tokens. */
+#buttonSettings{--studio-accent:var(--green,#177e65);--studio-soft:var(--surface-soft,#f5f8f6);--studio-surface:var(--surface,#fff)}
+#buttonSettings .studio-header{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+#buttonSettings .studio-header p{margin:7px 0 0;font-size:13px;max-width:620px}
+#buttonSettings .studio-badge{border:1px solid var(--line);border-radius:30px;padding:8px 13px;font-size:11px;color:var(--muted);white-space:nowrap}
+#buttonSettings .button-settings-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.9fr);gap:28px;margin-top:28px;align-items:start}
+#buttonSettings .button-settings-fields{border:0;padding:0;margin:0;min-width:0}
+#buttonSettings .studio-section{margin:0 0 24px;padding:0 0 24px;border-bottom:1px solid var(--line)}
+#buttonSettings .studio-section:last-child{border-bottom:0;margin-bottom:0}
+#buttonSettings .studio-section h3{display:flex;align-items:center;gap:9px;font-size:14px;margin:0 0 13px;color:var(--ink)}
+#buttonSettings .step-no{display:inline-grid;place-items:center;width:25px;height:25px;font:11px Arial;border:1px solid var(--line);border-radius:7px;color:var(--muted)}
+#buttonSettings .button-design-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#buttonSettings .button-design-option{position:relative;display:flex;flex-direction:column;gap:9px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--studio-surface);cursor:pointer;min-width:0}
+#buttonSettings .button-design-option.selected{border-color:var(--studio-accent);box-shadow:0 0 0 1px var(--studio-accent)}
+#buttonSettings .button-design-option:focus-within,#buttonSettings .studio-choice:focus-within,#buttonSettings .palette-choice:focus-visible{outline:2px solid var(--focus,var(--green));outline-offset:3px}
+#buttonSettings .button-design-head{display:flex;align-items:center;gap:6px;font-size:11px;padding:0 2px}
+#buttonSettings input[type=radio]{width:14px;height:14px;min-height:0;margin:0;accent-color:var(--studio-accent);flex-shrink:0}
+#buttonSettings .button-design-sample{pointer-events:none;display:grid!important;place-items:center;min-height:95px;padding:8px;background:#fff;color:#202222;border:1px solid #edf0ee;border-radius:6px;direction:rtl}
+#buttonSettings .button-design-option small{display:none}
+#buttonSettings .studio-help{font-size:11px;line-height:1.9;color:var(--muted);margin:10px 0 0}
+#buttonSettings .placement-group-label{font-size:11px;color:var(--muted);margin:14px 0 8px}
+#buttonSettings .placement-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#buttonSettings .studio-choice{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:42px;background:var(--studio-surface);font-size:11px;cursor:pointer;color:var(--ink)}
+#buttonSettings .studio-choice.selected{border-color:var(--studio-accent);background:var(--studio-soft);box-shadow:inset 0 0 0 1px var(--studio-accent)}
+#buttonSettings .place-map{position:relative;width:22px;height:26px;flex-shrink:0;border:1px solid currentColor;border-radius:3px;opacity:.65}
+#buttonSettings .place-map:before{content:'';position:absolute;width:11px;height:4px;right:4px;top:8px;background:currentColor;border-radius:2px}
+#buttonSettings .place-map[data-place*=bottom]:before,#buttonSettings .place-map[data-place*=floating]:before,#buttonSettings .place-map[data-place*=cart]:before{top:auto;bottom:3px}
+#buttonSettings .place-map[data-place*=left]:before{right:auto;left:2px;width:7px}
+#buttonSettings .place-map[data-place*=right]:before{right:2px;width:7px}
+#buttonSettings .place-map[data-place*=top]:before{top:3px}
+#buttonSettings .place-map[data-place=side_tab]:before{right:0;width:4px;height:9px}
+#buttonSettings .studio-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+#buttonSettings .studio-fields label,#buttonSettings .block-label{display:block;font-size:12px;color:var(--ink);margin-top:0}
+#buttonSettings .studio-fields select,#buttonSettings .studio-fields input,#buttonSettings .block-label>input{display:block;width:100%;margin-top:7px;font-size:12px;min-height:42px}
+#buttonSettings .studio-wide{grid-column:1/-1}
+#buttonSettings .palette-choices{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+#buttonSettings button.palette-choice{border:1px solid var(--line);border-radius:9px;padding:9px 4px;min-height:70px;background:var(--studio-surface);color:var(--ink);font-size:10px;font-weight:400;display:flex;flex-direction:column;align-items:center;gap:7px}
+#buttonSettings button.palette-choice.selected{border-color:var(--studio-accent);box-shadow:inset 0 0 0 1px var(--studio-accent)}
+#buttonSettings .palette-dot{width:23px;height:23px;border-radius:50%;border:1px solid #8884}
+#buttonSettings details.studio-custom{margin-top:15px;border:1px solid var(--line);border-radius:9px;padding:12px;background:var(--studio-surface)}
+#buttonSettings details.studio-custom>summary{cursor:pointer;font-size:12px;color:var(--ink)}
+#buttonSettings .button-color-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+#buttonSettings .button-color-field>label{font-size:11px;display:block;margin-bottom:7px;color:var(--muted)}
+#buttonSettings .button-color-pair{display:flex;gap:6px;align-items:center}
+#buttonSettings .button-color-pair input[type=color]{height:40px;width:42px;flex:0 0 42px;padding:4px}
+#buttonSettings .button-color-pair input[type=text]{width:100%;min-width:0;font:12px monospace;padding:10px 6px}
+#buttonSettings input:invalid{border-color:#b7473c}
+#buttonSettings .button-settings-fields:disabled{opacity:.65}
+#buttonSettings .button-settings-preview{position:sticky;top:18px;min-width:0;border:1px solid var(--line);border-radius:13px;background:var(--studio-soft);padding:16px}
+#buttonSettings .preview-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+#buttonSettings .preview-header strong{font-size:13px}
+#buttonSettings .preview-devices{display:flex;padding:3px;border:1px solid var(--line);border-radius:8px;gap:3px;background:var(--studio-surface)}
+#buttonSettings .preview-devices button{padding:5px 9px;min-height:30px;font-size:11px;border:0;border-radius:5px;background:transparent;color:var(--muted)}
+#buttonSettings .preview-devices button[aria-pressed=true]{background:var(--studio-accent);color:var(--button-ink,#fff)}
+#buttonSettings .button-preview-product{position:relative;background:#fff;color:#26372f;border:1px solid #e4e9e6;border-radius:12px;overflow:hidden;min-height:440px;padding:14px;direction:rtl;margin-inline:auto;isolation:isolate}
+#buttonSettings .button-preview-product[data-device=mobile]{max-width:330px;min-height:520px;padding:12px}
+#buttonSettings .button-preview-brand{font:14px Georgia,serif;letter-spacing:3px;border-bottom:1px solid #e9ece9;padding-bottom:12px;margin-bottom:14px;text-align:center;color:#243c30}
+#buttonSettings .preview-product-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+#buttonSettings [data-device=mobile] .preview-product-grid{grid-template-columns:1fr;gap:14px}
+#buttonSettings .preview-photo{position:relative;border-radius:8px;overflow:hidden;background:#ede7de;aspect-ratio:3/4;min-width:0;isolation:isolate}
+#buttonSettings [data-device=mobile] .preview-photo{aspect-ratio:4/3}
+#buttonSettings .preview-photo>svg{display:block;width:100%;height:100%}
+#buttonSettings .preview-photo-caption{position:absolute;top:10px;left:10px;background:#ffffffcf;padding:4px 7px;font-size:9px;border-radius:4px;color:#536159;pointer-events:none}
+#buttonSettings .preview-product-info{min-width:0;font-size:12px}
+#buttonSettings .preview-product-info h3{font-size:17px;line-height:1.6;margin:0 0 9px;color:#26372f}
+#buttonSettings .preview-price{display:flex;gap:7px;align-items:center;font-size:18px;font-weight:700;margin:0 0 12px;color:#26372f}
+#buttonSettings .preview-price small{font-size:10px;font-weight:400}.preview-category{color:#849087;font-size:10px;display:block;margin-bottom:7px}
+#buttonSettings .preview-options{margin-top:12px}.button-preview-size-label{font-size:12px;color:#617166;display:block;margin:10px 0}
+#buttonSettings .button-preview-sizes{display:flex;gap:5px;flex-wrap:wrap;direction:ltr;justify-content:flex-end}
+#buttonSettings .button-preview-sizes span{border:1px solid #dce1da;min-width:28px;text-align:center;padding:7px 5px;border-radius:5px;font-size:10px}
+#buttonSettings .button-preview-sizes span:nth-child(2){border-color:#243c30;background:#f3f5ef}
+#buttonSettings .preview-cart{display:block;background:#263d32;color:#fff;min-height:40px;border-radius:7px;padding:10px;text-align:center;margin-top:16px;font-size:11px}
+#buttonSettings .preview-caption{font-size:10px;color:#8a968e;margin:12px 0 0}
+#buttonSettings #buttonLivePreview{font-family:Tahoma,Arial,sans-serif}
+#buttonSettings #buttonPlacementHint{font-size:11px;line-height:1.9;color:var(--muted);margin:12px 0 0}
+#buttonSettings .studio-savebar{position:sticky;bottom:0;z-index:5;background:var(--studio-surface);padding:16px 0 4px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#buttonSettings .studio-savebar button{font-size:12px;min-height:42px}
+#buttonSettings #buttonSettingsState{font-size:11px;line-height:1.8;min-height:20px;margin:8px 0 0}
+#buttonSettings [hidden]{display:none!important}
+#buttonSettings #buttonContrastHint{padding:8px 11px;border:1px solid var(--line);border-radius:7px;font-size:11px;color:var(--muted);line-height:1.7}
+@media(min-width:1500px){#buttonSettings .button-design-choices{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:1120px){#buttonSettings .button-settings-layout{grid-template-columns:1fr}#buttonSettings .button-settings-preview{position:static;max-width:650px;width:100%;grid-row:1}}
+@media(max-width:550px){#buttonSettings .button-design-choices{grid-template-columns:repeat(2,minmax(0,1fr))}#buttonSettings .palette-choices{grid-template-columns:repeat(5,minmax(0,1fr))}#buttonSettings .button-settings-layout{gap:20px}#buttonSettings .studio-fields{grid-template-columns:1fr}#buttonSettings .button-settings-preview{padding:10px}#buttonSettings .studio-savebar button{flex:1}#buttonSettings .placement-choices{grid-template-columns:1fr 1fr}#buttonSettings .studio-choice{font-size:10px;padding:8px 6px}#buttonSettings .place-map{display:none}}
