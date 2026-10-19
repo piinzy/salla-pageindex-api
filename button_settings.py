@@ -10,21 +10,33 @@ from dashboard import authenticated, query, require_store
 router = APIRouter()
 HEX = r'^#[0-9a-fA-F]{6}$'
 
-class ButtonSettings(BaseModel):
+DESIGNS = Literal['link', 'outline', 'solid', 'pill', 'soft', 'dashed', 'split', 'band',
+                  'card', 'icon', 'row', 'tile', 'gradient', 'glass', 'raised', 'chip']
+PLACEMENTS = Literal['above_price', 'below_price', 'below_title', 'before_options',
+                     'beside_size', 'above_cart', 'beside_cart', 'image_top_right',
+                     'image_top_left', 'image_bottom_right', 'image_bottom_left',
+                     'floating_left', 'floating_right', 'side_tab', 'mobile_bar']
+MAX_EXTRA_BUTTONS = 3
+
+class ButtonStyle(BaseModel):
+    """One button: its look, place and size. The first button of a store is a ButtonStyle too."""
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
-    design: Literal['link', 'outline', 'solid', 'pill', 'soft', 'dashed', 'split',
-                    'band', 'card', 'icon', 'row', 'tile'] = 'outline'
-    placement: Literal['above_price', 'below_price', 'below_title', 'before_options',
-                       'beside_size', 'above_cart', 'beside_cart', 'image_top_right',
-                       'image_top_left', 'image_bottom_right', 'image_bottom_left',
-                       'floating_left', 'floating_right', 'side_tab', 'mobile_bar'] = 'above_price'
+    design: DESIGNS = 'outline'
+    placement: PLACEMENTS = 'above_price'
     mobile_placement: Literal['inherit', 'above_price', 'below_price', 'below_title',
                               'before_options', 'beside_size', 'above_cart', 'beside_cart',
                               'image_top_right', 'image_top_left', 'image_bottom_right',
                               'image_bottom_left', 'floating_left', 'floating_right',
                               'side_tab', 'mobile_bar'] = 'inherit'
+    devices: Literal['all', 'desktop', 'mobile'] = 'all'
     alignment: Literal['start', 'center', 'end'] = 'start'
     size: Literal['small', 'medium', 'large'] = 'medium'
+    scale: int = Field(default=100, ge=70, le=150, strict=True)
+    width: Literal['auto', 'full'] = 'auto'
+    radius: int = Field(default=-1, ge=-1, le=32, strict=True)
+    depth: Literal['flat', 'soft', 'raised', 'deep'] = 'soft'
+    effect: Literal['none', 'lift', 'tilt'] = 'lift'
+    icon: Literal['ruler', 'shirt', 'shoe', 'paw', 'tape', 'none'] = 'ruler'
     edge_offset: int = Field(default=16, ge=0, le=48, strict=True)
     bottom_offset: int = Field(default=88, ge=0, le=240, strict=True)
 
@@ -45,6 +57,10 @@ class ButtonSettings(BaseModel):
     border_color: str = Field(default='#d9e3dc', pattern=HEX)
     icon_color: str = Field(default='#243c30', pattern=HEX)
     secondary_text_color: str = Field(default='#63756a', pattern=HEX)
+
+class ButtonSettings(ButtonStyle):
+    """Store-wide settings: the main button plus up to three extra buttons."""
+    extra_buttons: list[ButtonStyle] = Field(default_factory=list, max_length=MAX_EXTRA_BUTTONS)
 
 class SaveButtonSettings(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -105,4 +121,10 @@ def placement_script():
 def studio_styles():
     return FileResponse(Path(__file__).parent / 'static/button-studio.css',
                         media_type='text/css',
+                        headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})
+
+@router.get('/size-guide-catalog.js', include_in_schema=False)
+def catalog_script():
+    return FileResponse(Path(__file__).parent / 'static/size-guide-catalog.js',
+                        media_type='application/javascript',
                         headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})

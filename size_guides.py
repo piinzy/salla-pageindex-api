@@ -41,6 +41,13 @@ class Guide(BaseModel):
     notes:str=Field(default='',max_length=2000)
     instructions:str=Field(default='',max_length=3000)
     color:str=Field(default='#177e65',pattern=r'^#[0-9a-fA-F]{6}$')
+    category:Literal['general','women','men','kids','shoes','pets']='general'
+    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','minimal']='classic'
+    table_style:Literal['zebra','lines','cards','plain']='zebra'
+    density:Literal['compact','comfortable']='comfortable'
+    corners:Literal['sharp','soft','round']='soft'
+    depth3d:bool=True
+    header_icon:bool=True
     @model_validator(mode='after')
     def validate_grid(self):
         if any(not c.label.strip() for c in self.columns):raise ValueError('اسم العمود مطلوب')

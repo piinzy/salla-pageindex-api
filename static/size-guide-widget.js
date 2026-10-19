@@ -34,37 +34,47 @@
       if (response.status===404) return null;if (!response.ok) throw Error('guide');return await response.json();
     } finally {clearTimeout(timeout);}
   }
-  let placementEngine=null,liveSettings=null;
-  function place(target,ctx,settings) {
-    if(!ctx)return;
-    placementEngine=placementEngine||window.SizeGuidePlacement.create();
-    liveSettings=settings;placementEngine.apply(target,ctx,settings);
+  // One slot per configured button: the main one plus up to three extras, each with its own placement engine.
+  let slots=[];
+  function teardown(){for(const slot of slots){slot.engine.reset();slot.host.remove();}slots=[];host=null;}
+  function place(slot,ctx){if(ctx)slot.engine.apply(slot.host,ctx,slot.settings);}
+  function build(data,ctx,activate){
+    teardown();
+    const normalized=window.SizeGuideButton.normalize(data.button_settings||{});
+    [normalized,...normalized.extra_buttons].forEach((settings,index)=>{
+      const target=document.createElement('span');
+      if(index===0)target.id='product-size-guide';else target.dataset.sizeGuideExtra=String(index);
+      const slot={host:target,settings,engine:window.SizeGuidePlacement.create(),rendered:null};
+      slot.rendered=window.SizeGuideButton.render(target,settings,data.guide,activate);
+      slots.push(slot);place(slot,ctx);
+    });
+    host=slots[0].host;
   }
   async function mount() {
     if (loading) return;
     const ctx=context(),key=ctx?.key||'';
-    if (key===current&&(!host||host.isConnected)) {if(host&&liveSettings)place(host,ctx,liveSettings);return;}
-    current=key;placementEngine?.reset();host?.remove();host=null;liveSettings=null;if(!ctx)return;
+    if (key===current&&(!host||host.isConnected)) {for(const slot of slots)place(slot,ctx);return;}
+    current=key;teardown();if(!ctx)return;
     loading=true;
     try {
       const data=await getGuide(ctx.id);if(!data||context()?.key!==key)return;
       await Promise.all([loadAsset('size-guide-button.js','SizeGuideButton'),loadAsset('size-guide-placement.js','SizeGuidePlacement')]);if(context()?.key!==key)return;
-      const target=document.createElement('span');target.id='product-size-guide';host=target;
-      let rendered;
       const activate=async()=>{
-        const button=rendered.button;button.disabled=true;button.setAttribute('aria-busy','true');
+        const buttons=slots.map(slot=>slot.rendered.button);
+        for(const button of buttons){button.disabled=true;button.setAttribute('aria-busy','true');}
         try {
           const [fresh]=await Promise.all([getGuide(ctx.id),loadAsset('size-guide-renderer.js','SizeGuideUI')]);
-          if (context()?.key!==key||!target.isConnected) return;
-          if (!fresh){placementEngine?.reset();target.remove();host=null;liveSettings=null;return;}
-          rendered=window.SizeGuideButton.render(target,fresh.button_settings,fresh.guide,activate);
-          place(target,context(),rendered.settings);rendered.button.focus();
+          if (context()?.key!==key||!host?.isConnected) return;
+          if (!fresh){teardown();return;}
+          build(fresh,context(),activate);slots[0].rendered.button.focus();
           window.SizeGuideUI.open(fresh.guide,fresh.product_name);
-        } catch {const message='تعذر التحميل، اضغط للمحاولة مجددًا';button.querySelector('.label').textContent=message;button.setAttribute('aria-label',message);button.title=message;}
-        finally {button.disabled=false;button.removeAttribute('aria-busy');}
+        } catch {
+          const message='تعذر التحميل، اضغط للمحاولة مجددًا';
+          for(const button of buttons){button.querySelector('.label').textContent=message;button.setAttribute('aria-label',message);button.title=message;}
+        }
+        finally {for(const button of buttons){button.disabled=false;button.removeAttribute('aria-busy');}}
       };
-      rendered=window.SizeGuideButton.render(target,data.button_settings,data.guide,activate);
-      place(target,context(),rendered.settings);
+      build(data,ctx,activate);
     } catch {current='';/* Retry on the next scheduled update without interrupting shopping. */}
     finally {loading=false;if((context()?.key||'')!==key)schedule();}
   }
