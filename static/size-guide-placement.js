@@ -31,14 +31,21 @@
     function relative(e){const old=e.style.position;if(!getComputedStyle(e).position||getComputedStyle(e).position==='static'){
       e.style.position='relative';return ()=>{if(e.style.position==='relative')e.style.position=old;};}return ()=>{};}
     function wrapper(anchor,kind){
-      const row=document.createElement('div');row.dataset.dalilakLayout=kind;
-      row.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:100%;width:100%';
-      anchor.before(row);row.append(anchor);
-      const oldFlex=anchor.style.flex;const applied=kind==='cart'?'1 1 180px':'0 1 auto';anchor.style.flex=applied;
-      return {row,cleanup:()=>{if(anchor.style.flex===applied)anchor.style.flex=oldFlex;if(row.parentNode)row.before(anchor);row.remove();}};
+      // Several buttons may sit beside the same anchor; they share one row and the last one out restores the theme.
+      let row=anchor.parentElement,applied=kind==='cart'?'1 1 180px':'0 1 auto';
+      if(row?.dataset.dalilakLayout===kind)row._sgUsers=(row._sgUsers||1)+1;
+      else{
+        row=document.createElement('div');row.dataset.dalilakLayout=kind;row._sgUsers=1;row._sgFlex=anchor.style.flex;
+        row.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:100%;width:100%';
+        anchor.before(row);row.append(anchor);anchor.style.flex=applied;
+      }
+      return {row,cleanup:()=>{
+        if(--row._sgUsers>0)return;
+        if(anchor.style.flex===applied)anchor.style.flex=row._sgFlex;if(row.parentNode)row.before(anchor);row.remove();}};
     }
     function apply(host,ctx,raw){
-      const s=window.SizeGuideButton.normalize(raw),mobile=viewport();
+      const s=window.SizeGuideButton.normalizeOne(raw),mobile=viewport();
+      const hidden=(s.devices==='mobile'&&!mobile)||(s.devices==='desktop'&&mobile);
       let requested=mobile&&s.mobile_placement!=='inherit'?s.mobile_placement:s.placement;
       let placement=requested==='mobile_bar'&&!mobile?'above_price':requested;
       const a=config.anchors?config.anchors(ctx):anchors(ctx);
@@ -54,7 +61,7 @@
       // If the theme exposes none of the safe anchors, retain a usable button.
       if(!floating()&&!anchor)placement='floating_left';
       const parent=floating()?(config.surface||document.body):anchor;
-      const modeKey=[placement,s.alignment,s.edge_offset,s.bottom_offset,mobile].join('|');
+      const modeKey=[placement,s.alignment,s.edge_offset,s.bottom_offset,mobile,hidden].join('|');
       if(!active||active.anchor!==parent||active.mode!==modeKey||placedHost!==host||!host.isConnected||!active.container?.isConnected){
         reset();placedHost=host;
         let container=parent;
@@ -86,9 +93,10 @@
         else if(anchor.previousElementSibling!==host)anchor.before(host);
         active.container=host.parentElement;
       }
+      if(hidden)css+='display:none!important;';
       if(styleKey!==css){host.style.cssText=css;styleKey=css;}
       host.dataset.placement=placement;
-      return {requested,placement,fallback:requested!==placement,mobile};
+      return {requested,placement,fallback:requested!==placement,mobile,hidden};
     }
     return {apply,reset};
   }

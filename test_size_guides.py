@@ -15,6 +15,25 @@ G={'title':'دليل المقاسات','button_label':'دليل المقاسات
 class SizeGuideTests(unittest.TestCase):
     def test_grid_shape(self):
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'rows':[{'size':'S','values':['90']}]})
+    def test_category_theme_and_style_options(self):
+        old=sg.Guide(**G)  # guides saved before these options existed
+        self.assertEqual((old.category,old.theme,old.table_style,old.density,old.corners,old.depth3d,old.header_icon),
+                         ('general','classic','zebra','comfortable','soft',True,True))
+        new=sg.Guide(**{**G,'category':'pets','theme':'paws','table_style':'cards','density':'compact','corners':'round','depth3d':False,'header_icon':False})
+        self.assertEqual((new.category,new.theme,new.table_style,new.depth3d),('pets','paws','cards',False))
+        for bad in [{'category':'cars'},{'theme':'neon'},{'table_style':'grid'},{'density':'tiny'},{'corners':'blob'},{'depth3d':'maybe'}]:
+            with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,**bad})
+    def test_themes_and_categories_match_the_window_script(self):
+        import re,pathlib
+        script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')
+        themes=re.findall(r"\{id:'([a-z]+)',name:'[^']+',accent",script)
+        cats=re.findall(r"\{id:'([a-z]+)',name:'[^']+',emblem",script)
+        self.assertEqual(set(themes),set(sg.Guide.model_fields['theme'].annotation.__args__))
+        self.assertEqual(set(cats),set(sg.Guide.model_fields['category'].annotation.__args__))
+    def test_catalog_script_is_served(self):
+        import button_settings as bs
+        app=FastAPI();app.include_router(bs.router);r=TestClient(app).get('/size-guide-catalog.js')
+        self.assertEqual(r.status_code,200);self.assertIn('SizeGuideCatalog',r.text)
     def test_reject_invalid_color(self):
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'color':'red;url(evil)'})
     def test_blank_draft_allowed_but_not_published(self):

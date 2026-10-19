@@ -1,9 +1,59 @@
-// Integration boundaries with a mocked Salla host; no browser session or store data.
+// Real vendored SDK in a browser-like VM, plus mocked app integration boundaries.
+// No browser session or store data is accessed.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname,'static/salla-embedded.js'),'utf8');
+
+async function checkVendoredSdk() {
+  const listeners = new Map(), messages = [];
+  const parent = {postMessage(message) { messages.push(message); }};
+  const window = {
+    parent, location:{search:'?token=temporary-salla-token'},
+    addEventListener(type,callback) {
+      if (!listeners.has(type)) listeners.set(type,new Set());
+      listeners.get(type).add(callback);
+    },
+    removeEventListener(type,callback) { listeners.get(type)?.delete(callback); },
+  };
+  const context = vm.createContext({window,
+    document:{documentElement:{scrollHeight:600}},
+    console,URL,URLSearchParams,setTimeout,clearTimeout,queueMicrotask,
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'static/salla-embedded-sdk-0.2.6.js'),'utf8'),context);
+  const sdk = context.SallaEmbeddedSDK.embedded;
+  const dispatch = (event,payload,origin='https://s.salla.sa',extra={}) => {
+    const data = {event,payload,timestamp:Date.now(),source:'merchant-dashboard',...extra};
+    for (const callback of listeners.get('message') || []) callback({origin,source:parent,data});
+  };
+  try {
+    assert.equal(typeof context.process,'undefined','a browser must not need a Node process global');
+    const pending = sdk.init();
+    assert.equal(messages.at(-1).event,'embedded::iframe.ready');
+    dispatch('embedded::context.provide',{layout:{theme:'light'}},'https://s.salla.sa.evil.example');
+    await Promise.resolve();
+    assert.equal(sdk.isReady(),false,'an untrusted origin must not complete the handshake');
+    // This valid host message used to throw ReferenceError: process is not defined.
+    dispatch('embedded::context.provide',{layout:{theme:'dark'}});
+    assert.equal((await pending).layout.theme,'dark');
+    assert.equal(sdk.auth.getToken(),'temporary-salla-token');
+    assert.equal(messages.some(message=>message.event==='embedded::ready'),false);
+    sdk.ready(); sdk.ready();
+    assert.equal(messages.filter(message=>message.event==='embedded::ready').length,1);
+    let theme = 'dark'; sdk.onThemeChange(value=>{ theme=value; });
+    dispatch('embedded::theme.change',{theme:'light'},'https://untrusted.example');
+    assert.equal(theme,'dark','the production origin filter must remain active');
+    dispatch('embedded::theme.change',{theme:'light'});
+    assert.equal(theme,'light');
+    const nav = sdk.nav.addNavItem({title:'Products',value:'catalog',url:'/embedded/app/755502526/size-guide'});
+    const request = messages.at(-1);
+    dispatch('embedded::nav.addItem.response',{item:{value:'catalog'}},'https://s.salla.sa',{requestId:request.requestId});
+    assert.equal((await nav).value,'catalog');
+  } finally { sdk.destroy(); }
+  assert.equal(listeners.get('message').size,0);
+  console.log('Vendored SDK checks passed without process: host handshake, origin filtering, ready, theme and navigation.');
+}
 
 function setup({exchangeOk=true, framed=true}={}) {
   const nodes = new Map(), calls = [], elements = [];
@@ -39,6 +89,7 @@ function setup({exchangeOk=true, framed=true}={}) {
 }
 
 (async()=>{
+  await checkVendoredSdk();
   const ok=setup();
   await ok.client.start(async()=>ok.calls.push('boot'));
   assert.ok(ok.calls.indexOf('boot')<ok.calls.indexOf('ready'));
