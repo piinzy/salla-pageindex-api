@@ -7,7 +7,7 @@
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
-    "test": "node test_embedded_client.cjs && node test_button_ui.cjs && node test_button_placements.cjs && node test_guide_themes.cjs && node test_guide_import.cjs && node test_guide_editor.cjs"
+    "test": "node test_embedded_client.cjs && node test_button_ui.cjs && node test_button_placements.cjs && node test_guide_themes.cjs && node test_guide_import.cjs && node test_guide_editor.cjs && node test_quick_lookup.cjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3"

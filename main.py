@@ -29,7 +29,8 @@ from size_library import router as library_router
 from size_stats import router as stats_router, initialize as initialize_size_stats
 from ai_import import router as ai_router
 from size_presets import router as presets_router, initialize as initialize_size_presets
-for extra_router in (library_router, stats_router, ai_router, presets_router):
+from quick_edit import router as quick_router, initialize as initialize_quick_edit
+for extra_router in (library_router, stats_router, ai_router, presets_router, quick_router):
     app.include_router(extra_router)
 from embedded import router as embedded_router, RedactTokenQuery
 app.include_router(embedded_router)
@@ -90,6 +91,7 @@ def startup_event():
     initialize_button_settings()
     initialize_size_stats()
     initialize_size_presets()
+    initialize_quick_edit()
 
 
 @app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
