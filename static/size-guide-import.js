@@ -60,5 +60,26 @@ function imageToDataUrl(file,maxSide=1600){
     img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('تعذر قراءة الصورة.'));};img.src=url;
   });
 }
-window.SizeGuideImport={parseRows,toGrid,imageToDataUrl,MAX_COLUMNS,MAX_ROWS};
+/* "Complete the column": from the first two cells (90 then 94, or 86-90 then 90-94) continue the same step into the empty cells below. */
+const digits=value=>String(value).trim().replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/٫/g,'.');
+function readCell(value){
+  const m=digits(value).match(/^(\d+(?:\.\d+)?)(?:\s*([-–])\s*(\d+(?:\.\d+)?))?$/);if(!m)return null;
+  const places=n=>(String(n).split('.')[1]||'').length;
+  return {lo:Number(m[1]),hi:m[3]===undefined?Number(m[1]):Number(m[3]),range:m[3]!==undefined,dash:m[2]||'-',places:Math.max(places(m[1]),m[3]===undefined?0:places(m[3]))};
+}
+function fillSeries(values){
+  const a=readCell(values[0]),b=readCell(values[1]);
+  if(!a||!b||a.range!==b.range)return null;
+  const stepLo=b.lo-a.lo,stepHi=a.range?b.hi-a.hi:stepLo;
+  if(!stepLo&&!stepHi)return null;
+  const places=Math.min(2,Math.max(a.places,b.places,...[stepLo,stepHi].map(x=>(String(Math.round(x*100)/100).split('.')[1]||'').length)));
+  const show=n=>Number(n.toFixed(places)).toString(),out=values.slice();let filled=0;
+  for(let i=2;i<out.length;i++){
+    if(String(out[i]).trim()!=='')continue;
+    const lo=a.lo+stepLo*i,hi=a.hi+stepHi*i;if(lo<0||hi<0)break;
+    out[i]=a.range?show(lo)+a.dash+show(hi):show(lo);filled++;
+  }
+  return filled?{values:out,filled}:null;
+}
+window.SizeGuideImport={parseRows,toGrid,imageToDataUrl,fillSeries,MAX_COLUMNS,MAX_ROWS};
 })();

@@ -119,5 +119,22 @@ try{
    UI.preview(host,{...guide,how_video:'https://evil.example.com/watch?v=xxxxxxxxxxx',logo_url:'javascript:alert(1)'},'منتج');
    const bad=shadow(host);assert.equal(bad.querySelector('iframe'),null);assert.equal(bad.querySelector('img.logo'),null);assert.ok(bad.querySelector('svg.emblem'));
    UI.preview(host,{...guide,how_video:'https://vimeo.com/123456789'},'منتج');assert.equal(shadow(host).querySelector('iframe').src,'https://player.vimeo.com/video/123456789');}
-  console.log('PASS: 7 categories x 12 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media and dialog.');
+  // the store's colour: kept when readable, nudged when not, header suited to its weight
+  {const b=UI.brandStyle('#7b2338');assert.equal(b.color,'#7b2338');assert.equal(b.adjusted,false);assert.equal(b.header_style,'solid');
+   const pale=UI.brandStyle('#ffe9a8');assert.equal(pale.adjusted,true);assert.ok(UI.contrast(pale.color,'#ffffff')>=3,'a pale brand colour is darkened until it reads');
+   const onDark=UI.brandStyle('#202020','#1d2326');assert.equal(onDark.adjusted,true);assert.ok(UI.contrast(onDark.color,'#1d2326')>=3,'and lightened on a dark table');
+   assert.equal(UI.brandStyle('#177e65').header_style,'solid');assert.equal(UI.brandStyle('#ffffff').adjusted,true,'white on white is darkened to a usable colour');
+   for(const bad of ['red','#12345','','javascript:x',null,undefined])assert.equal(UI.brandStyle(bad),null);
+   assert.ok(Math.abs(UI.contrast('#000000','#ffffff')-21)<.01);}
+  // ready-made looks only touch appearance fields and render with every theme
+  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.length,6);
+   for(const preset of C.stylePresets){
+     assert.ok(Object.keys(preset.style).every(k=>allowed.has(k)),'only appearance fields: '+preset.id);
+     for(const key of ['header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'])assert.equal(preset.style[key],'','no leftover custom colours: '+preset.id);
+     assert.ok(UI.themes.some(t=>t.id===preset.style.theme));
+     const host=d.createElement('div');UI.preview(host,{...guide,...preset.style,color:UI.themes.find(t=>t.id===preset.style.theme).accent},'منتج');assert.ok(shadow(host).querySelector('table'));
+   }
+   assert.equal(C.STYLE_FIELDS.filter(k=>['title','columns','rows','notes','instructions','category','language','calculator'].includes(k)).length,0,'content never travels with a look');
+   for(const c of UI.categories){const list=C.phrasesFor(c.id);assert.ok(list.length>=4);assert.ok(list.every(x=>x.length<=300&&x.trim()));assert.equal(new Set(list).size,list.length)}}
+  console.log('PASS: 7 categories x 12 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
 }finally{w.close();}

@@ -56,6 +56,28 @@ const templates=[
 ];
 const defaults={general:{theme:'classic',color:'#177e65'},women:{theme:'rose',color:'#b4456a'},men:{theme:'tailor',color:'#23375b'},
   kids:{theme:'mint',color:'#1b8f7c'},shoes:{theme:'sport',color:'#d9480f'},pets:{theme:'paws',color:'#d9701a'},accessories:{theme:'gold',color:'#a8812c'}};
+/* Ready-made looks. They change the appearance only, never the table's numbers or texts. */
+const STYLE_FIELDS=['theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style','font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'];
+const noCustomColors={header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''};
+const stylePresets=[
+  {id:'elegant',name:'أنيق',hint:'بطاقات ناعمة وزوايا دائرية',style:{theme:'rose',table_style:'cards',density:'comfortable',corners:'round',depth3d:true,header_icon:true,size_style:'pill',header_style:'tint',border_style:'none',font_scale:'medium'}},
+  {id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large'}},
+  {id:'calm',name:'هادئ',hint:'خطوط رفيعة وألوان منعشة',style:{theme:'mint',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:true,size_style:'underline',header_style:'plain',border_style:'thin',font_scale:'medium'}},
+  {id:'sporty',name:'رياضي',hint:'مدمج وحيوي بشارات مجسمة',style:{theme:'sport',table_style:'zebra',density:'compact',corners:'soft',depth3d:true,header_icon:true,size_style:'chip',header_style:'solid',border_style:'thin',font_scale:'medium'}},
+  {id:'luxury',name:'فاخر',hint:'ذهبي بخط تحت الترويسة',style:{theme:'gold',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
+  {id:'minimal',name:'بسيط',hint:'أبيض نظيف بلا زخرفة',style:{theme:'minimal',table_style:'plain',density:'compact',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'plain',border_style:'none',font_scale:'medium'}},
+].map(p=>({...p,style:{...noCustomColors,sticky_size:true,...p.style}}));
+/* Short notes a store tends to repeat under its tables; the merchant can add their own. */
+const phraseSets={
+  general:['القياسات مأخوذة والقطعة مفرودة على سطح مستوٍ.','قد يختلف القياس الفعلي من 1 إلى 2 سم.','راجع «طريقة القياس» قبل اختيار المقاس.','المقاسات بالسنتيمتر ما لم يُذكر غير ذلك.'],
+  women:['قماش مطاطي: يمكنك اختيار مقاسك المعتاد.','القَصّة واسعة قليلًا عند الأكمام.'],
+  men:['القَصّة مستقيمة (Regular Fit).','القماش قطني وقد ينكمش قليلًا بعد الغسيل الأول.'],
+  kids:['قياسات الأطفال تقريبية وتختلف بحسب نموّ الطفل.'],
+  shoes:['المقاسات حسب طول القدم؛ إن كنت بين مقاسين فاختر الأكبر.','قِس القدم في آخر اليوم وبالجورب الذي ترتديه عادةً.'],
+  pets:['قِس الحيوان وهو واقف وأضف مساحة للراحة.','اترك مسافة إصبعين بين الطوق والرقبة.'],
+  accessories:['المقاسات تقريبية؛ قِس بشريط ناعم لأفضل دقة.'],
+};
+const phrasesFor=category=>category==='general'?[...phraseSets.general]:[...phraseSets.general,...(phraseSets[category]||[])];
 const forCategory=category=>templates.filter(item=>item.category===category);
 /* Style fields every guide has; guides saved before they existed read as these values (the finder stays off for them). */
 const styleDefaults={category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
@@ -68,5 +90,5 @@ function fresh(templateId,category='general'){
     columns:item.columns.map(c=>({...c})),rows:item.sizes.map(size=>({size,values:item.columns.map(()=> '')})),
     notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true};
 }
-window.SizeGuideCatalog={templates,defaults,styleDefaults,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
+window.SizeGuideCatalog={templates,defaults,styleDefaults,stylePresets,STYLE_FIELDS,phrasesFor,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
 })();

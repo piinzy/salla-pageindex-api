@@ -8,7 +8,7 @@ os.environ.setdefault('DASHBOARD_PASSWORD', 'testing-password-only')
 os.environ.setdefault('DASHBOARD_SESSION_SECRET', 'testing-session-secret-for-unit-tests-only')
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import dashboard, size_guides as sg, size_library as lib, size_stats as stats, button_settings as bs
+import dashboard, size_guides as sg, size_library as lib, size_stats as stats, size_presets as presets, button_settings as bs
 from test_size_guides import G
 
 @unittest.skipUnless(DB, 'TEST_DATABASE_URL not set')
@@ -16,15 +16,15 @@ class LibraryDatabaseTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         dashboard.query('CREATE TABLE IF NOT EXISTS stores (merchant_id TEXT PRIMARY KEY, access_token TEXT, refresh_token TEXT, store_name TEXT)')
-        dashboard.initialize(); sg.initialize(); bs.initialize(); stats.initialize()
+        dashboard.initialize(); sg.initialize(); bs.initialize(); stats.initialize(); presets.initialize()
         app = FastAPI()
-        for router in (sg.router, lib.router, stats.router):
+        for router in (sg.router, lib.router, stats.router, presets.router):
             app.include_router(router)
         app.dependency_overrides[dashboard.authenticated] = lambda: None
         cls.client = TestClient(app)
 
     def setUp(self):
-        for table in ('size_guide_events', 'size_guide_library', 'product_size_guides', 'dashboard_catalog', 'stores'):
+        for table in ('size_guide_presets', 'size_guide_events', 'size_guide_library', 'product_size_guides', 'dashboard_catalog', 'stores'):
             dashboard.query(f'DELETE FROM {table}')
         dashboard.query("INSERT INTO stores(merchant_id,access_token) VALUES('123','t'),('999','t')")
         for pid in ('1', '2', '3', '4'):
@@ -131,6 +131,29 @@ class LibraryDatabaseTests(unittest.TestCase):
         self.assertEqual([(t['product_id'], t['opens']) for t in data['top']], [('1', 2)])
         self.assertEqual(self.call('GET', '/dashboard-api/size-guide-stats?days=0').status_code, 400)
         self.assertEqual(self.call('GET', '/dashboard-api/size-guide-stats', merchant='999').json()['opens'], 0)
+
+    def test_saved_looks_and_phrases_are_per_store_and_limited(self):
+        look = {'theme': 'gold', 'color': '#a8812c', 'table_style': 'lines', 'size_style': 'plain'}
+        r = self.call('POST', '/dashboard-api/size-presets', json={'kind': 'style', 'name': 'تصميمي', 'style': look})
+        self.assertEqual(r.status_code, 200, r.text); pid = r.json()['preset_id']
+        self.assertEqual(r.json()['style']['theme'], 'gold'); self.assertEqual(r.json()['style']['density'], 'comfortable', 'unspecified fields get safe defaults')
+        self.call('POST', '/dashboard-api/size-presets', json={'kind': 'phrase', 'name': 'جملة', 'text': 'القياسات تقريبية'})
+        data = self.call('GET', '/dashboard-api/size-presets').json()
+        self.assertEqual([x['name'] for x in data['styles']], ['تصميمي']); self.assertEqual(data['phrases'][0]['text'], 'القياسات تقريبية')
+        other = self.call('GET', '/dashboard-api/size-presets', merchant='999').json()
+        self.assertEqual(other, {'styles': [], 'phrases': []}, 'stores never see each other\'s designs')
+        self.assertEqual(self.call('DELETE', f'/dashboard-api/size-presets/{pid}', merchant='999').status_code, 404)
+        self.assertEqual(self.call('DELETE', '/dashboard-api/size-presets/nothex').status_code, 404)
+        self.assertEqual(self.call('DELETE', f'/dashboard-api/size-presets/{pid}').json(), {'deleted': True})
+        self.assertEqual(self.call('GET', '/dashboard-api/size-presets').json()['styles'], [])
+        # content is rejected, and each kind is capped at the limit even when requests arrive together
+        bad = self.call('POST', '/dashboard-api/size-presets', json={'kind': 'style', 'name': 'x', 'style': {**look, 'title': 'يتسلل'}})
+        self.assertEqual(bad.status_code, 422)
+        for i in range(presets.MAX_PER_KIND - 1):   # one phrase was saved above
+            self.assertEqual(self.call('POST', '/dashboard-api/size-presets', json={'kind': 'phrase', 'name': f'p{i}', 'text': f'جملة {i}'}).status_code, 200)
+        over = self.call('POST', '/dashboard-api/size-presets', json={'kind': 'phrase', 'name': 'زائدة', 'text': 'x'})
+        self.assertEqual(over.status_code, 400); self.assertIn('الأقصى', over.json()['detail'])
+        self.assertEqual(self.call('POST', '/dashboard-api/size-presets', json={'kind': 'style', 'name': 'ما زال متاحًا', 'style': look}).status_code, 200, 'the limit is per kind')
 
 if __name__ == '__main__':
     unittest.main()

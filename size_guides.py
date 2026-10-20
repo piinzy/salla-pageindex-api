@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, Field, ConfigDict, create_model, field_validator, model_validator
 from psycopg2.extras import Json
 from dashboard import query, authenticated, require_store
 from button_settings import ButtonSettings
@@ -101,6 +101,12 @@ class Guide(BaseModel):
             if len(r.values)!=len(self.columns):raise ValueError('عدد الخلايا لا يطابق الأعمدة')
             if any(len(v)>60 for v in r.values):raise ValueError('قيمة الخلية طويلة')
         return self
+
+# Appearance only (never the table's contents): what a saved design ("preset") may carry.
+STYLE_FIELDS=('theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style',
+              'font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text')
+GuideStyle=create_model('GuideStyle',__config__=ConfigDict(extra='forbid'),
+                        **{name:(Guide.model_fields[name].annotation,Guide.model_fields[name]) for name in STYLE_FIELDS})
 
 class SaveGuide(BaseModel):
     model_config=ConfigDict(extra='forbid')

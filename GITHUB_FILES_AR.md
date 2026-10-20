@@ -23,6 +23,7 @@
 | main.py | استبدل في جذر المستودع |
 | size_library.py | أضف ملفًا جديدًا في جذر المستودع |
 | size_stats.py | أضف ملفًا جديدًا في جذر المستودع |
+| size_presets.py | أضف ملفًا جديدًا في جذر المستودع |
 | ai_import.py | أضف ملفًا جديدًا في جذر المستودع |
 | static/dashboard.html | استبدل |
 | static/button-settings-admin.js | استبدل |

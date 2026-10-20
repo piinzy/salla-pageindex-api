@@ -193,3 +193,31 @@ label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:
 #stats .stats-chart .bar{flex:1;min-width:2px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 75%,#fff),var(--accent));box-shadow:inset 0 1px 0 #fff5}
 #stats .sub-title{font-size:14px;margin:22px 0 10px}
 @media(max-width:700px){#editor .import-grid{grid-template-columns:1fr}#catalog .bulk-grid{grid-template-columns:1fr}}
+/* ready-made looks, saved designs, phrases */
+#editor .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+#editor .preset-card{position:relative}
+#editor .preset-pick{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:9px 9px 11px;border:1px solid var(--hair);border-radius:14px;background:var(--surf);color:var(--text);font-size:12.5px;font-weight:500;box-shadow:var(--lift);transition:transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s}
+#editor .preset-pick:hover{transform:translateY(-2px);border-color:var(--accent)}
+#editor .preset-x{position:absolute;top:-7px;inset-inline-start:-7px;width:24px;height:24px;min-height:0;padding:0;border-radius:50%;background:var(--surf);color:var(--sub);border:1px solid var(--hair);font-size:14px;line-height:1;box-shadow:0 2px 6px #0003}
+#editor .preset-x:hover{color:#b7473c;border-color:#b7473c}
+#editor .preset-mini{width:100%;display:grid;gap:3px;padding:7px;border-radius:8px;background:var(--m-paper);border:1px solid var(--m-line);box-shadow:0 8px 12px -10px #0007}
+#editor .preset-mini .m-row{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:4px;align-items:center;padding:3px 4px;border-radius:3px}
+#editor .preset-mini .m-row i{display:block;height:5px;border-radius:2px;background:var(--m-line)}
+#editor .preset-mini .m-head{background:var(--m-head)}#editor .preset-mini .m-head i{background:var(--m-headInk);opacity:.75}
+#editor .preset-mini[data-head=plain] .m-head,#editor .preset-mini[data-head=line] .m-head{background:transparent;border-bottom:1.5px solid var(--m-accent);border-radius:0}
+#editor .preset-mini[data-head=plain] .m-head i,#editor .preset-mini[data-head=line] .m-head i{background:var(--m-accent);opacity:.8}
+#editor .preset-mini[data-table=zebra] .m-row:nth-child(odd):not(.m-head){background:var(--m-alt)}
+#editor .preset-mini[data-border=strong]{border-width:2px}#editor .preset-mini[data-border=none]{border-color:transparent}
+#editor .preset-mini[data-corners=sharp],#editor .preset-mini[data-corners=sharp] .m-row{border-radius:1px}#editor .preset-mini[data-corners=round]{border-radius:13px}
+#editor .preset-mini .m-chip{display:block;width:70%;height:9px;border-radius:99px;background:var(--m-chip);border:1px solid color-mix(in srgb,var(--m-chipInk) 30%,transparent)}
+#editor .preset-mini[data-size=square] .m-chip{border-radius:2px}
+#editor .preset-mini[data-size=underline] .m-chip{background:none;border:0;border-bottom:2px solid var(--m-accent);border-radius:0;height:7px}
+#editor .preset-mini[data-size=plain] .m-chip{background:var(--m-chipInk);border:0;height:4px;width:45%;border-radius:2px;opacity:.7}
+#editor .preset-tools{display:grid;gap:10px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--hair)}
+#editor .tool-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#editor .tool-row label{font-size:12.5px;font-weight:500}
+#editor .tool-row input[type=color]{width:52px;height:40px;padding:3px;border-radius:9px}#editor .tool-row input:not([type=color]){flex:1;min-width:180px}
+#editor .phrase-box{margin-top:14px;padding:12px;border:1px dashed var(--hair);border-radius:12px;background:var(--soft)}
+#editor .phrase-chips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 10px}#editor .phrase-chip{position:relative;display:inline-flex}
+#editor .phrase-pick{background:var(--surf);color:var(--text);border:1px solid var(--hair);border-radius:999px;min-height:34px;padding:3px 13px;font-size:12px;font-weight:400;max-width:100%;text-align:start}
+#editor .phrase-pick:hover{border-color:var(--accent);color:var(--accent)}
+#editor button.remove.fill{color:var(--accent);display:block;margin:4px 0 2px}

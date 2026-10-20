@@ -4,6 +4,7 @@ let stores=[],merchant='',page=1,pages=1,poll,timer,guideIndex=[],editing=null,g
 // An editor session is either one product's guide or a shared ("library") guide that many products follow.
 let mode='product',libraryId=null,libraryName='',linkedTo=null,libraries=[],libraryProducts=[],pending=null,aiBlob=null,aiChecked=false;
 const selected=new Set();
+let savedStyles=[],savedPhrases=[],styleSnapshot=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const url=s=>{try{let u=new URL(s);return u.protocol==='https:'?u.href:''}catch{return ''}};
 const date=s=>s?new Date(s).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'}):'لم تبدأ بعد';
@@ -35,7 +36,7 @@ function preview(){if(guide)window.SizeGuideUI.preview($('#guidePreview'),guide,
 
 /* ---------- store, catalog and bulk actions ---------- */
 async function boot(){stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
-async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load()])}
+async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load()])}
 function stateOf(g){
   if(!g)return ['بدون جدول',false];
   const base=g.is_published?(g.has_changes?'منشور + تعديلات مسودة':'منشور'):'مسودة';
@@ -162,13 +163,102 @@ $('#deleteLibrary').onclick=async()=>{
   if(!libraryId||!(await confirmAction('حذف هذا الجدول المشترك نهائيًا؟ لا يمكن حذفه وهو مرتبط بمنتجات.')))return;
   try{await api('size-library/'+libraryId+qs(),{method:'DELETE'});dirty=false;toast('حُذف الجدول المشترك.');show('library')}catch(e){toast(e.message)}
 };
+/* ---------- faster data entry: complete a column, paste a block of cells ---------- */
+function fillColumn(index){
+  const result=Import?.fillSeries(guide.rows.map(r=>r.values[index]));
+  if(!result)return toast('اكتب رقمين مختلفين في أول صفين من العمود (مثل 90 ثم 94)، وتأكد أن بقية الخانات فارغة.');
+  guide.rows.forEach((r,i)=>r.values[index]=result.values[i]);drawGrid();changed();toast(`تمت تعبئة ${result.filled} خانة بنفس الفرق. راجع الأرقام.`);
+}
+$('#gridEditor').addEventListener('paste',event=>{
+  const target=event.target,text=event.clipboardData?.getData('text')||'';
+  if(!guide||!Import||!/[\t\n\r]/.test(text.trim()))return;                       // one value pastes normally
+  const rows=Import.parseRows(text),row0=target.dataset.size!==undefined?+target.dataset.size:target.dataset.row!==undefined?+target.dataset.row:-1;
+  if(row0<0||(rows.length===1&&rows[0].length===1))return;
+  event.preventDefault();const col0=target.dataset.size!==undefined?-1:+target.dataset.cell;let cells=0,dropped=0;
+  rows.forEach((line,a)=>{
+    const i=row0+a;if(i>=30){dropped+=line.length;return}
+    while(guide.rows.length<=i)guide.rows.push({size:'',values:guide.columns.map(()=> '')});
+    line.forEach((cell,k)=>{const col=col0+k;if(col===-1)guide.rows[i].size=cell.slice(0,30);else if(col>=0&&col<guide.columns.length)guide.rows[i].values[col]=cell.slice(0,60);else{dropped++;return}cells++});
+  });
+  drawGrid();changed();toast(`لُصقت ${cells} خانة`+(dropped?` وتُجوهلت ${dropped} خارج حدود الجدول`:'')+'.');
+});
+/* ---------- looks: ready-made styles, the store's colour, saved designs and phrases ---------- */
+async function loadPresets(){
+  try{const d=await api('size-presets'+qs());savedStyles=Array.isArray(d?.styles)?d.styles:[];savedPhrases=Array.isArray(d?.phrases)?d.phrases:[]}catch{savedStyles=[];savedPhrases=[]}
+}
+const styleOf=g=>Object.fromEntries((Catalog?.STYLE_FIELDS||[]).filter(k=>k in g).map(k=>[k,g[k]]));
+function miniTable(style){
+  const full={...style};if(!/^#[0-9a-fA-F]{6}$/.test(full.color||''))full.color=UIX.themes.find(t=>t.id===full.theme)?.accent||'#177e65';
+  const pal=UIX.palette(full),box=mk('div','preset-mini');
+  for(const [k,v] of Object.entries({head:pal.headBg,headInk:pal.headInk,alt:pal.alt,line:pal.line,paper:pal.paper,chip:pal.chipBg,chipInk:pal.chipInk,accent:pal.accent}))box.style.setProperty('--m-'+k,v);
+  Object.assign(box.dataset,{size:style.size_style||'chip',border:style.border_style||'thin',corners:style.corners||'soft',table:style.table_style||'zebra',head:pal.headStyle});
+  const head=mk('div','m-row m-head');head.append(mk('i'),mk('i'),mk('i'));box.append(head);
+  for(let r=0;r<3;r++){const row=mk('div','m-row');row.append(mk('b','m-chip'),mk('i'),mk('i'));box.append(row)}
+  return box;
+}
+function renderPresets(){
+  if(!UIX?.palette||!Catalog)return;
+  const draw=(box,items,saved)=>{
+    box.replaceChildren();
+    for(const item of items){
+      const card=mk('div','preset-card'),pick=mk('button','preset-pick');pick.type='button';pick.title=item.hint||item.name;pick.append(miniTable(item.style),mk('span','',item.name));
+      pick.onclick=()=>applyStyle(item.style,item.name);card.append(pick);
+      if(saved){const x=mk('button','preset-x','×');x.type='button';x.setAttribute('aria-label','حذف التصميم '+item.name);x.onclick=()=>removePreset(item.preset_id,item.name,'styles');card.append(x)}
+      box.append(card);
+    }
+  };
+  draw($('#presetChoices'),Catalog.stylePresets,false);
+  draw($('#myPresets'),savedStyles.map(p=>({...p,style:p.style})),true);
+  $('#myPresetsTitle').classList.toggle('hidden',savedStyles.length===0);$('#myPresets').classList.toggle('hidden',savedStyles.length===0);
+}
+function applyStyle(style,label){
+  if(!guide)return;styleSnapshot=styleOf(guide);
+  const next={...style};if(!/^#[0-9a-fA-F]{6}$/.test(next.color||''))next.color=UIX.themes.find(t=>t.id===next.theme)?.accent||guide.color;
+  Object.assign(guide,styleOf(next));$('#guideColor').value=guide.color;syncChoices();changed();$('#undoStyle').classList.remove('hidden');toast('طُبّق النمط: '+label+'. جدولك لم يتغير.');
+}
+$('#undoStyle').onclick=()=>{if(!styleSnapshot||!guide)return;Object.assign(guide,styleSnapshot);styleSnapshot=null;$('#guideColor').value=guide.color;syncChoices();changed();$('#undoStyle').classList.add('hidden')};
+const brandKey=()=>'sg-brand-'+merchant;
+function rememberedBrand(){try{return localStorage.getItem(brandKey())||''}catch{return ''}}
+$('#applyBrand').onclick=()=>{
+  if(!guide)return;const hex=$('#brandColor').value,result=UIX.brandStyle(hex,UIX.palette(guide).paper);if(!result)return toast('اختر لونًا صالحًا.');
+  styleSnapshot=styleOf(guide);guide.color=result.color;guide.header_style=result.header_style;for(const k of ['header_bg','header_text','row_alt','size_bg','size_text'])guide[k]='';
+  try{localStorage.setItem(brandKey(),hex)}catch{/* optional convenience only */}
+  $('#guideColor').value=guide.color;syncChoices();changed();$('#undoStyle').classList.remove('hidden');
+  toast(result.adjusted?'عُدِّل اللون قليلًا ليكون مقروءًا على خلفية الجدول.':'طُبّق لون متجرك على الجدول.');
+};
+$('#savePreset').onclick=async()=>{
+  const name=$('#presetName').value.trim();if(!guide)return;if(!name)return toast('اكتب اسمًا لتصميمك أولًا.');
+  try{const d=await api('size-presets'+qs(),{method:'POST',body:JSON.stringify({kind:'style',name,style:styleOf(guide)})});savedStyles.push(d);$('#presetName').value='';renderPresets();toast('حُفظ التصميم «'+name+'» ويمكنك تطبيقه على أي جدول.')}catch(e){toast(e.message)}
+};
+async function removePreset(id,name,kind){
+  if(!(await confirmAction('حذف «'+name+'» نهائيًا؟')))return;
+  try{await api('size-presets/'+id+qs(),{method:'DELETE'});if(kind==='styles')savedStyles=savedStyles.filter(p=>p.preset_id!==id);else savedPhrases=savedPhrases.filter(p=>p.preset_id!==id);renderPresets();renderPhrases()}catch(e){toast(e.message)}
+}
+function renderPhrases(){
+  const box=$('#phraseChips');box.replaceChildren();if(!guide)return;
+  const add=(text,id)=>{
+    const chip=mk('span','phrase-chip'),pick=mk('button','phrase-pick',text.length>44?text.slice(0,44)+'…':text);pick.type='button';pick.title=text;pick.onclick=()=>addPhrase(text);chip.append(pick);
+    if(id){const x=mk('button','preset-x','×');x.type='button';x.setAttribute('aria-label','حذف الجملة');x.onclick=()=>removePreset(id,text.slice(0,30),'phrases');chip.append(x)}
+    box.append(chip);
+  };
+  for(const text of Catalog?.phrasesFor(guide.category)||[])add(text);for(const p of savedPhrases)add(p.text,p.preset_id);
+}
+function addPhrase(text){
+  const current=$('#notes').value;if(current.includes(text))return toast('هذه الجملة موجودة في الملاحظات.');
+  const next=current.trim()?current.replace(/\s+$/,'')+'\n'+text:text;if(next.length>2000)return toast('الملاحظات ستتجاوز 2000 حرف.');
+  $('#notes').value=next;guide.notes=next;changed();
+}
+$('#savePhrase').onclick=async()=>{
+  const text=$('#phraseText').value.trim();if(!text)return toast('اكتب الجملة أولًا.');
+  try{const d=await api('size-presets'+qs(),{method:'POST',body:JSON.stringify({kind:'phrase',name:text.slice(0,40),text})});savedPhrases.push(d);$('#phraseText').value='';renderPhrases();toast('حُفظت الجملة.')}catch(e){toast(e.message)}
+};
 function fill(){
   for(const [id,key] of [['guideTitle','title'],['buttonLabel','button_label'],['guideUnit','unit'],['measureType','measurement_type'],['guideColor','color'],['instructions','instructions'],['notes','notes']])$('#'+id).value=guide[key];
   $('#editorTitle').textContent=mode==='library'?(libraryName||'جدول مشترك جديد'):editing.title+(editing.sku?' • '+editing.sku:'');
   $('#editState').textContent=linkedTo?'هذا الجدول يتبع الجدول المشترك؛ التعديل من هناك.':published?'الجدول منشور للعميل؛ حفظ المسودة لا يغيّره.':version?'مسودة محفوظة؛ لا تظهر للعميل.':'جدول جديد؛ لم يُحفظ بعد.';
   $('#unpublish').disabled=!published;
   $('#copyFrom').innerHTML='<option value="">اختر المنتج المصدر…</option>'+guideIndex.filter(g=>g.product_id!==editing.product_id).map(g=>`<option value="${esc(g.product_id)}">${esc(g.title)} ${g.sku?'• '+esc(g.sku):''}</option>`).join('');
-  applyMode();fillTemplates();renderThemes();syncChoices();syncAdvanced();renderLibraryProducts();renderLinkResults();hidePending();drawGrid();preview();
+  applyMode();fillTemplates();renderThemes();syncChoices();syncAdvanced();styleSnapshot=null;$('#undoStyle').classList.add('hidden');$('#brandColor').value=rememberedBrand()||guide.color;renderPresets();renderPhrases();renderLibraryProducts();renderLinkResults();hidePending();drawGrid();preview();
 }
 function fillTemplates(){const list=Catalog?Catalog.forCategory(guide.category):[{id:'dresses',name:'فساتين'}];$('#template').innerHTML=list.map(t=>`<option value="${esc(t.id)}">${esc('هيكل '+t.name)}</option>`).join('')}
 const recommended=theme=>theme.cats.includes(guide?.category);
@@ -243,8 +333,8 @@ function setCategory(id){
   fillTemplates();renderThemes();syncChoices();drawGrid();changed();
   if(!blank)toast('تغيّرت الفئة والثيم فقط. اختر هيكلًا من القائمة ثم «استخدام الهيكل» إن أردت أعمدة جديدة.');
 }
-function drawGrid(){let html='<table><thead><tr><th>المقاس</th>'+guide.columns.map((c,i)=>`<th><input aria-label="اسم العمود ${i+1}" data-col="${i}" maxlength="40" value="${esc(c.label)}"><select aria-label="نوع العمود ${i+1}" data-kind="${i}"><option value="measurement" ${c.kind==='measurement'?'selected':''}>قياس: يتحول سم/إنش</option><option value="text" ${c.kind==='text'?'selected':''}>نص: EU / UK / غيره</option></select><button type="button" class="remove" data-remove-col="${i}" aria-label="حذف العمود ${i+1}">حذف العمود ×</button></th>`).join('')+'<th></th></tr></thead><tbody>'+guide.rows.map((r,i)=>`<tr><td><input aria-label="اسم المقاس ${i+1}" maxlength="30" data-size="${i}" value="${esc(r.size)}"></td>`+r.values.map((v,j)=>`<td><input aria-label="${esc(r.size)} ${esc(guide.columns[j].label)}" maxlength="60" data-row="${i}" data-cell="${j}" value="${esc(v)}" placeholder="—"></td>`).join('')+`<td><button type="button" class="remove" data-remove-row="${i}" aria-label="حذف المقاس ${esc(r.size)}">×</button></td></tr>`).join('')+'</tbody></table>';$('#gridEditor').innerHTML=html;
-$('#gridEditor').querySelectorAll('[data-col]').forEach(x=>x.oninput=()=>{guide.columns[+x.dataset.col].label=x.value;changed()});$('#gridEditor').querySelectorAll('[data-kind]').forEach(x=>x.onchange=()=>{guide.columns[+x.dataset.kind].kind=x.value;changed()});$('#gridEditor').querySelectorAll('[data-size]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.size].size=x.value;changed()});$('#gridEditor').querySelectorAll('[data-cell]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.row].values[+x.dataset.cell]=x.value;changed()});$('#gridEditor').querySelectorAll('[data-remove-col]').forEach(x=>x.onclick=async()=>{if(guide.columns.length<=1)return toast('يجب إبقاء عمود قياس واحد على الأقل.');if(!(await confirmAction('حذف هذا العمود وقيمه من المسودة؟')))return;const i=+x.dataset.removeCol;guide.columns.splice(i,1);guide.rows.forEach(r=>r.values.splice(i,1));drawGrid();changed()});$('#gridEditor').querySelectorAll('[data-remove-row]').forEach(x=>x.onclick=async()=>{if(guide.rows.length<=1)return toast('يجب إبقاء مقاس واحد على الأقل.');if(!(await confirmAction('حذف صف المقاس من المسودة؟')))return;guide.rows.splice(+x.dataset.removeRow,1);drawGrid();changed()})}
+function drawGrid(){let html='<table><thead><tr><th>المقاس</th>'+guide.columns.map((c,i)=>`<th><input aria-label="اسم العمود ${i+1}" data-col="${i}" maxlength="40" value="${esc(c.label)}"><select aria-label="نوع العمود ${i+1}" data-kind="${i}"><option value="measurement" ${c.kind==='measurement'?'selected':''}>قياس: يتحول سم/إنش</option><option value="text" ${c.kind==='text'?'selected':''}>نص: EU / UK / غيره</option></select><button type="button" class="remove fill" data-fill="${i}" aria-label="إكمال العمود ${i+1} بنفس الفرق">أكمل العمود ⇣</button><button type="button" class="remove" data-remove-col="${i}" aria-label="حذف العمود ${i+1}">حذف العمود ×</button></th>`).join('')+'<th></th></tr></thead><tbody>'+guide.rows.map((r,i)=>`<tr><td><input aria-label="اسم المقاس ${i+1}" maxlength="30" data-size="${i}" value="${esc(r.size)}"></td>`+r.values.map((v,j)=>`<td><input aria-label="${esc(r.size)} ${esc(guide.columns[j].label)}" maxlength="60" data-row="${i}" data-cell="${j}" value="${esc(v)}" placeholder="—"></td>`).join('')+`<td><button type="button" class="remove" data-remove-row="${i}" aria-label="حذف المقاس ${esc(r.size)}">×</button></td></tr>`).join('')+'</tbody></table>';$('#gridEditor').innerHTML=html;
+$('#gridEditor').querySelectorAll('[data-col]').forEach(x=>x.oninput=()=>{guide.columns[+x.dataset.col].label=x.value;changed()});$('#gridEditor').querySelectorAll('[data-kind]').forEach(x=>x.onchange=()=>{guide.columns[+x.dataset.kind].kind=x.value;changed()});$('#gridEditor').querySelectorAll('[data-size]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.size].size=x.value;changed()});$('#gridEditor').querySelectorAll('[data-cell]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.row].values[+x.dataset.cell]=x.value;changed()});$('#gridEditor').querySelectorAll('[data-fill]').forEach(x=>x.onclick=()=>fillColumn(+x.dataset.fill));$('#gridEditor').querySelectorAll('[data-remove-col]').forEach(x=>x.onclick=async()=>{if(guide.columns.length<=1)return toast('يجب إبقاء عمود قياس واحد على الأقل.');if(!(await confirmAction('حذف هذا العمود وقيمه من المسودة؟')))return;const i=+x.dataset.removeCol;guide.columns.splice(i,1);guide.rows.forEach(r=>r.values.splice(i,1));drawGrid();changed()});$('#gridEditor').querySelectorAll('[data-remove-row]').forEach(x=>x.onclick=async()=>{if(guide.rows.length<=1)return toast('يجب إبقاء مقاس واحد على الأقل.');if(!(await confirmAction('حذف صف المقاس من المسودة؟')))return;guide.rows.splice(+x.dataset.removeRow,1);drawGrid();changed()})}
 async function save(action){
   if(!editing||saving||linkedTo)return;
   if(mode==='library'&&!libraryName.trim())return toast('اكتب اسمًا للجدول المشترك.');
@@ -322,5 +412,5 @@ $('#aiRun').onclick=async()=>{
 $('#backCatalog').onclick=async()=>{if(!(await mayLeave()))return;dirty=false;const back=mode==='library'?'library':'catalog';show(back);if(back==='catalog')loadProducts().catch(e=>toast(e.message))};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=async()=>{if(!(await mayLeave()))return;dirty=false;show(b.dataset.tab);if(b.dataset.tab==='catalog')loadProducts().catch(e=>toast(e.message))});window.addEventListener('beforeunload',e=>{if(dirty||window.SizeGuideSettings?.isDirty()||window.SizeGuideSettings?.isBusy()){e.preventDefault();e.returnValue=''}});
 $('#getSnippet').onclick=async()=>{try{let d=await api('size-guide-snippet'+qs());$('#snippet').value=d.javascript}catch(e){toast(e.message)}};$('#copySnippet').onclick=async()=>{if(!$('#snippet').value)return toast('ولّد الكود أولًا.');try{await navigator.clipboard.writeText($('#snippet').value);toast('تم نسخ الكود.')}catch{$('#snippet').select();toast('حدد الكود وانسخه يدويًا.')}};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();$('#loginButton').disabled=true;$('#error').textContent='';try{await api('login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await boot()}catch(e){$('#error').textContent=e.message}finally{$('#loginButton').disabled=false}};$('#logout').onclick=async()=>{if(!(await mayLeave()))return;await api('logout',{method:'POST'});dirty=false;location.reload()};
-$('#store').onchange=async()=>{if(!(await mayLeave())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;merchant=$('#store').value;page=1;selected.clear();libraries=[];aiChecked=false;$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
+$('#store').onchange=async()=>{if(!(await mayLeave())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;merchant=$('#store').value;page=1;selected.clear();libraries=[];savedStyles=[];savedPhrases=[];aiChecked=false;$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
 $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),{method:'POST'});await loadJobs();toast('بدأت مزامنة المنتجات.')}catch(e){toast(e.message);$('#sync').disabled=false}};$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));if(window.SizeGuideEmbedded){window.SizeGuideEmbedded.start(boot)}else{boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message})}

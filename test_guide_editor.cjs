@@ -12,7 +12,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
   const dom=new JSDOM(file('dashboard.html'),{url:'https://app.test/dashboard',runScripts:'dangerously',virtualConsole:console_}),w=dom.window,d=w.document;
   try{
     w.structuredClone=structuredClone;let confirmed=true;w.confirm=()=>confirmed;
-    const calls=[];let aiAvailable=true;
+    const calls=[];let aiAvailable=true;const presets={styles:[{preset_id:'s00000000001',name:'تصميم قديم',style:{theme:'velvet',color:'#7b2338',table_style:'cards',density:'compact',corners:'round',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'none',font_scale:'small',sticky_size:true,header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''}}],phrases:[{preset_id:'f00000000001',name:'جملتي',text:'جملة محفوظة من التاجر'}],n:1};
     const call=(method,part)=>calls.filter(c=>c.method===method&&c.path.includes(part));
     const guideIndex=()=>[{product_id:'43',title:'منتج قديم',sku:'S2',version:3,is_published:true,has_changes:false,library_id:null},
       {product_id:'44',title:'منتج مرتبط',sku:'S3',version:1,is_published:true,has_changes:false,library_id:LIB,library_name:'فساتين'}];
@@ -38,10 +38,13 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
       else if(p.startsWith('size-library/')&&p.endsWith('/link'))data={linked:body.product_ids,skipped:['x']};
       else if(p===`size-library/${NEWLIB}`&&method==='PUT')data={library_id:NEWLIB,version:body.version+1,is_published:body.action==='publish'};
       else if(p===`size-library/${NEWLIB}`&&method==='DELETE')data={deleted:true};
+      else if(p==='size-presets'&&method==='GET')data={styles:presets.styles,phrases:presets.phrases};
+      else if(p==='size-presets'&&method==='POST'){const item={preset_id:'p'+(presets.n++).toString(16).padStart(11,'0'),name:body.name,...(body.kind==='style'?{style:body.style}:{text:body.text})};presets[body.kind==='style'?'styles':'phrases'].push(item);data=item}
+      else if(p.startsWith('size-presets/')&&method==='DELETE'){const id=p.split('/')[1].split('?')[0];presets.styles=presets.styles.filter(x=>x.preset_id!==id);presets.phrases=presets.phrases.filter(x=>x.preset_id!==id);data={deleted:true}}
       else if(p==='size-guide-ai-status')data={available:aiAvailable};
       else if(p==='size-guide-ai-import')data={columns:[{label:'الصدر',kind:'measurement'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['86','36']},{size:'M',values:['','38']}],unit:'in',notes:'ملاحظة من الصورة',warnings:['خانة فارغة']};
       else if(p==='size-guide-stats')data={days:+u.searchParams.get('days'),opens:12,calcs:3,published_guides:2,daily:[{day:new Date().toISOString().slice(0,10),opens:12,calcs:3}],top:[{product_id:'43',title:'منتج قديم',opens:12,calcs:3}]};
-      return {ok:true,json:async()=>data};
+      return {ok:true,json:async()=>JSON.parse(JSON.stringify(data))};   // a real response is never the server's own object
     };
     for(const name of ['size-guide-renderer.js','size-guide-catalog.js','size-guide-import.js','size-guide-button.js','size-guide-placement.js','button-settings-admin.js','size-guide-admin.js']){
       const script=d.createElement('script');script.textContent=file(name);d.body.append(script);
@@ -136,6 +139,63 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // missing server key: the AI button explains itself
     aiAvailable=false;
 
+    // ---- ready-made looks change only the appearance, and can be undone
+    const before={rows:JSON.stringify(guideCopy().rows),columns:JSON.stringify(guideCopy().columns),title:$('#guideTitle').value};
+    function guideCopy(){return {rows:all('#gridEditor tbody tr').map(tr=>[...tr.querySelectorAll('input')].map(i=>i.value)),columns:all('#gridEditor thead th input').map(i=>i.value)}}
+    assert.equal(all('#presetChoices .preset-card').length,6);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
+    assert.equal($('#undoStyle').classList.contains('hidden'),true);
+    const oldStyle=[$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value];
+    all('#presetChoices .preset-pick').find(b=>/جريء/.test(b.textContent)).click();
+    assert.deepEqual([$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('[name="guide-header_style"]:checked').value,$('[name="guide-corners"]:checked').value,$('[name="guide-font_scale"]:checked').value],['zebra','square','solid','sharp','large']);
+    assert.equal($('[name="guide-theme"]:checked').value,'slate');assert.equal($('#guideColor').value,'#3d4a56');assert.equal(guideWrap().dataset.theme,'slate');assert.equal(guideWrap().dataset.corners,'sharp');
+    assert.ok(all('#tableColors .color-field').every(f=>!f.classList.contains('custom')),'a look clears custom colours');
+    assert.deepEqual([JSON.stringify(guideCopy().rows),JSON.stringify(guideCopy().columns),$('#guideTitle').value],[before.rows,before.columns,before.title],'the table itself is untouched');
+    assert.equal($('#undoStyle').classList.contains('hidden'),false);$('#undoStyle').click();
+    assert.deepEqual([$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value],oldStyle,'undo restores the previous look');assert.equal($('#undoStyle').classList.contains('hidden'),true);
+    // a saved look applies like a built-in one
+    all('#myPresets .preset-pick').find(b=>/تصميم قديم/.test(b.textContent)).click();assert.equal($('[name="guide-theme"]:checked').value,'velvet');assert.equal($('[name="guide-density"]:checked').value,'compact');$('#undoStyle').click();
+    // the store's colour
+    $('#brandColor').value='#ffe9a8';$('#applyBrand').click();
+    assert.notEqual($('#guideColor').value,'#ffe9a8','a pale brand colour is darkened to stay readable');assert.match($('[name="guide-header_style"]:checked').value,/solid|tint/);
+    $('#brandColor').value='#7b2338';$('#applyBrand').click();assert.equal($('#guideColor').value,'#7b2338');assert.equal($('[name="guide-header_style"]:checked').value,'solid');assert.equal(w.localStorage.getItem('sg-brand-123'),'#7b2338');
+    $('#undoStyle').click();assert.notEqual($('#guideColor').value,'#7b2338');
+    // saving the current look as a named design
+    $('#savePreset').click();await settle();assert.equal(call('POST','size-presets').length,0,'a name is required');
+    $('[name="guide-theme"][value="gold"]').click();$('[name="guide-table_style"][value="lines"]').click();input('#presetName','تصميم متجري');$('#savePreset').click();await settle();
+    const savedLook=call('POST','size-presets')[0].body;assert.equal(savedLook.kind,'style');assert.equal(savedLook.name,'تصميم متجري');assert.equal(savedLook.style.theme,'gold');assert.equal(savedLook.style.table_style,'lines');
+    assert.equal('title' in savedLook.style||'columns' in savedLook.style||'rows' in savedLook.style||'language' in savedLook.style,false,'only appearance is saved');
+    assert.equal(all('#myPresets .preset-card').length,2);assert.equal($('#presetName').value,'');
+    confirmed=false;$('#myPresets .preset-x').click();await settle();assert.equal(call('DELETE','size-presets/').length,0);confirmed=true;$('#myPresets .preset-x').click();await settle();assert.equal(call('DELETE','size-presets/').length,1);assert.equal(all('#myPresets .preset-card').length,1);
+
+    // ---- quick phrases under the notes
+    const phrases=all('#phraseChips .phrase-pick');assert.ok(phrases.length>=5);assert.ok(phrases.some(b=>b.title==='جملة محفوظة من التاجر'),'saved phrases are listed');
+    const first=phrases[0].title;input('#notes','');phrases[0].click();assert.equal($('#notes').value,first);phrases[1].click();assert.equal($('#notes').value,first+'\n'+phrases[1].title);
+    const lines=$('#notes').value;phrases[0].click();assert.equal($('#notes').value,lines,'a phrase is never added twice');
+    input('#notes','x'.repeat(1995));phrases[0].click();assert.equal($('#notes').value.length,1995,'the 2000-character limit is respected');input('#notes','');
+    input('#phraseText','   ');$('#savePhrase').click();await settle();assert.equal(call('POST','size-presets').length,1,'an empty phrase is not saved');
+    input('#phraseText','شحن مجاني للمقاسات الكبيرة');$('#savePhrase').click();await settle();assert.equal(call('POST','size-presets')[1].body.kind,'phrase');assert.equal(call('POST','size-presets')[1].body.text,'شحن مجاني للمقاسات الكبيرة');
+    assert.ok(all('#phraseChips .phrase-pick').some(b=>b.title==='شحن مجاني للمقاسات الكبيرة'));
+    $('#phraseChips .preset-x').click();await settle();assert.equal(call('DELETE','size-presets/').length,2);
+    assert.equal(all('#phraseChips .phrase-pick').some(b=>b.title==='جملة محفوظة من التاجر'),false);
+
+    // ---- completing a column and pasting blocks of cells
+    $('[name="guide-category"][value="women"]').click();await settle();$('#template').value='women-dresses';confirmed=true;$('#applyTemplate').click();await settle();
+    const cell=(r,c)=>$(`#gridEditor [data-row="${r}"][data-cell="${c}"]`);
+    $('[data-fill="0"]').click();assert.equal(cell(2,0).value,'','nothing happens without two numbers');
+    input('#gridEditor [data-row="0"][data-cell="0"]','86-90');input('#gridEditor [data-row="1"][data-cell="0"]','90-94');$('[data-fill="0"]').click();
+    assert.deepEqual([2,3,4].map(r=>cell(r,0).value),['94-98','98-102','102-106']);assert.equal(guideWrap().querySelectorAll('tbody tr').length,5);
+    input('#gridEditor [data-row="0"][data-cell="1"]','70');input('#gridEditor [data-row="1"][data-cell="1"]','74');input('#gridEditor [data-row="3"][data-cell="1"]','99');$('[data-fill="1"]').click();
+    assert.deepEqual([2,3,4].map(r=>cell(r,1).value),['78','99','86'],'only empty cells are filled');
+    const pasteInto=(selector,text)=>{const event=new w.Event('paste',{bubbles:true,cancelable:true});event.clipboardData={getData:()=>text};$(selector).dispatchEvent(event);return event};
+    let ev=pasteInto('#gridEditor [data-row="0"][data-cell="2"]','95\t100\n98\t104\n');
+    assert.equal(ev.defaultPrevented,true);assert.deepEqual([cell(0,2).value,cell(0,3).value,cell(1,2).value,cell(1,3).value],['95','100','98','104']);
+    ev=pasteInto('#gridEditor [data-size="3"]','XL\t1\t2\t3\t4\t5\t6\nXXL\t7\t8\t9\t10\nXXXL\t11');
+    assert.equal($('#gridEditor [data-size="3"]').value,'XL');assert.equal($('#gridEditor [data-size="4"]').value,'XXL');assert.equal(all('#gridEditor tbody tr').length,6,'rows are added for the pasted block');assert.equal($('#gridEditor [data-size="5"]').value,'XXXL');
+    assert.equal(cell(3,0).value,'1');assert.equal(cell(3,3).value,'4');assert.equal(cell(5,0).value,'11');
+    ev=pasteInto('#gridEditor [data-row="0"][data-cell="0"]','777');assert.equal(ev.defaultPrevented,false,'a single value pastes normally');assert.equal(cell(0,0).value,'86-90');
+    ev=pasteInto('#gridEditor [data-row="0"][data-cell="0"]','a\nb\nc'.repeat(1)+'\n'+Array.from({length:40},(_,i)=>'r'+i).join('\n'));assert.equal(all('#gridEditor tbody tr').length,30,'the 30-row limit is respected');
+    ev=pasteInto('#guideTitle','a\tb\nc\td');assert.equal(ev.defaultPrevented,false,'only the table grid takes blocks');
+
     // ---- a guide saved before these options existed opens with defaults
     $('#backCatalog').click();await settle();$('[data-edit="43"]').click();await settle();
     assert.equal($('[name="guide-category"]:checked').value,'general');assert.equal($('[name="guide-theme"]:checked').value,'classic');assert.equal($('#guideColor').value,'#123456');
@@ -186,7 +246,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     input('#guideTitle','عنوان مشترك جديد');confirmed=true;$('#publish').click();await settle();
     const published=calls.filter(c=>c.method==='PUT'&&c.path.startsWith('size-library/'+NEWLIB)).pop().body;assert.deepEqual([published.version,published.action],[1,'publish']);
     $('#libraryProducts .link-row button').click();await settle();assert.equal(call('POST','size-guides/unlink').length,3);
-    $('#deleteLibrary').click();await settle();assert.equal(calls.filter(c=>c.method==='DELETE').length,1);assert.equal(hidden('#library'),false);
+    $('#deleteLibrary').click();await settle();assert.equal(call('DELETE','size-library/').length,1);assert.equal(hidden('#library'),false);
     $('#libraryList .lib-card button').click();await settle();
     assert.equal($('#libraryName').value,'فساتين');assert.equal(guideWrap().querySelector('h2').textContent,'جدول مشترك');assert.equal($('#unpublish').disabled,false);
     $('#backCatalog').click();await settle();assert.equal(hidden('#library'),false,'back from a shared guide returns to the library');

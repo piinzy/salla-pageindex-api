@@ -40,6 +40,7 @@ const theme=id=>themes.find(t=>t.id===id)||themes[0];
 function emblem(categoryId,className='emblem'){return svgEl(emblems[category(categoryId).emblem],className);}
 function luminance(hex){const rgb=hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;}
 const readable=hex=>luminance(hex)>.42?'#1b1b1b':'#ffffff';
+const contrast=(a,b)=>{const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
 const HEX=/^#[0-9a-fA-F]{6}$/,custom=value=>HEX.test(value||'')?value:'';
 const channels=hex=>hex.slice(1).match(/../g).map(x=>parseInt(x,16));
 const mix=(from,to,amount)=>{const a=channels(from),b=channels(to);return '#'+a.map((x,i)=>Math.round(x*(1-amount)+b[i]*amount).toString(16).padStart(2,'0')).join('');};
@@ -63,6 +64,13 @@ function palette(guide){
   const line=custom(guide.border_color)||(guide.border_style==='strong'?mix(t.line,ink,.3):t.line);
   return {theme:t,headStyle,accent,paper,ink,muted:guide.text_color?mix(ink,paper,.42):t.muted,line,headBg,headInk,alt,chipBg,
     chipInk:custom(guide.size_text)||(custom(guide.size_bg)?readable(chipBg):mix(ink,accent,.72)),accentInk:mix(ink,accent,.72)};
+}
+/* A store's own colour as the accent: nudged until it reads on the table's paper, with a header that suits its weight. */
+function brandStyle(hex,paper='#ffffff'){
+  if(!HEX.test(hex||''))return null;
+  const dark=luminance(paper)<=.5;let color=hex.toLowerCase(),adjusted=false;
+  for(let i=0;i<12&&contrast(color,paper)<3;i++){color=mix(color,dark?'#ffffff':'#000000',.1);adjusted=true}
+  return {color,adjusted,header_style:luminance(color)<.4?'solid':'tint'};
 }
 /* Tokens for a guide: the theme supplies surfaces, the guide's own colours override them. */
 function tokens(guide){
@@ -255,5 +263,5 @@ function render(host,guide,productName,close){
 function shadow(host){const root=host.shadowRoot||host.attachShadow({mode:'open'});root.replaceChildren();root.append(el('style',css));return root}
 function preview(host,guide,name){let root=shadow(host),surface=el('div');root.append(surface);render(surface,guide,name)}
 function open(guide,name){const previous=document.activeElement;const host=el('div');host.style.cssText='position:relative;z-index:2147483647';document.body.append(host);const root=shadow(host),dialog=el('dialog');dialog.dir=language(guide)==='en'?'ltr':'rtl';dialog.setAttribute('aria-labelledby','size-guide-title');const close=()=>dialog.close();root.append(dialog);render(dialog,guide,name,close);dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});dialog.addEventListener('close',()=>{host.remove();previous?.focus()},{once:true});dialog.showModal()}
-window.SizeGuideUI={preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language};
+window.SizeGuideUI={preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
 })();

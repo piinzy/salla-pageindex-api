@@ -25,9 +25,22 @@ try{
   for(const bad of ['','   \n  ','only one line,a,b','a\nb\nc','x'])assert.throws(()=>I.toGrid(bad),/الصق جدولًا/);
   // markup stays text (it is inserted with textContent / value only, never as HTML)
   g=I.toGrid('s,<img src=x onerror=alert(1)>\nS,<b>1</b>');assert.equal(g.columns[0].label,'<img src=x onerror=alert(1)>');assert.equal(g.columns[0].kind,'text');
+  // complete a column from its first two cells
+  const fill=values=>{const r=I.fillSeries(values);return r&&{values:j(r.values),filled:r.filled}};
+  assert.deepEqual(fill(['90','94','','','']),{values:['90','94','98','102','106'],filled:3});
+  assert.deepEqual(fill(['86-90','90-94','','']),{values:['86-90','90-94','94-98','98-102'],filled:2});
+  assert.deepEqual(fill(['٨٦–٩٠','٩٠–٩٤','']),{values:['٨٦–٩٠','٩٠–٩٤','94–98'],filled:1},'Arabic digits and the en dash are understood and kept');
+  assert.deepEqual(fill(['24.5','25','','']),{values:['24.5','25','25.5','26'],filled:2});assert.deepEqual(fill(['0.1','0.2','','']).values,['0.1','0.2','0.3','0.4'],'no floating-point noise');
+  assert.deepEqual(fill(['100','90','','']),{values:['100','90','80','70'],filled:2},'descending series');
+  assert.deepEqual(fill(['10','5','','']).values,['10','5','0','-5'].slice(0,3).concat('' ),'never goes below zero');
+  assert.deepEqual(fill(['90','94','98','','']),{values:['90','94','98','102','106'],filled:2},'cells already typed are kept');
+  assert.deepEqual(fill(['90','94','97','','']),{values:['90','94','97','102','106'],filled:2},'a typed value is never overwritten, even off-pattern');
+  assert.equal(I.fillSeries(['90','90','','']),null,'no step');assert.equal(I.fillSeries(['90','','','']),null,'needs two numbers');assert.equal(I.fillSeries(['S','M','','']),null);
+  assert.equal(I.fillSeries(['90','86-90','','']),null,'a number and a range do not mix');assert.equal(I.fillSeries(['90','94','98','102']),null,'nothing to fill');
+  assert.equal(I.fillSeries(['1','2','','x'].map(v=>v))?.values[2],'3');
   await_rejects();
   async function await_rejects(){
     await assert.rejects(I.imageToDataUrl({type:'application/pdf'}),/PNG/);await assert.rejects(I.imageToDataUrl(null),/PNG/);
-    console.log('PASS: import parsing (tabs, CSV, quotes, Arabic digits, duplicates, limits, bad input) and image type checks.');w.close();
+    console.log('PASS: import parsing (tabs, CSV, quotes, Arabic digits, duplicates, limits, bad input) series completion and image type checks.');w.close();
   }
 }catch(error){w.close();throw error;}
