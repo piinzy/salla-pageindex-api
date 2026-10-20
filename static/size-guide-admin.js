@@ -379,23 +379,46 @@ $('#unpublish').onclick=async()=>{
 };
 
 /* ---------- import: pasted Excel/CSV or a photo read by Gemini ---------- */
-function hidePending(){pending=null;$('#importPreview').classList.add('hidden')}
+function hidePending(){pending=null;$('#importPreview').classList.add('hidden');$('#importExtras').hidden=true}
+/* Everything the photo said besides the grid. Each item is optional; fields the guide already fills start unticked so nothing is replaced by surprise. */
+const unitName={cm:'سنتيمتر',in:'إنش'},typeName={body:'قياسات الجسم',garment:'قياسات القطعة نفسها'},languageName={ar:'العربية',en:'English'};
+const IMPORT_EXTRAS=[
+  ['title','عنوان النافذة',()=>guide.title,v=>v,v=>{guide.title=v;$('#guideTitle').value=v}],
+  ['size_label','عنوان عمود المقاس',()=>guide.size_label,v=>v,v=>{guide.size_label=v;$('#sizeLabel').value=v}],
+  ['unit','وحدة القياس',()=>guide.unit,v=>unitName[v],v=>{guide.unit=v;$('#guideUnit').value=v}],
+  ['measurement_type','نوع القياسات',()=>guide.measurement_type,v=>typeName[v],v=>{guide.measurement_type=v;$('#measureType').value=v}],
+  ['category','الفئة',()=>guide.category,v=>UIX?.categories.find(c=>c.id===v)?.name,v=>{guide.category=v;fillTemplates();renderThemes();syncChoices()}],
+  ['language','لغة النافذة',()=>guide.language,v=>languageName[v],v=>{guide.language=v;syncChoices()}],
+  ['instructions','إرشادات طريقة القياس',()=>guide.instructions,v=>v,v=>{guide.instructions=v;$('#instructions').value=v}],
+  ['notes','الملاحظات',()=>guide.notes,v=>v,v=>{guide.notes=v;$('#notes').value=v}],
+];
+function renderExtras(){
+  const list=$('#importExtraList');list.replaceChildren();let count=0;
+  for(const [key,label,current,show] of IMPORT_EXTRAS){
+    const value=pending?.[key];if(!value)continue;const text=show(value);if(!text)continue;count++;
+    const existing=current(),replaces=!!existing&&String(existing)!==String(value)&&!['unit','measurement_type','language','category'].includes(key)&&String(existing).trim()!==''&&!(key==='title'&&existing==='دليل المقاسات');
+    const row=mk('label','check import-extra'),box=mk('input');box.type='checkbox';box.dataset.key=key;box.checked=!replaces;
+    const body=mk('span','');body.append(mk('b','',label+': '),document.createTextNode(text.length>120?text.slice(0,120)+'…':text));if(replaces)body.append(mk('small','',' (سيستبدل المكتوب حاليًا)'));
+    row.append(box,body);list.append(row);
+  }
+  $('#importExtras').hidden=count===0;
+}
 function showPending(extraWarnings=[]){
   const table=mk('table'),head=mk('tr');head.append(mk('th','','المقاس'));for(const c of pending.columns)head.append(mk('th','',c.label+(c.kind==='measurement'?' ⌀':'')));
   const thead=mk('thead');thead.append(head);table.append(thead);const body=mk('tbody');
   for(const r of pending.rows.slice(0,6)){const tr=mk('tr');tr.append(mk('td','',r.size||'—'));for(const v of r.values)tr.append(mk('td','',v||'—'));body.append(tr)}
   table.append(body);$('#importTable').replaceChildren(table);
   const warnings=[...(pending.warnings||[]),...extraWarnings];if(pending.rows.length>6)warnings.unshift(`تُعرض أول 6 صفوف من ${pending.rows.length}.`);
-  $('#importWarnings').replaceChildren(...warnings.map(w=>mk('li','',w)));$('#importPreview').classList.remove('hidden');
+  $('#importWarnings').replaceChildren(...warnings.map(w=>mk('li','',w)));renderExtras();$('#importPreview').classList.remove('hidden');
 }
 $('#applyPaste').onclick=()=>{try{pending=Import.toGrid($('#pasteTable').value);showPending()}catch(e){hidePending();toast(e.message)}};
 $('#importCancel').onclick=hidePending;
 $('#importApply').onclick=async()=>{
   if(!pending)return;if(!blankGrid()&&!(await confirmAction('استبدال أعمدة وصفوف الجدول الحالي بالجدول المستورد؟')))return;
   guide.columns=pending.columns;guide.rows=pending.rows;
-  if((pending.unit==='cm'||pending.unit==='in')&&pending.unit!==guide.unit){guide.unit=pending.unit;$('#guideUnit').value=pending.unit}
-  if(pending.notes&&!guide.notes){guide.notes=pending.notes;$('#notes').value=pending.notes}
-  hidePending();drawGrid();changed();toast('طُبّق الجدول المستورد. راجع الأرقام ثم احفظ.');
+  const ticked=new Set([...document.querySelectorAll('#importExtraList input:checked')].map(i=>i.dataset.key));let applied=0;
+  for(const [key,,,,apply] of IMPORT_EXTRAS)if(ticked.has(key)&&pending[key]){apply(pending[key]);applied++}
+  hidePending();drawGrid();changed();toast('طُبّق الجدول المستورد'+(applied?' مع '+applied+' من الحقول المقروءة':'')+'. راجع الأرقام والنصوص ثم احفظ.');
 };
 async function checkAi(){
   if(aiChecked)return;aiChecked=true;
@@ -410,7 +433,7 @@ $('#aiRun').onclick=async()=>{
   try{
     const image=await Import.imageToDataUrl(file);
     pending=await api('size-guide-ai-import'+qs(),{method:'POST',body:JSON.stringify({image})});
-    showPending(['قُرئ الجدول بالذكاء الاصطناعي وقد يخطئ في بعض الأرقام؛ راجع كل خانة قبل النشر.']);$('#aiStatus').textContent='تمت القراءة. راجع المعاينة ثم اضغط «تطبيق على الجدول».';
+    showPending(['قُرئ الجدول بالذكاء الاصطناعي وقد يخطئ في بعض الأرقام؛ راجع كل خانة قبل النشر.']);$('#aiStatus').textContent='تمت القراءة. راجع المعاينة وما قُرئ معها ثم اضغط «تطبيق على الجدول».';
   }catch(e){hidePending();$('#aiStatus').textContent='';toast(e.message)}finally{$('#aiRun').disabled=false}
 };
 
