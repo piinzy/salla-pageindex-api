@@ -245,3 +245,5 @@ label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:
 :is(#quick,#editor) .qerror{margin:0;padding:9px 12px;border-radius:9px;background:var(--danger-bg,#fff0f0);color:var(--danger-ink,#b02835);font-size:12.5px;line-height:1.7}
 @media(max-width:700px){:is(#quick,#editor) .quick-results{grid-template-columns:1fr}}
 #catalog .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+#editor .import-extras{margin:12px 0;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:var(--surf)}
+#editor .import-extra{align-items:flex-start;margin:4px 0}#editor .import-extra span{font-size:12.5px;line-height:1.8;overflow-wrap:anywhere;white-space:pre-line}#editor .import-extra small{color:var(--sub)}

@@ -42,7 +42,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
       else if(p==='size-presets'&&method==='POST'){const item={preset_id:'p'+(presets.n++).toString(16).padStart(11,'0'),name:body.name,...(body.kind==='style'?{style:body.style}:{text:body.text})};presets[body.kind==='style'?'styles':'phrases'].push(item);data=item}
       else if(p.startsWith('size-presets/')&&method==='DELETE'){const id=p.split('/')[1].split('?')[0];presets.styles=presets.styles.filter(x=>x.preset_id!==id);presets.phrases=presets.phrases.filter(x=>x.preset_id!==id);data={deleted:true}}
       else if(p==='size-guide-ai-status')data={available:aiAvailable};
-      else if(p==='size-guide-ai-import')data={columns:[{label:'الصدر',kind:'measurement'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['86','36']},{size:'M',values:['','38']}],unit:'in',notes:'ملاحظة من الصورة',warnings:['خانة فارغة']};
+      else if(p==='size-guide-ai-import')data={columns:[{label:'الصدر',kind:'measurement'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['86','36']},{size:'M',values:['','38']}],unit:'in',notes:'ملاحظة من الصورة',warnings:['خانة فارغة'],title:'عنوان من الصورة',size_label:'المقاس',measurement_type:'garment',category:'pets',language:'ar',instructions:'تعليمات من الصورة'};
       else if(p==='size-guide-stats')data={days:+u.searchParams.get('days'),opens:12,calcs:3,published_guides:2,daily:[{day:new Date().toISOString().slice(0,10),opens:12,calcs:3}],top:[{product_id:'43',title:'منتج قديم',opens:12,calcs:3}]};
       return {ok:true,json:async()=>JSON.parse(JSON.stringify(data))};   // a real response is never the server's own object
     };
@@ -126,8 +126,22 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     $('#aiRun').click();await settle();
     const ai=calls.find(c=>c.path.startsWith('size-guide-ai-import'));assert.equal(ai.method,'POST');assert.match(ai.body.image,/^data:image\/jpeg;base64,/);assert.deepEqual(Object.keys(ai.body),['image']);
     assert.equal(hidden('#importPreview'),false);assert.ok(all('#importWarnings li').some(li=>/الذكاء الاصطناعي/.test(li.textContent)));
+    // everything else the photo said is offered, and what the guide already holds is not replaced by surprise
+    assert.equal($('#importExtras').hidden,false);const extra=key=>$(`#importExtraList input[data-key="${key}"]`);
+    assert.deepEqual(all('#importExtraList input').map(i=>i.dataset.key),['title','size_label','unit','measurement_type','category','language','instructions','notes']);
+    assert.deepEqual(all('#importExtraList input').map(i=>i.checked),[false,false,true,true,true,true,false,true],'filled fields start unticked');
+    assert.match(extra('title').closest('label').textContent,/عنوان من الصورة.*سيستبدل/s);assert.match(extra('unit').closest('label').textContent,/إنش/);assert.match(extra('measurement_type').closest('label').textContent,/قياسات القطعة/);
+    extra('size_label').checked=false;
     $('#importApply').click();await settle();
+    assert.equal($('#guideTitle').value,'دليل الأحذية','an unticked field is left alone');assert.equal($('#instructions').value.includes('تعليمات من الصورة'),false);assert.equal($('#sizeLabel').value,'الحجم');assert.equal($('#measureType').value,'garment');
+    assert.equal($('#importExtras').hidden,true,'the panel closes after applying');
     assert.equal($('#guideUnit').value,'in');assert.equal($('#notes').value,'ملاحظة من الصورة');assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['الصدر','EU']);assert.equal($('#gridEditor [data-row="1"][data-cell="0"]').value,'');
+
+    // a second photo with every box ticked replaces the texts too
+    $('#importPanel').dispatchEvent(paste);$('#aiRun').click();await settle();
+    for(const box of all('#importExtraList input'))box.checked=true;$('#importApply').click();await settle();confirmed=true;
+    assert.deepEqual([$('#guideTitle').value,$('#sizeLabel').value,$('#instructions').value],['عنوان من الصورة','المقاس','تعليمات من الصورة']);assert.equal(guideWrap().querySelector('h2').textContent,'عنوان من الصورة');
+    input('#guideTitle','دليل الأحذية');input('#sizeLabel','الحجم');
 
     // ---- saving sends everything
     $('#saveDraft').click();await settle();
