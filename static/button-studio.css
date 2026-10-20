@@ -244,3 +244,4 @@ label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:
 :is(#quick,#editor) .qedit input{min-height:42px}:is(#quick,#editor) .qpanel select{min-height:42px;flex:1;min-width:150px}
 :is(#quick,#editor) .qerror{margin:0;padding:9px 12px;border-radius:9px;background:var(--danger-bg,#fff0f0);color:var(--danger-ink,#b02835);font-size:12.5px;line-height:1.7}
 @media(max-width:700px){:is(#quick,#editor) .quick-results{grid-template-columns:1fr}}
+#catalog .row-actions{display:flex;gap:8px;flex-wrap:wrap}

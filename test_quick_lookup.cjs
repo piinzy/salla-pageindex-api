@@ -22,7 +22,7 @@ function makeApp(url){
     if(state.fail&&method==='PUT'){const detail=state.fail;state.fail=null;return {ok:false,status:403,json:async()=>({detail})}}
     let data=[];
     if(p==='stores')data=[{merchant_id:'123',store_name:'متجر',product_count:3,connected:true}];
-    else if(p==='products'&&method==='GET')data={items:[],pages:1,total:0};
+    else if(p==='products'&&method==='GET')data={items:state.catalog.map(x=>({product_id:x.product_id,title:x.title,sku:x.sku,price:x.price,currency:x.currency,quantity:x.quantity,status:x.status,image:x.image,url:x.url})),pages:1,total:state.catalog.length};
     else if(p==='product-lookup'){const q=(u.searchParams.get('q')||'').toLowerCase();data={items:state.catalog.filter(x=>!q||x.title.toLowerCase().includes(q)||x.sku.toLowerCase().includes(q))}}
     else if(/^products\/\d+$/.test(p)&&method==='PUT'){const item=state.catalog.find(x=>x.product_id===p.split('/')[1]);Object.assign(item,{...(body.name&&{title:body.name}),...(body.price&&{price:body.price}),...(body.quantity!==undefined&&{quantity:body.quantity})});data={product:{...item},changed:{}}}
     else if(p==='button-settings')data={settings:{design:'outline'},version:0};
@@ -52,6 +52,25 @@ function makeApp(url){
   const press=(card,text)=>[...card.querySelectorAll('button')].find(b=>b.textContent.trim()===text).click();
   try{
     await settle();assert.equal(app.errors.length,0,app.errors.map(e=>e.message).join('\n'));
+
+    // ---- the section sits beside "products and tables" and "button settings", and every product row can open it
+    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['catalog','buttonSettings','quick','library','stats','install','activity'],'tab order');
+    assert.match($('aside nav [data-tab="quick"]').textContent,/تعديل المنتج/);assert.match($('#quick h2').textContent,/تعديل المنتج/);
+    assert.equal(all('#rows tr').length,3);
+    for(const row of all('#rows tr')){const labels=[...row.querySelectorAll('.row-actions button')].map(b=>b.textContent);assert.equal(labels.length,2);assert.equal(labels[1],'تعديل البيانات')}
+    assert.equal($('[data-edit="42"]').textContent,'إضافة مقاسات');assert.equal($('[data-edit="43"]').textContent,'تعديل الجدول');
+    $('[data-edit-data="44"]').click();await settle();
+    assert.equal(hidden('#quick'),false);assert.equal(hidden('#catalog'),true);assert.equal($('#quickSearch').value,'PT-44');
+    assert.equal(all('#quickResults .qcard').length,1);assert.ok($('#quickResults .qcard[data-product="44"] .qedit'),'the data form is already open');assert.equal($('#quickResults .qcard[data-product="44"] .qedit input').value,'طوق جلدي');
+    assert.equal($('aside nav [data-tab="quick"]').classList.contains('active'),true);
+    $('[data-tab="catalog"]').click();await settle();
+    // an unknown product says so and opens nothing
+    await w.SizeGuideQuick.focus('999','لا يوجد');assert.equal(all('#quickResults .qcard').length,0);assert.equal(all('#quickResults .qedit').length,0);
+    // unsaved work in the guide editor is protected
+    $('[data-tab="catalog"]').click();await settle();$('[data-edit="43"]').click();await settle();$('#guideTitle').value='غير محفوظ';$('#guideTitle').dispatchEvent(new w.Event('input',{bubbles:true}));
+    state.confirmed=false;await w.SizeGuideQuick.focus('43','SH-43');assert.equal(hidden('#editor'),false,'declining keeps the editor open');assert.equal(hidden('#quick'),true);
+    state.confirmed=true;await w.SizeGuideQuick.focus('43','SH-43');assert.equal(hidden('#quick'),false);assert.ok($('#quickResults .qcard[data-product="43"] .qedit'));
+    $('[data-tab="catalog"]').click();await settle();$('#quickSearch').value='';
 
     // ---- the standalone tab: compact cards for the first products, then a search by name or SKU
     $('[data-tab="quick"]').click();await settle();

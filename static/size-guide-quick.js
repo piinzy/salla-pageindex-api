@@ -6,6 +6,7 @@ const SizeGuideQuick=(() => {
     quick:{input:'#quickSearch',box:'#quickResults',count:'#quickCount',always:true},
     editor:{input:'#editorFind',box:'#editorFindResults',count:null,always:false},
   };
+  let skipOpen=false;
   const timers={},statusText={sale:'معروض للبيع',hidden:'مخفي',out:'نفدت الكمية','out-and-notify':'نفدت مع التنبيه'};
   const money=value=>value===null||value===undefined?'—':Number(value).toLocaleString('ar',{maximumFractionDigits:2});
   const guideText=p=>!p.has_guide?'بدون جدول':p.library_id?'مرتبط · '+(p.library_name||'جدول مشترك')+(p.is_published?'':' (غير منشور)'):p.is_published?(p.has_changes?'منشور + تعديلات مسودة':'منشور'):'مسودة';
@@ -39,7 +40,8 @@ const SizeGuideQuick=(() => {
     info.append(title,meta,chips);head.append(thumb,info);
     const actions=mk('div','qactions'),editPanel=mk('div','qpanel hidden'),linkPanel=mk('div','qpanel hidden');
     actions.append(button(p.has_guide?(p.library_id?'عرض الجدول':'تعديل الجدول'):'إضافة جدول',()=>openEditor(p.product_id).catch(e=>toast(e.message)),'small'));
-    actions.append(button('تعديل البيانات',()=>{editPanel.classList.toggle('hidden');linkPanel.classList.add('hidden');if(!editPanel.classList.contains('hidden'))buildEdit(editPanel,p,el,surface)}));
+    const editData=button('تعديل البيانات',()=>{editPanel.classList.toggle('hidden');linkPanel.classList.add('hidden');if(!editPanel.classList.contains('hidden'))buildEdit(editPanel,p,el,surface)});
+    editData.dataset.act='edit';el.dataset.product=p.product_id;actions.append(editData);
     actions.append(button(p.library_id?'تغيير الجدول المشترك':'ربط بجدول مشترك',()=>{linkPanel.classList.toggle('hidden');editPanel.classList.add('hidden');if(!linkPanel.classList.contains('hidden'))buildLink(linkPanel,p)}));
     if(p.library_id)actions.append(button('فصل الارتباط',()=>unlink(p)));
     else if(p.has_guide)actions.append(button(p.is_published&&!p.has_changes?'إيقاف الظهور':'نشر',()=>bulk(p,p.is_published&&!p.has_changes?'unpublish':'publish')));
@@ -114,7 +116,15 @@ const SizeGuideQuick=(() => {
     try{const d=await api('size-guides/copy'+qs(),{method:'POST',body:JSON.stringify({source_product_id:editing.product_id,product_ids:[p.product_id],overwrite,publish:false})});
       toast(d.copied.length?'نُسخ الجدول كمسودة مستقلة إلى «'+p.title+'». انشره من بطاقته.':'لم يُنسخ الجدول.');await refresh()}catch(e){toast(e.message)}
   }
+  /* From a catalog row: open the tool on that product with its data form ready. */
+  async function focus(productId,search){
+    if(!(await mayLeave()))return;dirty=false;
+    $('#quickSearch').value=search||'';skipOpen=true;show('quick');skipOpen=false;await run('quick');
+    const card=[...document.querySelectorAll('#quickResults .qcard')].find(c=>c.dataset.product===String(productId));
+    if(!card)return toast('لم أجد المنتج بهذا البحث. اكتب اسمه في خانة البحث.');
+    card.scrollIntoView?.({behavior:'smooth',block:'center'});card.querySelector('[data-act="edit"]').click();
+  }
   $('#quickSearch').oninput=()=>schedule('quick');$('#editorFind').oninput=()=>schedule('editor');
-  return {run,refresh,open:()=>run('quick'),clear:()=>{for(const s of Object.values(SURFACES))$(s.box).replaceChildren()}};
+  return {run,refresh,focus,open:()=>skipOpen?undefined:run('quick'),clear:()=>{for(const s of Object.values(SURFACES))$(s.box).replaceChildren()}};
 })();
 window.SizeGuideQuick=SizeGuideQuick;
