@@ -8,7 +8,7 @@ os.environ.setdefault('DASHBOARD_PASSWORD', 'testing-password-only')
 os.environ.setdefault('DASHBOARD_SESSION_SECRET', 'testing-session-secret-for-unit-tests-only')
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import dashboard, size_guides as sg, size_library as lib, size_stats as stats, size_presets as presets, button_settings as bs
+import dashboard, size_guides as sg, size_library as lib, size_stats as stats, size_presets as presets, quick_edit as quick, button_settings as bs
 from test_size_guides import G
 
 @unittest.skipUnless(DB, 'TEST_DATABASE_URL not set')
@@ -16,15 +16,15 @@ class LibraryDatabaseTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         dashboard.query('CREATE TABLE IF NOT EXISTS stores (merchant_id TEXT PRIMARY KEY, access_token TEXT, refresh_token TEXT, store_name TEXT)')
-        dashboard.initialize(); sg.initialize(); bs.initialize(); stats.initialize(); presets.initialize()
+        dashboard.initialize(); sg.initialize(); bs.initialize(); stats.initialize(); presets.initialize(); quick.initialize()
         app = FastAPI()
-        for router in (sg.router, lib.router, stats.router, presets.router):
+        for router in (sg.router, lib.router, stats.router, presets.router, quick.router):
             app.include_router(router)
         app.dependency_overrides[dashboard.authenticated] = lambda: None
         cls.client = TestClient(app)
 
     def setUp(self):
-        for table in ('size_guide_presets', 'size_guide_events', 'size_guide_library', 'product_size_guides', 'dashboard_catalog', 'stores'):
+        for table in ('product_edit_log', 'size_guide_presets', 'size_guide_events', 'size_guide_library', 'product_size_guides', 'dashboard_catalog', 'stores'):
             dashboard.query(f'DELETE FROM {table}')
         dashboard.query("INSERT INTO stores(merchant_id,access_token) VALUES('123','t'),('999','t')")
         for pid in ('1', '2', '3', '4'):
@@ -131,6 +131,47 @@ class LibraryDatabaseTests(unittest.TestCase):
         self.assertEqual([(t['product_id'], t['opens']) for t in data['top']], [('1', 2)])
         self.assertEqual(self.call('GET', '/dashboard-api/size-guide-stats?days=0').status_code, 400)
         self.assertEqual(self.call('GET', '/dashboard-api/size-guide-stats', merchant='999').json()['opens'], 0)
+
+    def test_lookup_shows_guide_state_and_matches_name_or_sku(self):
+        dashboard.query("UPDATE dashboard_catalog SET sku='DR-100',price=240 WHERE merchant_id='123' AND product_id='1'")
+        dashboard.query("UPDATE dashboard_catalog SET sku='SH-200',title='حذاء رياضي' WHERE merchant_id='123' AND product_id='2'")
+        lid = self.make_library()
+        self.call('POST', f'/dashboard-api/size-library/{lid}/link', json={'product_ids': ['1']})
+        self.call('PUT', '/dashboard-api/size-guides/2', json={'version': 0, 'guide': G, 'action': 'draft'})
+        everything = self.call('GET', '/dashboard-api/product-lookup').json()['items']
+        self.assertEqual({p['product_id'] for p in everything}, {'1', '2', '3', '4'}, 'an empty search lists products')
+        by = {p['product_id']: p for p in everything}
+        self.assertEqual((by['1']['has_guide'], by['1']['library_name'], by['1']['is_published']), (True, 'فساتين', True))
+        self.assertEqual((by['2']['has_guide'], by['2']['library_id'], by['2']['is_published']), (True, None, False))
+        self.assertEqual((by['3']['has_guide'], by['3']['is_published']), (False, False))
+        self.assertEqual([p['product_id'] for p in self.call('GET', '/dashboard-api/product-lookup?q=sh-2').json()['items']], ['2'], 'SKU, case-insensitive')
+        self.assertEqual([p['product_id'] for p in self.call('GET', '/dashboard-api/product-lookup?q=حذاء').json()['items']], ['2'])
+        self.assertEqual(self.call('GET', '/dashboard-api/product-lookup?q=100%25').json()['items'], [], 'a typed % is not a wildcard')
+        self.assertEqual(self.call('GET', '/dashboard-api/product-lookup?q=DR-100', merchant='999').json()['items'], [], 'other stores are invisible')
+        dashboard.query("INSERT INTO dashboard_catalog(merchant_id,product_id,title,status) SELECT '123',n::text,'منتج كثير','sale' FROM generate_series(100,130) n")
+        self.assertEqual(len(self.call('GET', '/dashboard-api/product-lookup?q=كثير').json()['items']), quick.LOOKUP_LIMIT)
+
+    def test_product_edit_updates_catalog_and_writes_an_audit_row(self):
+        from unittest.mock import patch, MagicMock
+        dashboard.query("UPDATE dashboard_catalog SET price=240,quantity=5 WHERE merchant_id='123' AND product_id='1'")
+        ok = MagicMock(status_code=200); ok.json.return_value = {'data': {'id': 1, 'name': 'فستان معدّل', 'price': {'amount': 199, 'currency': 'SAR'}, 'sku': 'DR-1', 'quantity': 5, 'status': 'sale'}}
+        with patch.object(quick.requests, 'put', return_value=ok) as put:
+            r = self.call('PUT', '/dashboard-api/products/1', json={'name': 'فستان معدّل', 'price': 199})
+        self.assertEqual(r.status_code, 200, r.text); self.assertEqual(put.call_args.kwargs['json'], {'name': 'فستان معدّل', 'price': 199.0})
+        row = dashboard.query("SELECT title,price,quantity,sku FROM dashboard_catalog WHERE merchant_id='123' AND product_id='1'", one=True)
+        self.assertEqual((row['title'], float(row['price']), float(row['quantity']), row['sku']), ('فستان معدّل', 199.0, 5.0, 'DR-1'))
+        log = dashboard.query("SELECT merchant_id,product_id,changes FROM product_edit_log", one=True)
+        self.assertEqual((log['merchant_id'], log['product_id'], log['changes']['price']), ('123', '1', {'from': 240.0, 'to': 199.0}))
+        # a refused edit leaves the catalog and the log untouched
+        refused = MagicMock(status_code=403)
+        with patch.object(quick.requests, 'put', return_value=refused):
+            self.assertEqual(self.call('PUT', '/dashboard-api/products/1', json={'price': 5}).status_code, 403)
+        self.assertEqual(float(dashboard.query("SELECT price FROM dashboard_catalog WHERE merchant_id='123' AND product_id='1'", one=True)['price']), 199.0)
+        self.assertEqual(dashboard.query('SELECT count(*) AS n FROM product_edit_log', one=True)['n'], 1)
+        # another store's product is never reachable
+        with patch.object(quick.requests, 'put') as other:
+            self.assertEqual(self.call('PUT', '/dashboard-api/products/2', merchant='999', json={'price': 5}).status_code, 404)
+            other.assert_not_called()
 
     def test_saved_looks_and_phrases_are_per_store_and_limited(self):
         look = {'theme': 'gold', 'color': '#a8812c', 'table_style': 'lines', 'size_style': 'plain'}
