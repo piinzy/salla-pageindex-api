@@ -81,5 +81,15 @@ function fillSeries(values){
   }
   return filled?{values:out,filled}:null;
 }
-window.SizeGuideImport={parseRows,toGrid,imageToDataUrl,fillSeries,MAX_COLUMNS,MAX_ROWS};
+/* Swap rows and columns: for a chart printed with the sizes across the top (or read that way by mistake). */
+function transpose(grid){
+  if(!grid||!grid.rows.length||!grid.columns.length)throw new Error('لا يوجد جدول لتبديله.');
+  const sources=grid.rows.slice(0,MAX_COLUMNS),labels=unique(sources.map(r=>r.size||'')),warnings=[];
+  if(grid.rows.length>MAX_COLUMNS)warnings.push(`بعد التبديل تُؤخذ أول ${MAX_COLUMNS} أعمدة فقط.`);
+  if(grid.columns.length>MAX_ROWS)warnings.push(`بعد التبديل تُؤخذ أول ${MAX_ROWS} صفًا فقط.`);
+  const rows=grid.columns.slice(0,MAX_ROWS).map((column,j)=>({size:String(column.label||'').slice(0,30),values:sources.map(r=>String(r.values[j]||'').slice(0,60))}));
+  const columns=labels.map((label,i)=>{const cells=rows.map(r=>r.values[i]).filter(Boolean);return {label,kind:cells.length&&cells.every(c=>NUMERIC.test(c))?'measurement':'text'}});
+  return {columns,rows,warnings};
+}
+window.SizeGuideImport={parseRows,toGrid,imageToDataUrl,fillSeries,transpose,MAX_COLUMNS,MAX_ROWS};
 })();

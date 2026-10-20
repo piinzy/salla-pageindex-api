@@ -118,6 +118,17 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     confirmed=true;$('#importApply').click();await settle();
     assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['الصدر','الخصر','EU']);assert.equal(all('#gridEditor tbody tr').length,3);assert.equal(hidden('#importPreview'),true);
     input('#pasteTable','only one line');$('#applyPaste').click();assert.equal(hidden('#importPreview'),true,'an unusable paste shows a message and no preview');
+    // a chart printed with the sizes across the top can be flipped before it is applied
+    input('#pasteTable','المقاس\t38/S\t40/M\nمحيط الصدر\t91.4\t96.5\nالطول\t147.3\t147.3');$('#applyPaste').click();
+    const heads=()=>all('#importTable thead th').map(th=>th.textContent.replace(/ ⌀$/,''));
+    assert.deepEqual(heads(),['المقاس','38/S','40/M']);assert.deepEqual(all('#importTable tbody tr').map(tr=>tr.firstChild.textContent),['محيط الصدر','الطول']);
+    $('#importTranspose').click();assert.deepEqual(heads(),['المقاس','محيط الصدر','الطول']);assert.deepEqual(all('#importTable tbody tr').map(tr=>tr.firstChild.textContent),['38/S','40/M']);
+    assert.ok(all('#importWarnings li').some(li=>/قُلبت/.test(li.textContent)));
+    $('#importTranspose').click();assert.deepEqual(heads(),['المقاس','38/S','40/M'],'a second press restores the first orientation');$('#importTranspose').click();
+    confirmed=true;$('#importApply').click();await settle();
+    assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['محيط الصدر','الطول']);assert.deepEqual(all('#gridEditor tbody tr').map(tr=>tr.querySelector('[data-size]').value),['38/S','40/M']);
+    assert.equal($('#gridEditor [data-row="1"][data-cell="0"]').value,'96.5');assert.equal(hidden('#importPreview'),true);
+    $('#importTranspose').click();assert.equal(hidden('#importPreview'),true,'nothing happens without a proposal');
     // import: photo read by Gemini (the server is stubbed; the canvas step is replaced)
     w.SizeGuideImport.imageToDataUrl=async()=> 'data:image/jpeg;base64,/9j/AAAA';
     $('#importPanel').open=true;$('#importPanel').dispatchEvent(new w.Event('toggle'));await settle();assert.equal($('#aiRun').disabled,false);
