@@ -38,6 +38,17 @@ try{
   assert.equal(I.fillSeries(['90','90','','']),null,'no step');assert.equal(I.fillSeries(['90','','','']),null,'needs two numbers');assert.equal(I.fillSeries(['S','M','','']),null);
   assert.equal(I.fillSeries(['90','86-90','','']),null,'a number and a range do not mix');assert.equal(I.fillSeries(['90','94','98','102']),null,'nothing to fill');
   assert.equal(I.fillSeries(['1','2','','x'].map(v=>v))?.values[2],'3');
+  // swap rows and columns: a chart with the sizes across the top
+  const across=I.toGrid('المقاس\t38/S\t40/M\t42/L\nمحيط الصدر\t91.4\t96.5\t101.6\nالطول\t147.3\t147.3\t147.3\nالأكمام\t61\t61\t61');
+  assert.deepEqual(j(across.columns.map(c=>c.label)),['38/S','40/M','42/L']);assert.deepEqual(j(across.rows.map(r=>r.size)),['محيط الصدر','الطول','الأكمام']);
+  const flipped=I.transpose(across);
+  assert.deepEqual(j(flipped.columns.map(c=>c.label)),['محيط الصدر','الطول','الأكمام']);assert.deepEqual(j(flipped.columns.map(c=>c.kind)),['measurement','measurement','measurement']);
+  assert.deepEqual(j(flipped.rows),[{size:'38/S',values:['91.4','147.3','61']},{size:'40/M',values:['96.5','147.3','61']},{size:'42/L',values:['101.6','147.3','61']}]);
+  const back=I.transpose(flipped);assert.deepEqual(j(back.rows.map(r=>r.size)),['محيط الصدر','الطول','الأكمام']);assert.deepEqual(j(back.rows[0].values),['91.4','96.5','101.6'],'swapping twice restores the data');
+  assert.deepEqual(j(I.transpose({columns:[{label:'EU',kind:'text'}],rows:[{size:'',values:['38']},{size:'',values:['40']}]}).columns.map(c=>c.label)),['عمود 1','عمود 2'],'blank size names get placeholders');
+  const huge=I.transpose({columns:Array.from({length:40},(_,i)=>({label:'c'+i,kind:'text'})),rows:Array.from({length:15},(_,i)=>({size:'s'+i,values:Array(40).fill('1')}))});
+  assert.equal(huge.columns.length,I.MAX_COLUMNS);assert.equal(huge.rows.length,I.MAX_ROWS);assert.equal(huge.warnings.length,2);
+  assert.throws(()=>I.transpose({columns:[],rows:[]}),/لا يوجد/);assert.throws(()=>I.transpose(null),/لا يوجد/);
   await_rejects();
   async function await_rejects(){
     await assert.rejects(I.imageToDataUrl({type:'application/pdf'}),/PNG/);await assert.rejects(I.imageToDataUrl(null),/PNG/);

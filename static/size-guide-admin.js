@@ -413,6 +413,10 @@ function showPending(extraWarnings=[]){
 }
 $('#applyPaste').onclick=()=>{try{pending=Import.toGrid($('#pasteTable').value);showPending()}catch(e){hidePending();toast(e.message)}};
 $('#importCancel').onclick=hidePending;
+$('#importTranspose').onclick=()=>{
+  if(!pending)return;
+  try{const swapped=Import.transpose(pending);pending={...pending,...swapped,warnings:[...swapped.warnings]};showPending(['قُلبت الصفوف والأعمدة. اضغط «تبديل» مرة أخرى لإرجاعها.'])}catch(e){toast(e.message)}
+};
 $('#importApply').onclick=async()=>{
   if(!pending)return;if(!blankGrid()&&!(await confirmAction('استبدال أعمدة وصفوف الجدول الحالي بالجدول المستورد؟')))return;
   guide.columns=pending.columns;guide.rows=pending.rows;

@@ -81,6 +81,40 @@ class AiImportTests(unittest.TestCase):
             plain = self.post().json()
         self.assertEqual((plain['title'], plain['instructions'], plain['notes'], plain['category']), ('', '', 'مرجع', None), 'a chart with no extra text returns empty fields')
 
+    def test_a_chart_printed_sideways_with_two_units_comes_back_one_row_per_size(self):
+        # La Vallee style: sizes across the top, measurements down the side, each size with IN and CM sub-columns
+        sideways = {'layout': 'sizes_across', 'units_present': ['cm', 'in'], 'unit': 'cm', 'size_header': 'المقاس', 'category': 'women', 'measurement_type': 'body', 'language': 'ar',
+                    'columns': ['محيط الصدر', 'الطول', 'الأكمام'], 'instructions': 'الصدر: أكبر جزء.', 'other_text': 'لافالي',
+                    'rows': [{'size': '38/S', 'values': ['91.4', '147.3', '61']}, {'size': '40/M', 'values': ['96.5', '147.3', '61']}]}
+        with patch.object(ai.requests, 'post', return_value=gemini(sideways)) as call:
+            data = self.post().json()
+        self.assertEqual([c['label'] for c in data['columns']], ['محيط الصدر', 'الطول', 'الأكمام'])
+        self.assertEqual([r['size'] for r in data['rows']], ['38/S', '40/M']); self.assertEqual(data['rows'][0]['values'], ['91.4', '147.3', '61'])
+        self.assertEqual((data['unit'], data['layout'], data['units_present'], data['size_label']), ('cm', 'sizes_across', ['cm', 'in'], 'المقاس'))
+        text = ' '.join(data['warnings']); self.assertIn('بالمقلوب', text); self.assertIn('الوحدتين', text)
+        prompt = call.call_args.kwargs['json']['contents'][0]['parts'][0]['text']
+        for rule in ('ORIENTATION', 'one ROW per size', 'transpose', 'ONLY the centimetre', 'never make separate columns', 'Arabic wording'):
+            self.assertIn(rule, prompt)
+        props = call.call_args.kwargs['json']['generationConfig']['responseSchema']['properties']
+        self.assertEqual(props['layout']['enum'], ['sizes_down', 'sizes_across', 'unknown']); self.assertIn('units_present', props)
+        # only inches printed: no "both units" note
+        inches = {**sideways, 'unit': 'in', 'units_present': ['in'], 'layout': 'sizes_down'}
+        with patch.object(ai.requests, 'post', return_value=gemini(inches)):
+            data = self.post().json()
+        self.assertEqual((data['unit'], data['layout'], data['warnings']), ('in', 'sizes_down', []))
+        with patch.object(ai.requests, 'post', return_value=gemini({**sideways, 'layout': 'bogus', 'units_present': 'cm'})):
+            data = self.post().json()
+        self.assertEqual((data['layout'], data['units_present']), (None, []), 'odd values are ignored')
+
+    def test_columns_named_only_by_units_flag_a_misread_chart(self):
+        misread = {'columns': ['IN', 'سم', 'IN 3', 'CM 4', 'انش'], 'rows': [{'size': 'S/38', 'values': ['36', '91.4', '38', '96.5', '40']}]}
+        with patch.object(ai.requests, 'post', return_value=gemini(misread)):
+            data = self.post().json()
+        self.assertTrue(any('تبديل الصفوف والأعمدة' in w for w in data['warnings']))
+        fine = {'columns': ['Chest', 'Waist', 'Length cm'], 'rows': [{'size': 'S', 'values': ['90', '70', '100']}]}
+        with patch.object(ai.requests, 'post', return_value=gemini(fine)):
+            self.assertFalse(any('قُرئ بشكل خاطئ' in w for w in self.post().json()['warnings']))
+
     def test_size_column_listed_among_the_headers_is_realigned(self):
         chart = {'columns': ['Size', 'Bust', 'Waist'], 'rows': [{'size': 'S', 'values': ['80', '60']}, {'size': 'M', 'values': ['84', '64']}]}
         with patch.object(ai.requests, 'post', return_value=gemini(chart)):
