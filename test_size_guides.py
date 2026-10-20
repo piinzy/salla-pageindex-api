@@ -30,6 +30,37 @@ class SizeGuideTests(unittest.TestCase):
         cats=re.findall(r"\{id:'([a-z]+)',name:'[^']+',emblem",script)
         self.assertEqual(set(themes),set(sg.Guide.model_fields['theme'].annotation.__args__))
         self.assertEqual(set(cats),set(sg.Guide.model_fields['category'].annotation.__args__))
+    def test_every_starter_template_is_a_valid_guide(self):
+        import json, pathlib, shutil, subprocess
+        if not shutil.which('node'):self.skipTest('node is not installed')
+        script=("const fs=require('fs');const w={};new Function('window',fs.readFileSync('static/size-guide-catalog.js','utf8'))(w);"
+                "console.log(JSON.stringify(w.SizeGuideCatalog.templates.map(t=>w.SizeGuideCatalog.fresh(t.id))))")
+        out=subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout
+        guides=json.loads(out);self.assertGreaterEqual(len(guides),20)
+        for guide in guides:
+            with self.subTest(category=guide['category'],columns=len(guide['columns'])):
+                parsed=sg.Guide(**guide)  # every key the editor produces is accepted by the server
+                self.assertTrue(parsed.calculator)
+        self.assertEqual(set(guides[0]),set(sg.Guide.model_fields),'the editor and the server agree on every field')
+    def test_ready_made_looks_are_valid_appearance_only(self):
+        import json, pathlib, shutil, subprocess
+        if not shutil.which('node'):self.skipTest('node is not installed')
+        script=("const fs=require('fs');const w={};new Function('window',fs.readFileSync('static/size-guide-catalog.js','utf8'))(w);"
+                "console.log(JSON.stringify({presets:w.SizeGuideCatalog.stylePresets,fields:w.SizeGuideCatalog.STYLE_FIELDS}))")
+        data=json.loads(subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout)
+        self.assertEqual(set(data['fields']),set(sg.STYLE_FIELDS),'editor and server agree on what a look contains')
+        self.assertEqual(len(data['presets']),6)
+        accents={'classic':'#177e65','rose':'#b4456a','velvet':'#7b2338','gold':'#a8812c','tailor':'#23375b','slate':'#3d4a56','sport':'#d9480f','leather':'#8a5a35','paws':'#d9701a','mint':'#1b8f7c','night':'#7be0c3','minimal':'#2b2b2b'}
+        for preset in data['presets']:
+            with self.subTest(preset=preset['id']):
+                style=sg.GuideStyle(**{**preset['style'],'color':accents[preset['style']['theme']]})
+                full=sg.Guide(**{**G,**style.model_dump()})   # a look can always be applied to a guide
+                self.assertEqual(full.columns[0].label,'محيط الصدر')
+    def test_style_model_never_carries_content(self):
+        for content in ['title','columns','rows','notes','instructions','category','language','calculator','how_video','logo_url','size_label']:
+            self.assertNotIn(content,sg.STYLE_FIELDS);self.assertNotIn(content,sg.GuideStyle.model_fields)
+        with self.assertRaises(ValidationError):sg.GuideStyle(title='x')
+        with self.assertRaises(ValidationError):sg.GuideStyle(color='red')
     def test_catalog_script_is_served(self):
         import button_settings as bs
         app=FastAPI();app.include_router(bs.router);r=TestClient(app).get('/size-guide-catalog.js')
