@@ -41,7 +41,7 @@ async function boot(){
   const wanted=new URLSearchParams(location.search).get('view');if(['quick','library','stats'].includes(wanted))show(wanted);
 }
 async function bootStores(){stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
-async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load()])}
+async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling()])}
 function stateOf(g){
   if(!g)return ['بدون جدول',false];
   const base=g.is_published?(g.has_changes?'منشور + تعديلات مسودة':'منشور'):'مسودة';
@@ -465,9 +465,21 @@ $('#importApply').onclick=async()=>{
   for(const [key,,,,apply] of IMPORT_EXTRAS)if(ticked.has(key)&&pending[key]){apply(pending[key]);applied++}
   hidePending();drawGrid();changed();toast('طُبّق الجدول المستورد'+(applied?' مع '+applied+' من الحقول المقروءة':'')+'. راجع الأرقام والنصوص ثم احفظ.');
 };
+/* Plan banner: only shown once the server enforces plans (BILLING_ENFORCE). */
+async function loadBilling(){
+  const bar=$('#billingBar');
+  try{const b=await api('billing'+qs());if(!b||!b.enforced){bar.classList.add('hidden');return}
+    const ai=b.ai,n=x=>Number(x).toLocaleString('ar');
+    let text,tone='ok';
+    if(b.plan==='trial')text=`تجربة مجانية: باقي ${n(b.trial_days_left)} يوم · صور الذكاء الاصطناعي المتبقية ${n(ai.remaining)} من ${n(ai.limit)}. للاشتراك (${n(b.price)} ر.س شهريًا) افتح صفحة التطبيق في سلة.`;
+    else if(b.plan==='paid')text=`الاشتراك فعّال${b.paid_until?' حتى '+date(b.paid_until):''} · صور الذكاء الاصطناعي هذا الشهر: ${n(ai.plan_remaining)} من ${n(ai.limit)}${ai.extra?' + رصيد إضافي '+n(ai.extra):''}.`;
+    else{text='انتهت التجربة أو الاشتراك: جداولك محفوظة لكنها مخفية عن عملائك حتى تشترك من صفحة التطبيق في سلة.';tone='warn'}
+    bar.textContent=text;bar.dataset.tone=tone;bar.classList.remove('hidden');
+  }catch{bar.classList.add('hidden')}
+}
 async function checkAi(){
   if(aiChecked)return;aiChecked=true;
-  try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}}catch{aiChecked=false}
+  try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}else if(typeof d.remaining==='number')$('#aiHint').textContent='المتبقي لك: '+d.remaining.toLocaleString('ar')+' صورة.'}catch{aiChecked=false}
 }
 $('#importPanel').addEventListener('toggle',()=>{if($('#importPanel').open)checkAi()});
 $('#aiFile').onchange=()=>{aiBlob=null};
@@ -478,7 +490,7 @@ $('#aiRun').onclick=async()=>{
   try{
     const image=await Import.imageToDataUrl(file);
     pending=await api('size-guide-ai-import'+qs(),{method:'POST',body:JSON.stringify({image})});
-    showPending(['قُرئ الجدول بالذكاء الاصطناعي وقد يخطئ في بعض الأرقام؛ راجع كل خانة قبل النشر.']);$('#aiStatus').textContent='تمت القراءة. راجع المعاينة وما قُرئ معها ثم اضغط «تطبيق على الجدول».';
+    showPending(['قُرئ الجدول بالذكاء الاصطناعي وقد يخطئ في بعض الأرقام؛ راجع كل خانة قبل النشر.']);loadBilling();$('#aiStatus').textContent='تمت القراءة. راجع المعاينة وما قُرئ معها ثم اضغط «تطبيق على الجدول».';
   }catch(e){hidePending();$('#aiStatus').textContent='';toast(e.message)}finally{$('#aiRun').disabled=false}
 };
 

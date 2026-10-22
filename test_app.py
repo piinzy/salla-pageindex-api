@@ -13,6 +13,17 @@ class AppTests(unittest.TestCase):
         self.env.start();self.addCleanup(self.env.stop)
         self.client=TestClient(main.app)
 
+    def test_app_lifecycle_events_reach_billing_and_bad_input_is_refused(self):
+        headers={'X-Salla-Token':'test-webhook-only'}
+        with patch.object(main,'billing_event',return_value=True) as billing:
+            r=self.client.post('/webhook',headers=headers,json={'event':'app.uninstalled','merchant':123,'data':{}})
+            self.assertEqual((r.status_code,r.json()['status']),(200,'success'));billing.assert_called_once_with('app.uninstalled','123',{})
+            for bad in ('x',None,True,'1'*40):
+                self.assertEqual(self.client.post('/webhook',headers=headers,json={'event':'app.uninstalled','merchant':bad}).status_code,400)
+        with patch.object(main,'billing_event',return_value=False):
+            self.assertEqual(self.client.post('/webhook',headers=headers,json={'event':'app.new.thing','merchant':1}).json()['status'],'ignored')
+        self.assertEqual(self.client.post('/webhook',json={'event':'app.uninstalled','merchant':1}).status_code,401)
+
     def test_root_and_head_are_lightweight(self):
         with patch.object(main.psycopg2,'connect') as connect:
             self.assertEqual(self.client.get('/').json(),{'status':'ok','service':'salla-size-guides'})

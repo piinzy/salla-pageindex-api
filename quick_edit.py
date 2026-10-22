@@ -102,9 +102,18 @@ def edit_product(product_id: str, merchant: str, body: ProductEdit):
             changes[field] = {'from': old, 'to': new}
     if not sent:
         raise HTTPException(400, 'لا يوجد تغيير عن القيم الحالية.')
+    def put(access):
+        return requests.put(f'{API}/products/{product_id}', json=sent, timeout=(5, 25), allow_redirects=False,
+                            headers={'Authorization': 'Bearer ' + access, 'Accept': 'application/json'})
     try:
-        response = requests.put(f'{API}/products/{product_id}', json=sent, timeout=(5, 25), allow_redirects=False,
-                                headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'})
+        response = put(token)
+        if response.status_code == 401:
+            # Expired token: renew it once and retry.
+            from salla_tokens import refresh, TokenError
+            try:
+                response = put(refresh(merchant, token))
+            except TokenError as error:
+                logger.warning('Token refresh failed: %s', error)   # the original 401 is reported below
     except requests.RequestException as error:
         logger.error('Salla product update failed: %s', type(error).__name__)
         raise HTTPException(502, 'تعذر الاتصال بسلة. حاول لاحقًا.') from None

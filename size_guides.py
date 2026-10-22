@@ -201,6 +201,8 @@ def unpublish(product_id:str,merchant:str,body:Version):
 def public_guide(merchant:str,product_id:str):
     if not re.fullmatch(r'[0-9]{1,30}',merchant) or not re.fullmatch(r'[0-9]{1,30}',product_id):
         return JSONResponse({'detail':'Not found'},status_code=404,headers=PUBLIC_HEADERS)
+    from billing import storefront_allowed
+    if not storefront_allowed(merchant):return JSONResponse({'detail':'Not found'},status_code=404,headers=PUBLIC_HEADERS)
     row=query('''SELECT CASE WHEN g.library_id IS NOT NULL THEN l.published ELSE g.published END AS guide,
         c.title AS product_name,b.settings AS button_settings
         FROM product_size_guides g JOIN dashboard_catalog c USING(merchant_id,product_id)

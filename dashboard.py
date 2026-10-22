@@ -139,12 +139,17 @@ def jobs(merchant:str):
     require_store(merchant)
     return query('SELECT * FROM dashboard_jobs WHERE merchant_id=%s ORDER BY started_at DESC LIMIT 20',(merchant,))
 
-def salla_get(path, token, params=None):
+def salla_get(path, token, params=None, merchant=None):
     for attempt in range(3):
         r=requests.get(API+path,headers={'Authorization':'Bearer '+token,'Accept':'application/json'},params=params,timeout=(5,20),allow_redirects=False)
         if r.status_code==429 or r.status_code>=500:
             if attempt<2: time.sleep(2**attempt); continue
-        if r.status_code==401: raise RuntimeError('انتهت صلاحية رمز الوصول. أعد إرسال رمز الوصول من سلة ثم أعد المزامنة.')
+        if r.status_code==401:
+            if merchant:
+                # Renew the store's token once and retry with it.
+                from salla_tokens import refresh
+                return salla_get(path,refresh(merchant,token),params)
+            raise RuntimeError('انتهت صلاحية رمز الوصول. أعد تثبيت التطبيق من سلة.')
         if r.status_code==403: raise RuntimeError('سلة رفضت الوصول. تحقق من صلاحية قراءة المنتجات في التطبيق.')
         if r.status_code!=200: raise RuntimeError(f'تعذر جلب المنتجات من سلة (HTTP {r.status_code}).')
         data=r.json()
@@ -177,7 +182,7 @@ def sync(merchant,job):
             query("UPDATE dashboard_jobs SET state='running' WHERE id=%s",(job,))
             page=1; seen=set()
             while True:
-                result=salla_get('/products',row['access_token'],{'page':page,'per_page':50})
+                result=salla_get('/products',row['access_token'],{'page':page,'per_page':50},merchant)
                 items=result.get('data')
                 if not isinstance(items,list): raise RuntimeError('قائمة المنتجات الواردة غير صالحة.')
                 pagination=result.get('pagination') or {}
@@ -223,6 +228,6 @@ def update_product_event(merchant,event,data):
         else:
             row=query('SELECT access_token FROM stores WHERE merchant_id=%s',(merchant,),True)
             if not row: raise HTTPException(404,'Unknown merchant')
-            p=salla_get('/products/'+str(product_id),row['access_token']).get('data')
+            p=salla_get('/products/'+str(product_id),row['access_token'],None,merchant).get('data')
             if not isinstance(p,dict): raise HTTPException(502,'Invalid product response')
             cur.execute(UPSERT,normalize(p,merchant))
