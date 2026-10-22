@@ -226,7 +226,12 @@ def ask_gemini(mime, raw, key):
 @router.get('/dashboard-api/size-guide-ai-status', dependencies=[Depends(authenticated)])
 def ai_status(merchant: str):
     require_store(merchant)
-    return {'available': bool(os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))}
+    from billing import enforcing, state
+    result = {'available': bool(os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))}
+    if enforcing():
+        plan = state(merchant)
+        result.update(remaining=plan['ai']['remaining'], plan=plan['plan'])
+    return result
 
 @router.post('/dashboard-api/size-guide-ai-import', dependencies=[Depends(authenticated)])
 def ai_import(merchant: str, body: ImportRequest):
@@ -237,7 +242,13 @@ def ai_import(merchant: str, body: ImportRequest):
     mime, raw = decode_image(body.image)
     if not allow(merchant):
         raise HTTPException(429, 'وصلت للحد الأقصى من عمليات الاستيراد هذه الساعة.')
+    from billing import consume_ai, refund_ai
+    source = consume_ai(merchant)
     try:
         return to_grid(ask_gemini(mime, raw, key))
     except ValueError:
+        refund_ai(merchant, source)
         raise HTTPException(502, 'لم أتمكن من قراءة جدول في هذه الصورة. جرّب صورة أوضح.') from None
+    except Exception:
+        refund_ai(merchant, source)   # a read that failed costs nothing
+        raise

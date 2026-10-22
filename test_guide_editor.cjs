@@ -12,7 +12,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
   const dom=new JSDOM(file('dashboard.html'),{url:'https://app.test/dashboard',runScripts:'dangerously',virtualConsole:console_}),w=dom.window,d=w.document;
   try{
     w.structuredClone=structuredClone;let confirmed=true;w.confirm=()=>confirmed;
-    const calls=[];let aiAvailable=true;const presets={styles:[{preset_id:'s00000000001',name:'تصميم قديم',style:{theme:'velvet',color:'#7b2338',table_style:'cards',density:'compact',corners:'round',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'none',font_scale:'small',sticky_size:true,header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''}}],phrases:[{preset_id:'f00000000001',name:'جملتي',text:'جملة محفوظة من التاجر'}],n:1};
+    const calls=[];let aiAvailable=true;let billing={enforced:true,plan:'trial',trial_days_left:5,price:389,paid_until:null,ai:{limit:3,used:0,plan_remaining:3,extra:0,remaining:3}};const presets={styles:[{preset_id:'s00000000001',name:'تصميم قديم',style:{theme:'velvet',color:'#7b2338',table_style:'cards',density:'compact',corners:'round',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'none',font_scale:'small',sticky_size:true,header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''}}],phrases:[{preset_id:'f00000000001',name:'جملتي',text:'جملة محفوظة من التاجر'}],n:1};
     const call=(method,part)=>calls.filter(c=>c.method===method&&c.path.includes(part));
     const guideIndex=()=>[{product_id:'43',title:'منتج قديم',sku:'S2',version:3,is_published:true,has_changes:false,library_id:null},
       {product_id:'44',title:'منتج مرتبط',sku:'S3',version:1,is_published:true,has_changes:false,library_id:LIB,library_name:'فساتين'}];
@@ -41,6 +41,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
       else if(p==='size-presets'&&method==='GET')data={styles:presets.styles,phrases:presets.phrases};
       else if(p==='size-presets'&&method==='POST'){const item={preset_id:'p'+(presets.n++).toString(16).padStart(11,'0'),name:body.name,...(body.kind==='style'?{style:body.style}:{text:body.text})};presets[body.kind==='style'?'styles':'phrases'].push(item);data=item}
       else if(p.startsWith('size-presets/')&&method==='DELETE'){const id=p.split('/')[1].split('?')[0];presets.styles=presets.styles.filter(x=>x.preset_id!==id);presets.phrases=presets.phrases.filter(x=>x.preset_id!==id);data={deleted:true}}
+      else if(p==='billing')data=billing;
       else if(p==='size-guide-ai-status')data={available:aiAvailable};
       else if(p==='size-guide-ai-import')data={columns:[{label:'الصدر',kind:'measurement'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['86','36']},{size:'M',values:['','38']}],unit:'in',notes:'ملاحظة من الصورة',warnings:['خانة فارغة'],title:'عنوان من الصورة',size_label:'المقاس',measurement_type:'garment',category:'pets',language:'ar',instructions:'تعليمات من الصورة'};
       else if(p==='size-guide-stats')data={days:+u.searchParams.get('days'),opens:12,calcs:3,published_guides:2,daily:[{day:new Date().toISOString().slice(0,10),opens:12,calcs:3}],top:[{product_id:'43',title:'منتج قديم',opens:12,calcs:3}]};
@@ -56,6 +57,8 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     const hidden=s=>$(s).classList.contains('hidden');
     assert.equal(all('#categoryChoices [name="guide-category"]').length,4);const pickCat=id=>{const sel=$('#specialType');sel.value=id;sel.dispatchEvent(new w.Event('change',{bubbles:true}))};
 
+    // plan banner: trial days and AI allowance, hidden when plans are not enforced
+    assert.equal(hidden('#billingBar'),false);assert.match($('#billingBar').textContent,/تجربة مجانية/);assert.match($('#billingBar').textContent,/389/);assert.equal($('#billingBar').dataset.tone,'ok');
     // ---- a brand-new guide starts as a women's dress guide with its own theme and template list
     $('[data-edit="42"]').click();await settle();
     assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'women');assert.equal($('[name="guide-theme"]:checked').value,'rose');
