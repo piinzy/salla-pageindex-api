@@ -53,7 +53,7 @@ class Guide(BaseModel):
     instructions:str=Field(default='',max_length=3000)
     color:str=Field(default='#177e65',pattern=r'^#[0-9a-fA-F]{6}$')
     category:Literal['general','women','men','kids','shoes','pets','accessories']='general'
-    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','minimal']='classic'
+    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','linen','minimal']='classic'
     table_style:Literal['zebra','lines','cards','plain']='zebra'
     density:Literal['compact','comfortable']='comfortable'
     corners:Literal['sharp','soft','round']='soft'
@@ -76,6 +76,8 @@ class Guide(BaseModel):
     calculator:bool=False
     language:Literal['ar','en','auto']='ar'
     how_images:list[str]=Field(default_factory=list,max_length=4)
+    side_image:str=Field(default='',max_length=300100)
+    side_image_back:str=Field(default='',max_length=300100)
     how_art:Literal['none','auto','women','men','kids']='none'
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)
@@ -84,6 +86,11 @@ class Guide(BaseModel):
     def check_images(cls,values):
         if any(not (HTTPS_URL.fullmatch(v) or DATA_IMAGE.fullmatch(v)) for v in values):raise ValueError('الصورة يجب أن تكون رابط https أو صورة مرفوعة (JPG أو PNG أو WebP)')
         return values
+    @field_validator('side_image','side_image_back')
+    @classmethod
+    def check_side(cls,value):
+        if value and not (HTTPS_URL.fullmatch(value) or DATA_IMAGE.fullmatch(value)):raise ValueError('الصورة يجب أن تكون رابط https أو صورة مرفوعة')
+        return value
     @field_validator('logo_url')
     @classmethod
     def check_logo(cls,value):

@@ -18,6 +18,7 @@ const themes=[
   {id:'paws',name:'مخالب مرحة',accent:'#d9701a',paper:'#fffbf5',ink:'#43290f',muted:'#87684a',line:'#f4e3cc',head:'tint',pattern:'paws',cats:['pets']},
   {id:'mint',name:'نعناع منعش',accent:'#1b8f7c',paper:'#f9fffd',ink:'#123b34',muted:'#587a73',line:'#d6efe9',head:'tint',pattern:'dots',cats:['pets','kids']},
   {id:'night',name:'ليلي',accent:'#7be0c3',paper:'#1d2326',ink:'#eef3f4',muted:'#a9b6ba',line:'#364045',head:'tint',pattern:'dots',dark:true,cats:['general','shoes','accessories']},
+  {id:'linen',name:'كتان هادئ',accent:'#2d2630',paper:'#f2ede6',ink:'#2a2523',muted:'#7a706a',line:'#ddd5cb',head:'line',pattern:'none',split:true,cats:['general','women','men','kids','accessories']},
   {id:'minimal',name:'بسيط',accent:'#2b2b2b',paper:'#ffffff',ink:'#1c1c1c',muted:'#6b6b6b',line:'#ebebeb',head:'tint',pattern:'none',cats:['general','accessories']},
 ];
 const emblems={
@@ -66,6 +67,17 @@ function measureGuide(art,categoryId,lang,custom){
   else{const doc=new DOMParser().parseFromString(diagrams[key].replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+(lang==='en'?'Measuring diagram':'رسم توضيحي للقياس')+'" '),'image/svg+xml');fig.append(document.importNode(doc.documentElement,true))}
   let list;if(custom&&custom.trim()){list=el('div',custom,'instructions side')}else{list=el('ol');tips.forEach(t=>list.append(el('li',t)))}
   box.append(fig,list);return box;
+}
+
+/* Split layout (calm "linen" theme): the table on one side, the store's own garment photo on the other, optional front/back views. */
+const sideOf=guide=>[guide.side_image,guide.side_image_back].map(u=>typeof u==='string'&&(HTTPS.test(u)||DATA_IMAGE.test(u))?u:'');
+function sideFigure(guide,lang,view,setView){
+  const [front,back]=sideOf(guide),side=el('aside',undefined,'side'),shown=view===1&&back?back:front;
+  if(shown){const img=el('img');img.alt=lang==='en'?'Product':'صورة المنتج';img.referrerPolicy='no-referrer';img.src=shown;side.append(img)}
+  else{const doc=new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" role="img" aria-label="'+(lang==='en'?'Garment':'قطعة ملابس')+'"><path d="M70 14 28 36l16 44 22-8v128h68V72l22 8 16-44-42-22q-30 18-60 0Z" fill="var(--ink)" opacity=".9"/><path d="M70 14q30 20 60 0" fill="none" stroke="var(--paper)" stroke-width="3" opacity=".5"/></svg>','image/svg+xml');side.append(document.importNode(doc.documentElement,true))}
+  if(front&&back){const views=el('div',undefined,'views');views.setAttribute('role','group');
+    [[0,lang==='en'?'Front':'أمامي'],[1,lang==='en'?'Back':'خلفي']].forEach(([i,label])=>{const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(view===i));b.onclick=()=>setView(i);views.append(b)});side.append(views)}
+  return side;
 }
 let emblemCount=0;
 function svgEl(markup,className){
@@ -120,6 +132,8 @@ const css=`:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line
 .wrap{--r:14px;--pad-y:13px;--pad-x:16px;--fs:.92rem;position:relative;overflow:hidden;isolation:isolate;background:var(--paper);color:var(--ink);border-radius:calc(var(--r) * 1.3)}
 .wrap[data-corners=sharp]{--r:3px}.wrap[data-corners=round]{--r:22px}.wrap[data-density=compact]{--pad-y:8px;--pad-x:11px}
 .wrap[data-font=small]{--fs:.8rem}.wrap[data-font=large]{--fs:1.05rem}
+.wrap[data-split="1"] #sg-table:not([hidden]){display:grid;grid-template-columns:minmax(0,1.5fr) minmax(190px,1fr);gap:0 26px;align-items:start}.tcol{min-width:0}.side{display:flex;flex-direction:column;align-items:center;gap:14px;padding-inline-start:24px;border-inline-start:1px solid var(--line)}.side img,.side svg{display:block;width:100%;max-width:280px;max-height:340px;object-fit:contain}.views{display:flex;gap:8px}.views button{min-height:38px;padding:3px 18px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font-size:.82rem}.views button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}.wrap{container-type:inline-size}@container (max-width:680px){.wrap[data-split="1"] #sg-table:not([hidden]){grid-template-columns:1fr}.side{border:0;padding:18px 0 0;order:2}}
+.wrap[data-theme=linen] h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:.01em}.wrap[data-theme=linen] .units{background:color-mix(in srgb,var(--ink) 9%,var(--paper));border-color:transparent;border-radius:999px}.wrap[data-theme=linen] .units button{border-radius:999px}.wrap[data-theme=linen] .units button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px #0003}
 .hero{position:relative;display:flex;align-items:center;gap:18px;padding:26px 28px 22px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 17%,var(--paper)),var(--paper) 75%)}
 .hero:before{content:'';position:absolute;inset:0;z-index:-1;background:var(--pattern);opacity:.7;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 60%);mask-image:linear-gradient(90deg,transparent,#000 60%)}
 .emblem{flex:0 0 84px;width:84px;height:84px;color:var(--accent);overflow:visible;filter:drop-shadow(0 12px 10px color-mix(in srgb,var(--accent) 32%,transparent))}
@@ -238,7 +252,7 @@ const HTTPS=/^https:\/\/[^\s"'<>\\]{4,480}$/;
 function render(host,guide,productName,close){
   host.replaceChildren();const {theme:t,vars}=tokens(guide),p=palette(guide),lang=language(guide),w=words[lang];let unit=guide.unit;
   const box=el('div',undefined,'wrap');for(const [key,value] of Object.entries(vars))box.style.setProperty(key,value);box.dir=lang==='en'?'ltr':'rtl';
-  box.dataset.table=guide.table_style||'zebra';box.dataset.density=guide.density||'comfortable';box.dataset.corners=guide.corners||'soft';box.dataset.depth=guide.depth3d===false?'0':'1';box.dataset.theme=t.id;
+  box.dataset.table=guide.table_style||'zebra';box.dataset.density=guide.density||'comfortable';box.dataset.corners=guide.corners||'soft';box.dataset.depth=guide.depth3d===false?'0':'1';box.dataset.theme=t.id;box.dataset.split=t.split?'1':'0';
   box.dataset.sizestyle=['chip','pill','square','underline','plain'].includes(guide.size_style)?guide.size_style:'chip';box.dataset.head=p.headStyle;
   box.dataset.border=['none','thin','strong'].includes(guide.border_style)?guide.border_style:'thin';box.dataset.font=['small','large'].includes(guide.font_scale)?guide.font_scale:'medium';box.dataset.sticky=guide.sticky_size===false?'0':'1';
   const cat=category(guide.category),hero=el('div',undefined,'hero'),titles=el('div',undefined,'titles');
@@ -266,19 +280,20 @@ function render(host,guide,productName,close){
     b.onclick=()=>select(id);
     b.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?tabDefs.length-1:(i+(e.key==='ArrowRight'?(lang==='en'?1:-1):(lang==='en'?-1:1))+tabDefs.length)%tabDefs.length;tabButtons[next].click();tabButtons[next].focus()}};
   });
-  let hit=-1,refreshLabels=()=>{};
+  let hit=-1,sideView=0,refreshLabels=()=>{};
   function draw(){
-    refreshLabels();grid.replaceChildren();const bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
+    refreshLabels();grid.replaceChildren();const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
     for(const [code,label] of [['cm',w.cm],['in',w.inch]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(unit===code));b.onclick=()=>{unit=code;draw()};units.append(b)}
-    bar.append(el('span',w.scroll,'legend'),units);grid.append(bar);
+    bar.append(el('span',w.scroll,'legend'),units);col.append(bar);
     const scroll=el('div',undefined,'scroll');scroll.tabIndex=0;scroll.setAttribute('aria-label',w.tableLabel);
     const table=el('table'),thead=el('thead'),tr=el('tr');tr.append(el('th',guide.size_label||w.size));
     for(const c of guide.columns)tr.append(el('th',c.label+(c.kind==='measurement'?' ('+(unit==='cm'?w.cm:w.inch)+')':'')));
     for(const x of tr.children)x.scope='col';thead.append(tr);table.append(thead);
     const tb=el('tbody');guide.rows.forEach((r,index)=>{const row=el('tr',undefined,index===hit?'hit':''),label=el('th');label.scope='row';label.append(el('span',r.size||'—','chip'));row.append(label);
       r.values.forEach((v,i)=>row.append(el('td',guide.columns[i]?.kind==='measurement'?convert(v,guide.unit,unit):v)));tb.append(row)});
-    table.append(tb);scroll.append(table);grid.append(scroll);if(guide.notes)grid.append(el('p',guide.notes,'notes'));
-    grid.append(el('p',w.hint,'hint'));
+    table.append(tb);scroll.append(table);col.append(scroll);if(guide.notes)col.append(el('p',guide.notes,'notes'));
+    col.append(el('p',w.hint,'hint'));grid.append(col);
+    if(t.split)grid.append(sideFigure(guide,lang,sideView,i=>{sideView=i;draw()}));
   }
   if(hasFinder){
     finder.append(el('p',w.intro));const fields=el('div',undefined,'fields'),inputs={},result=el('div',undefined,'result');result.setAttribute('aria-live','polite');

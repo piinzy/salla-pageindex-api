@@ -341,7 +341,7 @@ function syncColors(){
 }
 function syncAdvanced(){
   $('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
-  $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');drawUploads();syncColors();
+  $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');drawUploads();drawSide();syncColors();
 }
 function blankGrid(){return guide.rows.every(r=>r.values.every(v=>!String(v).trim()))}
 function setCategory(id){
@@ -388,6 +388,13 @@ function drawUploads(){
     remove.onclick=()=>{guide.how_images=guide.how_images.filter((_,i)=>i!==index);drawUploads();changed()};item.append(img,remove);box.append(item)});
 }
 $('#howImages').oninput=()=>{if(!guide)return;const links=$('#howImages').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),uploads=(guide.how_images||[]).filter(isUpload);setHowImages(links,uploads);changed()};
+let sideSlot='';
+function drawSide(){document.querySelectorAll('#sideRow .side-slot').forEach(slot=>{const key=slot.dataset.slot,box=slot.querySelector('[data-thumb]');box.replaceChildren();const value=guide?.[key];if(!value)return;
+  const item=mk('div','upload-thumb'),img=mk('img'),remove=mk('button','secondary small','×');img.src=value;img.alt='صورة المنتج';remove.type='button';remove.setAttribute('aria-label','حذف الصورة');remove.onclick=()=>{guide[key]='';drawSide();changed()};item.append(img,remove);box.append(item)})}
+document.querySelectorAll('#sideRow [data-up]').forEach(b=>b.onclick=()=>{sideSlot=b.closest('.side-slot').dataset.slot;$('#sideFile').click()});
+$('#sideFile').onchange=async()=>{const file=$('#sideFile').files[0];$('#sideFile').value='';if(!file||!guide||!sideSlot)return;
+  try{let data=await Import.imageToDataUrl(file,900,.8);if(data.length>280000)data=await Import.imageToDataUrl(file,640,.7);if(data.length>290000)return toast('الصورة كبيرة جدًا حتى بعد التصغير.');
+    guide[sideSlot]=data;drawSide();changed();toast('تمت إضافة الصورة. اضغط حفظ لتظهر للعملاء.')}catch(error){toast(error.message||'تعذر رفع الصورة.')}};
 $('#howUploadBtn').onclick=()=>$('#howUploadFile').click();
 $('#howUploadFile').onchange=async()=>{
   const file=$('#howUploadFile').files[0];$('#howUploadFile').value='';if(!file||!guide)return;
