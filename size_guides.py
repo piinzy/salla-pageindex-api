@@ -12,6 +12,7 @@ from button_settings import ButtonSettings
 
 router=APIRouter()
 HEX_OR_EMPTY=r'^(#[0-9a-fA-F]{6})?$'
+DATA_IMAGE=re.compile(r'data:image/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]{20,300000}')
 HTTPS_URL=re.compile(r'https://[^\s"\'<>\\]{4,480}')
 VIDEO_URL=re.compile(r'https://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|player\.vimeo\.com/video/|vimeo\.com/)[A-Za-z0-9_-]{5,20}(?:[?&][A-Za-z0-9_=&.-]{0,60})?')
 PUBLIC_HEADERS={'Access-Control-Allow-Origin':'*','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}
@@ -75,12 +76,13 @@ class Guide(BaseModel):
     calculator:bool=False
     language:Literal['ar','en','auto']='ar'
     how_images:list[str]=Field(default_factory=list,max_length=4)
+    how_diagram:bool=False
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)
     @field_validator('how_images')
     @classmethod
     def check_images(cls,values):
-        if any(not HTTPS_URL.fullmatch(v) for v in values):raise ValueError('رابط الصورة يجب أن يبدأ بـ https')
+        if any(not (HTTPS_URL.fullmatch(v) or DATA_IMAGE.fullmatch(v)) for v in values):raise ValueError('الصورة يجب أن تكون رابط https أو صورة مرفوعة (JPG أو PNG أو WebP)')
         return values
     @field_validator('logo_url')
     @classmethod

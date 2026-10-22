@@ -29,6 +29,44 @@ const emblems={
   ring:'<path class="body" fill-rule="evenodd" d="M32 22a17 17 0 1 0 0 34 17 17 0 1 0 0-34Zm0 7a10 10 0 1 1 0 20 10 10 0 1 1 0-20Z"/><path class="sole" d="m32 5 8 8-8 10-8-10Z"/>',
   tape:'<circle class="body" cx="26" cy="32" r="20"/><circle class="hole" cx="26" cy="32" r="8"/><path class="sole" d="M44 36h16v10q0 2-2 2H44Z"/><path class="tick" d="M49 36v5M53 36v3M57 36v5"/>',
 };
+
+/* Ready-made "how to measure" drawings: dashed rings show where to wrap the tape, arrows show lengths. */
+const dash='fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="6 4" stroke-linecap="round"',arrow='fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"',outline='fill="var(--paper)" stroke="var(--muted)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"';
+const pin=(x,y,n)=>`<g><circle cx="${x}" cy="${y}" r="9" fill="var(--accent)"/><text x="${x}" y="${y+3.6}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--on-accent,#fff)">${n}</text></g>`;
+const person=(x,hip,shoulder)=>`<g transform="translate(${x} 0)"><circle cx="0" cy="26" r="13" ${outline}/><path d="M-${shoulder} 54Q0 46 ${shoulder} 54L${shoulder-2} 118 ${hip} 124 ${hip-4} 196H-6V150H6V196H${-hip+4}L-${hip} 124-${shoulder-2} 118Z" ${outline}/><path d="M-${shoulder} 56-${shoulder+14} 120M${shoulder} 56${shoulder+14} 120" ${outline}/></g>`;
+const diagrams={
+  women:`<svg viewBox="0 0 240 210">${person(120,32,26)}<ellipse cx="120" cy="76" rx="27" ry="6" ${dash}/><ellipse cx="120" cy="104" rx="21" ry="5" ${dash}/><ellipse cx="120" cy="126" rx="32" ry="6" ${dash}/><path d="M72 52V196M68 58l4-6 4 6M68 190l4 6 4-6" ${arrow}/>${pin(168,76,1)}${pin(168,104,2)}${pin(168,126,3)}${pin(60,124,4)}</svg>`,
+  men:`<svg viewBox="0 0 240 210">${person(120,26,32)}<ellipse cx="120" cy="76" rx="32" ry="6" ${dash}/><ellipse cx="120" cy="116" rx="26" ry="5" ${dash}/><path d="M66 52V196M62 58l4-6 4 6M62 190l4 6 4-6" ${arrow}/><path d="M158 56l22 62" ${arrow}/>${pin(172,76,1)}${pin(160,116,2)}${pin(54,124,3)}${pin(186,126,4)}</svg>`,
+  kids:`<svg viewBox="0 0 240 210">${person(120,22,24)}<ellipse cx="120" cy="76" rx="24" ry="5.5" ${dash}/><ellipse cx="120" cy="106" rx="19" ry="5" ${dash}/><path d="M76 52V196M72 58l4-6 4 6M72 190l4 6 4-6" ${arrow}/>${pin(162,76,1)}${pin(158,106,2)}${pin(62,124,3)}</svg>`,
+  shoes:`<svg viewBox="0 0 240 210"><path d="M96 24Q120 14 144 24Q158 40 154 92 152 150 146 172Q140 194 120 194 100 194 94 172 88 150 86 92 82 40 96 24Z" ${outline}/><path d="M120 6V206M114 12l6-6 6 6M114 200l6 6 6-6" ${arrow}/><path d="M72 96H168M78 90l-6 6 6 6M162 90l6 6-6 6" ${arrow}/>${pin(186,60,1)}${pin(60,60,2)}</svg>`,
+  pets:`<svg viewBox="0 0 240 210"><path d="M52 92Q52 70 78 70H168Q196 70 196 96 196 118 184 122V164H168V126H92V164H76V122Q52 118 52 92Z" ${outline}/><path d="M52 92 36 54 60 62Z" ${outline}/><ellipse cx="68" cy="96" rx="7" ry="22" ${dash}/><ellipse cx="128" cy="98" rx="9" ry="28" ${dash}/><path d="M72 56H190M78 50l-6 6 6 6M184 50l6 6-6 6" ${arrow}/>${pin(46,120,1)}${pin(128,142,2)}${pin(132,40,3)}</svg>`,
+  accessories:`<svg viewBox="0 0 240 210"><circle cx="120" cy="108" r="52" ${outline}/><circle cx="120" cy="108" r="38" fill="none" stroke="var(--muted)" stroke-width="1.4"/><path d="M82 108H158M88 102l-6 6 6 6M152 102l6 6-6 6" ${arrow}/><circle cx="120" cy="108" r="52" ${dash} opacity=".55"/>${pin(120,172,1)}${pin(120,70,2)}</svg>`,
+  general:`<svg viewBox="0 0 240 210"><rect x="30" y="78" width="180" height="54" rx="8" ${outline}/><path d="M54 78v18M78 78v12M102 78v18M126 78v12M150 78v18M174 78v12M198 78v18" stroke="var(--muted)" stroke-width="1.6"/><path d="M38 160H202M46 154l-8 6 8 6M194 154l8 6-8 6" ${arrow}/>${pin(120,40,1)}</svg>`,
+};
+const measureTips={
+  ar:{women:['الصدر: لفّ المتر حول أعرض نقطة من الصدر وهو مشدود بدون ضغط.','الخصر: قِس عند أنحف نقطة من الجذع.','الأرداف: قِس حول أعرض نقطة من الورك.','الطول: من أعلى الكتف حتى المكان الذي تريد أن تصل إليه القطعة.'],
+    men:['الصدر: لفّ المتر تحت الإبطين حول أعرض نقطة من الصدر.','الخصر: قِس عند مستوى السرّة.','الطول: من أعلى الكتف حتى نهاية القطعة.','الكم: من الكتف حتى المعصم والذراع مفرودة قليلًا.'],
+    kids:['الصدر: لفّ المتر تحت الإبطين حول أعرض نقطة.','الخصر: قِس عند أنحف نقطة من الجذع.','الطول: من أعلى الكتف حتى الكاحل، ويقف الطفل مستقيمًا.'],
+    shoes:['طول القدم: ضع قدمك على ورقة وعلّم أطول نقطة بين الإصبع والكعب، ثم قِس المسافة.','عرض القدم: قِس أعرض نقطة من القدم.'],
+    pets:['الرقبة: قِس حول الرقبة عند مكان الطوق، واترك فراغًا يسع إصبعين.','الصدر: قِس حول أعرض جزء من الصدر خلف الأرجل الأمامية.','الظهر: من أسفل الرقبة حتى أول الذيل.'],
+    accessories:['القطر: قِس عرض الدائرة الداخلية من الحافة إلى الحافة.','المحيط: لفّ شريطًا رفيعًا حول الإصبع أو المعصم، ثم قِس طوله.'],
+    general:['افرد المتر على القطعة أو الجسم بدون شدّ زائد، واقرأ الرقم عند أول نقطة تلتقي فيها بداية الشريط.']},
+  en:{women:['Bust: wrap the tape around the fullest part of the chest, snug but not tight.','Waist: measure at the narrowest part of the torso.','Hips: measure around the widest part of the hips.','Length: from the top of the shoulder to where you want the garment to end.'],
+    men:['Chest: wrap the tape under the arms around the fullest part of the chest.','Waist: measure at navel level.','Length: from the top of the shoulder to the hem.','Sleeve: from the shoulder to the wrist with the arm slightly bent.'],
+    kids:['Chest: wrap the tape under the arms around the fullest part.','Waist: measure at the narrowest part of the torso.','Height: from the top of the shoulder to the ankle, standing straight.'],
+    shoes:['Foot length: stand on paper, mark the longest point from heel to toe, then measure the distance.','Foot width: measure the widest part of the foot.'],
+    pets:['Neck: measure where the collar sits, leaving room for two fingers.','Chest: measure the widest part of the chest behind the front legs.','Back: from the base of the neck to the base of the tail.'],
+    accessories:['Diameter: measure the inside width edge to edge.','Circumference: wrap a thin strip around the finger or wrist, then measure its length.'],
+    general:['Lay the tape flat on the item or body without pulling, and read the number where the tape meets its start.']},
+};
+function measureGuide(categoryId,lang){
+  const id=diagrams[categoryId]?categoryId:'general',tips=(measureTips[lang]||measureTips.ar)[id]||[];
+  const box=el('section',undefined,'measure');box.setAttribute('aria-label',lang==='en'?'How to measure':'طريقة أخذ القياس');
+  const doc=new DOMParser().parseFromString(diagrams[id].replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+(lang==='en'?'Measuring diagram':'رسم توضيحي للقياس')+'" '),'image/svg+xml');
+  const fig=el('div',undefined,'figure');fig.append(document.importNode(doc.documentElement,true));
+  const list=el('ol');tips.forEach((t,i)=>{const li=el('li',t);li.value=i+1;list.append(li)});
+  box.append(fig,list);return box;
+}
 let emblemCount=0;
 function svgEl(markup,className){
   const id='sgShine'+(++emblemCount),doc=new DOMParser().parseFromString(
@@ -129,6 +167,7 @@ tbody th{position:sticky;inset-inline-start:0;z-index:1;background:var(--paper);
 tbody tr.hit>*{background:color-mix(in srgb,var(--accent) 22%,var(--paper))!important;font-weight:700}
 .notes{font-size:.82rem;color:var(--muted);white-space:pre-wrap;margin:16px 0 0;padding:11px 14px;background:var(--alt);border-radius:var(--r);border-inline-start:3px solid var(--accent)}
 .instructions{white-space:pre-wrap;font-size:.95rem;line-height:2;padding:6px 2px}.hint{font-size:.72rem;color:var(--muted);margin:12px 0 0}
+.measure{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:18px;align-items:center;margin:18px 0 6px;padding:14px;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}.measure .figure svg{display:block;width:100%;height:auto}.measure ol{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:.88rem;line-height:1.8}.measure li{display:flex;gap:10px;align-items:flex-start}.measure li::before{content:counter(item);counter-increment:item;flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);font-size:.72rem;font-weight:700;display:grid;place-items:center;margin-top:3px}.measure ol{counter-reset:item}@media(max-width:520px){.measure{grid-template-columns:1fr}}
 .how-media{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:16px}
 .how-media img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}
 .video{margin-top:16px;aspect-ratio:16/9;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000}.video iframe{display:block;width:100%;height:100%;border:0}
@@ -193,6 +232,7 @@ function videoEmbed(url){
   const youtube=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{5,20})/),vimeo=url.match(/vimeo\.com\/(?:video\/)?([A-Za-z0-9_-]{5,20})/);
   return youtube?'https://www.youtube-nocookie.com/embed/'+youtube[1]:vimeo?'https://player.vimeo.com/video/'+vimeo[1]:'';
 }
+const DATA_IMAGE=/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+\/=]{20,300000}$/;
 const HTTPS=/^https:\/\/[^\s"'<>\\]{4,480}$/;
 function render(host,guide,productName,close){
   host.replaceChildren();const {theme:t,vars}=tokens(guide),p=palette(guide),lang=language(guide),w=words[lang];let unit=guide.unit;
@@ -212,7 +252,8 @@ function render(host,guide,productName,close){
   const tabDefs=[['table',w.table],['how',w.how],...(hasFinder?[['finder',w.finder]]:[])],tabButtons=[],panels={};
   const grid=el('div'),how=el('div'),finder=el('div',undefined,'finder');panels.table=grid;panels.how=how;panels.finder=finder;
   how.append(el('div',guide.instructions||w.noHow,'instructions'));
-  const images=(guide.how_images||[]).filter(u=>HTTPS.test(u)).slice(0,4);
+  if(guide.how_diagram===true)how.append(measureGuide(cat.id,lang));
+  const images=(guide.how_images||[]).filter(u=>HTTPS.test(u)||DATA_IMAGE.test(u)).slice(0,4);
   if(images.length){const media=el('div',undefined,'how-media');for(const u of images){const img=el('img');img.loading='lazy';img.alt=w.image;img.referrerPolicy='no-referrer';img.src=u;media.append(img)}how.append(media)}
   const embed=guide.how_video?videoEmbed(guide.how_video):'';
   if(embed){const wrapper=el('div',undefined,'video'),frame=el('iframe');frame.src=embed;frame.title=w.video;frame.loading='lazy';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');wrapper.append(frame);how.append(wrapper)}

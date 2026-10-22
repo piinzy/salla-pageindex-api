@@ -23,6 +23,12 @@ class SizeGuideTests(unittest.TestCase):
         self.assertEqual((new.category,new.theme,new.table_style,new.depth3d),('pets','paws','cards',False))
         for bad in [{'category':'cars'},{'theme':'neon'},{'table_style':'grid'},{'density':'tiny'},{'corners':'blob'},{'depth3d':'maybe'}]:
             with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,**bad})
+    def test_measure_images_accept_https_or_small_uploads_only(self):
+        up='data:image/jpeg;base64,'+'A'*200
+        ok=sg.Guide(**{**G,'how_images':['https://cdn.example.com/a.jpg',up],'how_diagram':True})
+        self.assertTrue(ok.how_diagram);self.assertFalse(sg.Guide(**G).how_diagram)
+        for bad in ['http://x.example.com/a.jpg','data:image/svg+xml;base64,'+'A'*200,'data:text/html;base64,'+'A'*200,'data:image/jpeg;base64,'+'A'*300001,'javascript:alert(1)']:
+            with self.subTest(bad=bad[:40]),self.assertRaises(ValidationError):sg.Guide(**{**G,'how_images':[bad]})
     def test_themes_and_categories_match_the_window_script(self):
         import re,pathlib
         script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')

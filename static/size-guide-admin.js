@@ -293,11 +293,17 @@ const SEGMENTS=[
 ];
 const COLOR_FIELDS=[['header_bg','headBg','خلفية الترويسة'],['header_text','headInk','نص الترويسة'],['row_alt','alt','الصفوف المتبادلة'],['border_color','line','الحدود'],
   ['text_color','ink','نص الجدول'],['paper_color','paper','خلفية الجدول'],['size_bg','chipBg','خلفية خانة المقاس'],['size_text','chipInk','نص خانة المقاس']];
+/* Flat one-colour line icons for the category picker (the 3D emblems stay on the storefront header). */
+const LINE_ICONS={general:'<path d="M4 9h16v6H4zM8 9v3M12 9v2M16 9v3"/>',women:'<path d="M9 3l-2 4 2 3-3 11h12l-3-11 2-3-2-4-3 2z"/>',men:'<path d="M8 4l-5 3 2 5 3-1v9h8v-9l3 1 2-5-5-3q-2 2-4 2T8 4z"/>',
+  kids:'<path d="M9 5L4 8l1 4 3-1v9h8v-9l3 1 1-4-5-3q-2 2-6 0z"/><path d="M12 11.500l.9 1.800 2 .3-1.450 1.400.35 2-1.800-.950-1.800.950.35-2L9.100 13.600l2-.3z"/>',shoes:'<path d="M3 15v-4l4-1 3-4 3 2h3q4 1 5 6v2H4z"/><path d="M3 18h18"/>',
+  pets:'<circle cx="6" cy="11" r="1.8"/><circle cx="10" cy="6.500" r="1.8"/><circle cx="14.500" cy="6.500" r="1.8"/><circle cx="18.500" cy="11" r="1.8"/><path d="M12 12c-3 0-5.500 2.500-5.500 5 0 2 1.700 2.800 3.200 2.500 1-.2 1.600-.6 2.300-.6s1.300.4 2.300.6c1.500.3 3.200-.5 3.200-2.500 0-2.500-2.500-5-5.500-5z"/>',
+  accessories:'<circle cx="12" cy="15" r="6"/><path d="M9 4l-1.500 3h9L15 4z"/>'};
+function catIcon(id){const d=LINE_ICONS[id]||LINE_ICONS.general,svg=new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`,'image/svg+xml');return document.importNode(svg.documentElement,true)}
 function buildChoices(){
   const box=$('#categoryChoices');box.replaceChildren();
   for(const c of UIX?.categories||[]){
-    const label=mk('label','cat-card'),radio=mk('input');radio.type='radio';radio.name='guide-category';radio.value=c.id;radio.setAttribute('aria-label',c.name);
-    label.style.color=Catalog?.defaults[c.id]?.color||'#177e65';label.append(radio,UIX.emblem(c.id),mk('span','',c.name));radio.onchange=()=>{if(radio.checked)setCategory(c.id)};box.append(label);
+    const label=mk('label','cat-card'),radio=mk('input'),icon=mk('span','cat-icon'),ico=catIcon(c.id);radio.type='radio';radio.name='guide-category';radio.value=c.id;radio.setAttribute('aria-label',c.name);
+    label.style.setProperty('--cat',Catalog?.defaults[c.id]?.color||'#177e65');if(ico)icon.append(ico);label.append(radio,icon,mk('span','cat-name',c.name),mk('span','cat-check','✓'));radio.onchange=()=>{if(radio.checked)setCategory(c.id)};box.append(label);
   }
   for(const [id,key,options] of SEGMENTS){
     const group=$('#'+id);group.replaceChildren();
@@ -328,7 +334,7 @@ function syncColors(){
 }
 function syncAdvanced(){
   $('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
-  $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).join('\n');syncColors();
+  $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');$('#howDiagram').checked=guide.how_diagram===true;drawUploads();syncColors();
 }
 function blankGrid(){return guide.rows.every(r=>r.values.every(v=>!String(v).trim()))}
 function setCategory(id){
@@ -366,7 +372,28 @@ async function save(action){
 /* ---------- editor controls ---------- */
 for(const [id,key] of [['guideTitle','title'],['buttonLabel','button_label'],['measureType','measurement_type'],['guideColor','color'],['instructions','instructions'],['notes','notes'],['sizeLabel','size_label']])$('#'+id).oninput=()=>{if(!guide)return;guide[key]=$('#'+id).value;changed()};
 for(const [id,key] of [['howVideo','how_video'],['logoUrl','logo_url']])$('#'+id).oninput=()=>{if(!guide)return;guide[key]=$('#'+id).value.trim();changed()};
-$('#howImages').oninput=()=>{if(!guide)return;guide.how_images=$('#howImages').value.split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(0,4);changed()};
+const isUpload=value=>/^data:image\//.test(value);
+function setHowImages(links,uploads){guide.how_images=[...links,...uploads].slice(0,4)}
+function drawUploads(){
+  const box=$('#howUploads');box.replaceChildren();if(!guide)return;
+  (guide.how_images||[]).forEach((value,index)=>{if(!isUpload(value))return;
+    const item=mk('div','upload-thumb'),img=mk('img'),remove=mk('button','secondary small','×');img.src=value;img.alt='صورة مرفوعة '+(index+1);remove.type='button';remove.setAttribute('aria-label','حذف الصورة');
+    remove.onclick=()=>{guide.how_images=guide.how_images.filter((_,i)=>i!==index);drawUploads();changed()};item.append(img,remove);box.append(item)});
+}
+$('#howImages').oninput=()=>{if(!guide)return;const links=$('#howImages').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),uploads=(guide.how_images||[]).filter(isUpload);setHowImages(links,uploads);changed()};
+$('#howDiagram').onchange=()=>{if(!guide)return;guide.how_diagram=$('#howDiagram').checked;changed()};
+$('#howUploadBtn').onclick=()=>$('#howUploadFile').click();
+$('#howUploadFile').onchange=async()=>{
+  const file=$('#howUploadFile').files[0];$('#howUploadFile').value='';if(!file||!guide)return;
+  if((guide.how_images||[]).length>=4)return toast('الحد الأقصى 4 صور. احذف صورة أولًا.');
+  try{
+    let data=await Import.imageToDataUrl(file,900,.8);if(data.length>280000)data=await Import.imageToDataUrl(file,640,.7);
+    if(data.length>290000)return toast('الصورة كبيرة جدًا حتى بعد التصغير. استخدم صورة أبسط أو رابطًا.');
+    const links=(guide.how_images||[]).filter(x=>!isUpload(x)),uploads=(guide.how_images||[]).filter(isUpload);
+    if(links.length+uploads.length>=4)return toast('الحد الأقصى 4 صور. احذف صورة أولًا.');
+    uploads.push(data);setHowImages(links,uploads);drawUploads();changed();toast('تمت إضافة الصورة. اضغط حفظ لتظهر للعملاء.');
+  }catch(error){toast(error.message||'تعذر رفع الصورة.')}
+};
 for(const [id,key] of [['depth3d','depth3d'],['headerIcon','header_icon'],['stickySize','sticky_size'],['calculator','calculator']])$('#'+id).onchange=()=>{if(guide){guide[key]=$('#'+id).checked;changed()}};
 $('#resetTableColors').onclick=()=>{if(!guide)return;for(const [key] of COLOR_FIELDS)guide[key]='';changed()};
 $('#guideUnit').onchange=async()=>{const to=$('#guideUnit').value;if(!(await confirmAction('سيتم تحويل القيم الرقمية والنطاقات إلى الوحدة الجديدة. هل تتابع؟'))){$('#guideUnit').value=guide.unit;return}guide.rows.forEach(r=>r.values=r.values.map((v,i)=>guide.columns[i].kind==='measurement'?window.SizeGuideUI.convert(v,guide.unit,to):v));guide.unit=to;drawGrid();changed()};
