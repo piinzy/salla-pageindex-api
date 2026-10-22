@@ -7,7 +7,7 @@ const w=dom.window,d=w.document;
 try{
   w.eval(read('size-guide-renderer.js'));w.eval(read('size-guide-catalog.js'));
   const UI=w.SizeGuideUI,Catalog=w.SizeGuideCatalog;
-  assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,12);
+  assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,13);
 
   // every starter template satisfies the server's grid rules and ships no invented measurements
   for(const t of Catalog.templates){
@@ -130,6 +130,12 @@ try{
     assert.equal(r.querySelector('.measure .instructions.side').textContent,'الصدر: قياس أكبر جزء');assert.equal(r.querySelectorAll('#sg-how .instructions').length,1,'text only once, beside the picture');assert.equal(r.querySelector('.measure li'),null);
     UI.preview(host,{...guide,category:'women',how_art:'none',instructions:'نص'},'منتج');assert.equal(shadow(host).querySelector('.measure'),null);assert.equal(shadow(host).querySelector('#sg-how .instructions').textContent,'نص');
     assert.equal(UI.tipsFor('auto','men','ar').tips.length,4);}
+   {const lin={...guide,theme:'linen'},img='https://cdn.example.com/tee.png',back='data:image/jpeg;base64,'+'B'.repeat(60);
+    UI.preview(host,lin,'x');let r=shadow(host);assert.equal(r.querySelector('.wrap').dataset.split,'1');assert.ok(r.querySelector('#sg-table .tcol table'));assert.ok(r.querySelector('#sg-table .side svg'),'drawn garment when no photo');assert.equal(r.querySelector('.side .views'),null);
+    UI.preview(host,{...lin,side_image:img},'x');r=shadow(host);assert.equal(r.querySelector('.side img').src,img);assert.equal(r.querySelector('.side .views'),null);
+    UI.preview(host,{...lin,side_image:img,side_image_back:back,side_image:'javascript:alert(1)'},'x');assert.equal(shadow(host).querySelector('.side img'),null,'bad urls ignored');
+    UI.preview(host,{...lin,side_image:img,side_image_back:back},'x');r=shadow(host);assert.equal(r.querySelectorAll('.side .views button').length,2);r.querySelectorAll('.side .views button')[1].click();assert.equal(shadow(host).querySelector('.side img').src,back);
+    UI.preview(host,guide,'x');assert.equal(shadow(host).querySelector('.side'),null,'other themes unchanged');}
    const up='data:image/jpeg;base64,'+'A'.repeat(60);UI.preview(host,{...guide,how_images:[up,'data:image/svg+xml;base64,'+'A'.repeat(60),'data:text/html;base64,'+'A'.repeat(60)]},'منتج');
    const imgs=[...shadow(host).querySelectorAll('.how-media img')];assert.equal(imgs.length,1);assert.equal(imgs[0].src,up);}
   // the store's colour: kept when readable, nudged when not, header suited to its weight
@@ -140,7 +146,7 @@ try{
    for(const bad of ['red','#12345','','javascript:x',null,undefined])assert.equal(UI.brandStyle(bad),null);
    assert.ok(Math.abs(UI.contrast('#000000','#ffffff')-21)<.01);}
   // ready-made looks only touch appearance fields and render with every theme
-  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.length,6);
+  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.length,7);
    for(const preset of C.stylePresets){
      assert.ok(Object.keys(preset.style).every(k=>allowed.has(k)),'only appearance fields: '+preset.id);
      for(const key of ['header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'])assert.equal(preset.style[key],'','no leftover custom colours: '+preset.id);
@@ -149,5 +155,5 @@ try{
    }
    assert.equal(C.STYLE_FIELDS.filter(k=>['title','columns','rows','notes','instructions','category','language','calculator'].includes(k)).length,0,'content never travels with a look');
    for(const c of UI.categories){const list=C.phrasesFor(c.id);assert.ok(list.length>=4);assert.ok(list.every(x=>x.length<=300&&x.trim()));assert.equal(new Set(list).size,list.length)}}
-  console.log('PASS: 7 categories x 12 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
+  console.log('PASS: 7 categories x 13 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
 }finally{w.close();}

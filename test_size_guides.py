@@ -30,6 +30,11 @@ class SizeGuideTests(unittest.TestCase):
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'how_art':'dogs'})
         for bad in ['http://x.example.com/a.jpg','data:image/svg+xml;base64,'+'A'*200,'data:text/html;base64,'+'A'*200,'data:image/jpeg;base64,'+'A'*300001,'javascript:alert(1)']:
             with self.subTest(bad=bad[:40]),self.assertRaises(ValidationError):sg.Guide(**{**G,'how_images':[bad]})
+    def test_side_images_accept_https_or_small_uploads_only(self):
+        ok=sg.Guide(**{**G,'theme':'linen','side_image':'https://cdn.example.com/tee.png','side_image_back':'data:image/webp;base64,'+'A'*100})
+        self.assertEqual(ok.theme,'linen');self.assertEqual(sg.Guide(**G).side_image,'')
+        for bad in ['http://x.example.com/a.png','javascript:alert(1)','data:image/svg+xml;base64,'+'A'*100]:
+            with self.subTest(bad=bad[:30]),self.assertRaises(ValidationError):sg.Guide(**{**G,'side_image':bad})
     def test_themes_and_categories_match_the_window_script(self):
         import re,pathlib
         script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')
@@ -56,8 +61,8 @@ class SizeGuideTests(unittest.TestCase):
                 "console.log(JSON.stringify({presets:w.SizeGuideCatalog.stylePresets,fields:w.SizeGuideCatalog.STYLE_FIELDS}))")
         data=json.loads(subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout)
         self.assertEqual(set(data['fields']),set(sg.STYLE_FIELDS),'editor and server agree on what a look contains')
-        self.assertEqual(len(data['presets']),6)
-        accents={'classic':'#177e65','rose':'#b4456a','velvet':'#7b2338','gold':'#a8812c','tailor':'#23375b','slate':'#3d4a56','sport':'#d9480f','leather':'#8a5a35','paws':'#d9701a','mint':'#1b8f7c','night':'#7be0c3','minimal':'#2b2b2b'}
+        self.assertEqual(len(data['presets']),7)
+        accents={'classic':'#177e65','rose':'#b4456a','velvet':'#7b2338','gold':'#a8812c','tailor':'#23375b','slate':'#3d4a56','sport':'#d9480f','leather':'#8a5a35','paws':'#d9701a','mint':'#1b8f7c','night':'#7be0c3','linen':'#2d2630','minimal':'#2b2b2b'}
         for preset in data['presets']:
             with self.subTest(preset=preset['id']):
                 style=sg.GuideStyle(**{**preset['style'],'color':accents[preset['style']['theme']]})

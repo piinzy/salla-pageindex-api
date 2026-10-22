@@ -65,6 +65,7 @@ const stylePresets=[
   {id:'calm',name:'هادئ',hint:'خطوط رفيعة وألوان منعشة',style:{theme:'mint',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:true,size_style:'underline',header_style:'plain',border_style:'thin',font_scale:'medium'}},
   {id:'sporty',name:'رياضي',hint:'مدمج وحيوي بشارات مجسمة',style:{theme:'sport',table_style:'zebra',density:'compact',corners:'soft',depth3d:true,header_icon:true,size_style:'chip',header_style:'solid',border_style:'thin',font_scale:'medium'}},
   {id:'luxury',name:'فاخر',hint:'ذهبي بخط تحت الترويسة',style:{theme:'gold',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
+  {id:'linen',name:'كتان هادئ',hint:'خلفية دافئة وصورة منتجك بجانب الجدول',style:{theme:'linen',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
   {id:'minimal',name:'بسيط',hint:'أبيض نظيف بلا زخرفة',style:{theme:'minimal',table_style:'plain',density:'compact',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'plain',border_style:'none',font_scale:'medium'}},
 ].map(p=>({...p,style:{...noCustomColors,sticky_size:true,...p.style}}));
 /* Short notes a store tends to repeat under its tables; the merchant can add their own. */
@@ -82,7 +83,7 @@ const forCategory=category=>templates.filter(item=>item.category===category);
 /* Style fields every guide has; guides saved before they existed read as these values (the finder stays off for them). */
 const styleDefaults={category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
   size_style:'chip',header_style:'auto',border_style:'auto',font_scale:'medium',sticky_size:true,size_label:'',header_bg:'',header_text:'',row_alt:'',
-  border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_art:'auto',how_video:'',logo_url:''};
+  border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_art:'auto',side_image:'',side_image_back:'',how_video:'',logo_url:''};
 /* A new guide for a category; blank cells keep the "enter your own numbers" rule. */
 function fresh(templateId,category='general'){
   const item=templates.find(x=>x.id===templateId)||forCategory(category)[0]||templates[templates.length-1],base=defaults[item.category]||defaults.general;
