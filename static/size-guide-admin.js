@@ -289,6 +289,7 @@ const SEGMENTS=[
   ['headerStyleSeg','header_style',[['auto','حسب الثيم'],['tint','هادئة'],['solid','ممتلئة'],['plain','شفافة'],['line','بخط']]],
   ['borderStyleSeg','border_style',[['auto','حسب الثيم'],['none','بلا'],['thin','رفيعة'],['strong','سميكة']]],
   ['fontScaleSeg','font_scale',[['small','صغير'],['medium','متوسط'],['large','كبير']]],
+  ['howArtSeg','how_art',[['auto','حسب الفئة'],['women','نسائي'],['men','رجالي'],['kids','أطفال'],['none','بدون']]],
   ['languageSeg','language',[['ar','العربية'],['en','English'],['auto','حسب المتجر']]],
 ];
 const COLOR_FIELDS=[['header_bg','headBg','خلفية الترويسة'],['header_text','headInk','نص الترويسة'],['row_alt','alt','الصفوف المتبادلة'],['border_color','line','الحدود'],
@@ -299,12 +300,17 @@ const LINE_ICONS={general:'<path d="M4 9h16v6H4zM8 9v3M12 9v2M16 9v3"/>',women:'
   pets:'<circle cx="6" cy="11" r="1.8"/><circle cx="10" cy="6.500" r="1.8"/><circle cx="14.500" cy="6.500" r="1.8"/><circle cx="18.500" cy="11" r="1.8"/><path d="M12 12c-3 0-5.500 2.500-5.500 5 0 2 1.700 2.800 3.200 2.500 1-.2 1.600-.6 2.300-.6s1.300.4 2.300.6c1.500.3 3.200-.5 3.200-2.500 0-2.500-2.500-5-5.500-5z"/>',
   accessories:'<circle cx="12" cy="15" r="6"/><path d="M9 4l-1.500 3h9L15 4z"/>'};
 function catIcon(id){const d=LINE_ICONS[id]||LINE_ICONS.general,svg=new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`,'image/svg+xml');return document.importNode(svg.documentElement,true)}
+const SPECIAL=['general','shoes','pets','accessories'],groupOf=id=>SPECIAL.includes(id)?'special':id;
 function buildChoices(){
   const box=$('#categoryChoices');box.replaceChildren();
-  for(const c of UIX?.categories||[]){
-    const label=mk('label','cat-card'),radio=mk('input'),icon=mk('span','cat-icon'),ico=catIcon(c.id);radio.type='radio';radio.name='guide-category';radio.value=c.id;radio.setAttribute('aria-label',c.name);
-    label.style.setProperty('--cat',Catalog?.defaults[c.id]?.color||'#177e65');if(ico)icon.append(ico);label.append(radio,icon,mk('span','cat-name',c.name),mk('span','cat-check','✓'));radio.onchange=()=>{if(radio.checked)setCategory(c.id)};box.append(label);
+  const names=Object.fromEntries((UIX?.categories||[]).map(c=>[c.id,c.name]));
+  const tiles=[['women','نسائي'],['men','رجالي'],['kids','أطفال'],['special','خاص']];
+  for(const [id,name] of tiles){
+    const label=mk('label','cat-card'),radio=mk('input'),icon=mk('span','cat-icon'),ico=catIcon(id==='special'?'general':id);radio.type='radio';radio.name='guide-category';radio.value=id;radio.setAttribute('aria-label',name);
+    label.style.setProperty('--cat',Catalog?.defaults[id==='special'?'general':id]?.color||'#177e65');icon.append(ico);label.append(radio,icon,mk('span','cat-name',name),mk('span','cat-check','✓'));
+    radio.onchange=()=>{if(radio.checked)setCategory(id==='special'?(SPECIAL.includes(guide?.category)?guide.category:'general'):id)};box.append(label);
   }
+  const special=$('#specialType');special.replaceChildren(...SPECIAL.map(id=>{const o=mk('option','',names[id]||id);o.value=id;return o}));special.onchange=()=>setCategory(special.value);
   for(const [id,key,options] of SEGMENTS){
     const group=$('#'+id);group.replaceChildren();
     for(const [value,text] of options){const label=mk('label'),radio=mk('input');radio.type='radio';radio.name='guide-'+key;radio.value=value;label.append(radio,mk('span','',text));group.append(label);radio.onchange=()=>{if(radio.checked&&guide){guide[key]=value;syncChoices();changed()}}}
@@ -320,8 +326,9 @@ function buildChoices(){
 }
 function syncChoices(){
   if(!guide)return;
-  for(const [name,value] of [['guide-category',guide.category],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
+  for(const [name,value] of [['guide-category',groupOf(guide.category)],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
     document.querySelectorAll(`#editor [name="${name}"]`).forEach(r=>{r.checked=r.value===value;r.closest('label').classList.toggle('selected',r.checked)});
+  $('#specialRow').classList.toggle('hidden',!SPECIAL.includes(guide.category));$('#specialType').value=guide.category;
   $('#depth3d').checked=guide.depth3d!==false;$('#headerIcon').checked=guide.header_icon!==false;
 }
 /* Colour pickers show the colour in effect: the merchant's own, or the one the theme would use. */
@@ -334,7 +341,7 @@ function syncColors(){
 }
 function syncAdvanced(){
   $('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
-  $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');$('#howDiagram').checked=guide.how_diagram===true;drawUploads();syncColors();
+  $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');drawUploads();syncColors();
 }
 function blankGrid(){return guide.rows.every(r=>r.values.every(v=>!String(v).trim()))}
 function setCategory(id){
@@ -381,7 +388,6 @@ function drawUploads(){
     remove.onclick=()=>{guide.how_images=guide.how_images.filter((_,i)=>i!==index);drawUploads();changed()};item.append(img,remove);box.append(item)});
 }
 $('#howImages').oninput=()=>{if(!guide)return;const links=$('#howImages').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),uploads=(guide.how_images||[]).filter(isUpload);setHowImages(links,uploads);changed()};
-$('#howDiagram').onchange=()=>{if(!guide)return;guide.how_diagram=$('#howDiagram').checked;changed()};
 $('#howUploadBtn').onclick=()=>$('#howUploadFile').click();
 $('#howUploadFile').onchange=async()=>{
   const file=$('#howUploadFile').files[0];$('#howUploadFile').value='';if(!file||!guide)return;

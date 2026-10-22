@@ -76,7 +76,7 @@ class Guide(BaseModel):
     calculator:bool=False
     language:Literal['ar','en','auto']='ar'
     how_images:list[str]=Field(default_factory=list,max_length=4)
-    how_diagram:bool=False
+    how_art:Literal['none','auto','women','men','kids']='none'
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)
     @field_validator('how_images')
