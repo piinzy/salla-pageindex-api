@@ -57,13 +57,14 @@ const measureTips={
     accessories:['Diameter: measure the inside width edge to edge.','Circumference: wrap a thin strip around the finger or wrist, then measure its length.'],
     general:['Lay the tape flat on the item or body without pulling, and read the number where the tape meets its start.']},
 };
-function measureGuide(art,categoryId,lang){
-  const id=art==='auto'?categoryId:art,key=(measureTips.ar[id]?id:'general'),tips=(measureTips[lang]||measureTips.ar)[key]||[];
+const tipsFor=(art,categoryId,lang)=>{const id=art==='auto'?categoryId:art,key=measureTips.ar[id]?id:'general';return {key,tips:(measureTips[lang]||measureTips.ar)[key]||[]}};
+function measureGuide(art,categoryId,lang,custom){
+  const {key,tips}=tipsFor(art,categoryId,lang);
   const box=el('section',undefined,'measure');box.setAttribute('aria-label',lang==='en'?'How to measure':'طريقة أخذ القياس');
   const fig=el('div',undefined,'figure');
   if(MEASURE_ART[key]){const a=MEASURE_ART[key],img=el('img');img.src=a.src;img.width=a.w;img.height=a.h;img.alt=lang==='en'?'Measuring diagram':'رسم توضيحي للقياس';fig.className='figure photo';fig.append(img)}
   else{const doc=new DOMParser().parseFromString(diagrams[key].replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+(lang==='en'?'Measuring diagram':'رسم توضيحي للقياس')+'" '),'image/svg+xml');fig.append(document.importNode(doc.documentElement,true))}
-  const list=el('ol');tips.forEach(t=>list.append(el('li',t)));
+  let list;if(custom&&custom.trim()){list=el('div',custom,'instructions side')}else{list=el('ol');tips.forEach(t=>list.append(el('li',t)))}
   box.append(fig,list);return box;
 }
 let emblemCount=0;
@@ -166,7 +167,7 @@ tbody th{position:sticky;inset-inline-start:0;z-index:1;background:var(--paper);
 tbody tr.hit>*{background:color-mix(in srgb,var(--accent) 22%,var(--paper))!important;font-weight:700}
 .notes{font-size:.82rem;color:var(--muted);white-space:pre-wrap;margin:16px 0 0;padding:11px 14px;background:var(--alt);border-radius:var(--r);border-inline-start:3px solid var(--accent)}
 .instructions{white-space:pre-wrap;font-size:.95rem;line-height:2;padding:6px 2px}.hint{font-size:.72rem;color:var(--muted);margin:12px 0 0}
-.measure{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:18px;align-items:center;margin:18px 0 6px;padding:14px;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}.measure .figure.photo{background:#fff;border-radius:12px;padding:8px;justify-self:center}.measure .figure.photo img{display:block;max-width:100%;max-height:300px;width:auto;height:auto}.measure .figure svg{display:block;width:100%;height:auto}.measure ol{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:.88rem;line-height:1.8}.measure li{display:flex;gap:10px;align-items:flex-start}.measure li::before{content:counter(item);counter-increment:item;flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);font-size:.72rem;font-weight:700;display:grid;place-items:center;margin-top:3px}.measure ol{counter-reset:item}@media(max-width:520px){.measure{grid-template-columns:1fr}}
+.measure{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:18px;align-items:center;margin:18px 0 6px;padding:14px;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}.measure .figure.photo{background:#fff;border-radius:12px;padding:8px;justify-self:center}.measure .figure.photo img{display:block;max-width:100%;max-height:300px;width:auto;height:auto}.measure .figure svg{display:block;width:100%;height:auto}.measure .instructions.side{padding:0;font-size:.9rem;line-height:1.9}.measure ol{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:.88rem;line-height:1.8}.measure li{display:flex;gap:10px;align-items:flex-start}.measure li::before{content:counter(item);counter-increment:item;flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);font-size:.72rem;font-weight:700;display:grid;place-items:center;margin-top:3px}.measure ol{counter-reset:item}@media(max-width:520px){.measure{grid-template-columns:1fr}}
 .how-media{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:16px}
 .how-media img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}
 .video{margin-top:16px;aspect-ratio:16/9;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000}.video iframe{display:block;width:100%;height:100%;border:0}
@@ -251,8 +252,8 @@ function render(host,guide,productName,close){
   const measured=guide.columns.map((c,i)=>c.kind==='measurement'?i:-1).filter(i=>i>=0),hasFinder=guide.calculator===true&&measured.length>0;
   const tabDefs=[['table',w.table],['how',w.how],...(hasFinder?[['finder',w.finder]]:[])],tabButtons=[],panels={};
   const grid=el('div'),how=el('div'),finder=el('div',undefined,'finder');panels.table=grid;panels.how=how;panels.finder=finder;
-  how.append(el('div',guide.instructions||w.noHow,'instructions'));
-  if(HOW_ART.includes(guide.how_art)&&guide.how_art!=='none')how.append(measureGuide(guide.how_art,cat.id,lang));
+  const showArt=HOW_ART.includes(guide.how_art)&&guide.how_art!=='none';
+  if(showArt)how.append(measureGuide(guide.how_art,cat.id,lang,guide.instructions));else how.append(el('div',guide.instructions||w.noHow,'instructions'));
   const images=(guide.how_images||[]).filter(u=>HTTPS.test(u)||DATA_IMAGE.test(u)).slice(0,4);
   if(images.length){const media=el('div',undefined,'how-media');for(const u of images){const img=el('img');img.loading='lazy';img.alt=w.image;img.referrerPolicy='no-referrer';img.src=u;media.append(img)}how.append(media)}
   const embed=guide.how_video?videoEmbed(guide.how_video):'';
@@ -304,5 +305,5 @@ function render(host,guide,productName,close){
 function shadow(host){const root=host.shadowRoot||host.attachShadow({mode:'open'});root.replaceChildren();root.append(el('style',css));return root}
 function preview(host,guide,name){let root=shadow(host),surface=el('div');root.append(surface);render(surface,guide,name)}
 function open(guide,name){const previous=document.activeElement;const host=el('div');host.style.cssText='position:relative;z-index:2147483647';document.body.append(host);const root=shadow(host),dialog=el('dialog');dialog.dir=language(guide)==='en'?'ltr':'rtl';dialog.setAttribute('aria-labelledby','size-guide-title');const close=()=>dialog.close();root.append(dialog);render(dialog,guide,name,close);dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});dialog.addEventListener('close',()=>{host.remove();previous?.focus()},{once:true});dialog.showModal()}
-window.SizeGuideUI={preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
+window.SizeGuideUI={tipsFor,preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
 })();

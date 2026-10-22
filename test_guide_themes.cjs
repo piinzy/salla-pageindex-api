@@ -121,11 +121,15 @@ try{
    UI.preview(host,{...guide,how_video:'https://vimeo.com/123456789'},'منتج');assert.equal(shadow(host).querySelector('iframe').src,'https://player.vimeo.com/video/123456789');}
   // ready-made measuring drawing per category; uploaded images allowed, svg/html data URLs are not
   {const host=d.createElement('div');
-   for(const cat of ['women','men','kids','shoes','pets','accessories','general']){UI.preview(host,{...guide,category:cat,how_art:'auto'},'منتج');const r=shadow(host);
+   for(const cat of ['women','men','kids','shoes','pets','accessories','general']){UI.preview(host,{...guide,instructions:'',category:cat,how_art:'auto'},'منتج');const r=shadow(host);
      assert.ok(r.querySelector('.measure img,.measure svg'),cat+' drawing');assert.ok(r.querySelectorAll('.measure li').length>=1);assert.equal(r.querySelector('.measure svg script'),null)}
    for(const art of ['women','men','kids']){UI.preview(host,{...guide,category:'shoes',how_art:art},'منتج');assert.match(shadow(host).querySelector('.measure img').src,/^data:image\/webp;base64,/)}
    UI.preview(host,{...guide,how_art:'none'},'منتج');assert.equal(shadow(host).querySelector('.measure'),null);UI.preview(host,{...guide},'منتج');assert.equal(shadow(host).querySelector('.measure'),null,'old guides unchanged');
-   UI.preview(host,{...guide,how_art:'auto',language:'en'},'x');assert.match(shadow(host).querySelector('.measure li').textContent,/[A-Za-z]/);
+   UI.preview(host,{...guide,instructions:'',how_art:'auto',language:'en'},'x');assert.match(shadow(host).querySelector('.measure li').textContent,/[A-Za-z]/);
+   {UI.preview(host,{...guide,category:'women',how_art:'auto',instructions:'الصدر: قياس أكبر جزء'},'منتج');const r=shadow(host);
+    assert.equal(r.querySelector('.measure .instructions.side').textContent,'الصدر: قياس أكبر جزء');assert.equal(r.querySelectorAll('#sg-how .instructions').length,1,'text only once, beside the picture');assert.equal(r.querySelector('.measure li'),null);
+    UI.preview(host,{...guide,category:'women',how_art:'none',instructions:'نص'},'منتج');assert.equal(shadow(host).querySelector('.measure'),null);assert.equal(shadow(host).querySelector('#sg-how .instructions').textContent,'نص');
+    assert.equal(UI.tipsFor('auto','men','ar').tips.length,4);}
    const up='data:image/jpeg;base64,'+'A'.repeat(60);UI.preview(host,{...guide,how_images:[up,'data:image/svg+xml;base64,'+'A'.repeat(60),'data:text/html;base64,'+'A'.repeat(60)]},'منتج');
    const imgs=[...shadow(host).querySelectorAll('.how-media img')];assert.equal(imgs.length,1);assert.equal(imgs[0].src,up);}
   // the store's colour: kept when readable, nudged when not, header suited to its weight
