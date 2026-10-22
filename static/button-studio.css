@@ -247,3 +247,18 @@ label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:
 #catalog .row-actions{display:flex;gap:8px;flex-wrap:wrap}
 #editor .import-extras{margin:12px 0;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:var(--surf)}
 #editor .import-extra{align-items:flex-start;margin:4px 0}#editor .import-extra span{font-size:12.5px;line-height:1.8;overflow-wrap:anywhere;white-space:pre-line}#editor .import-extra small{color:var(--sub)}
+
+/* Category picker: flat tiles, one-colour line icon, tick when chosen */
+#editor .cat-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+#editor .cat-card{flex-direction:row;justify-content:flex-start;gap:11px;padding:11px 13px;box-shadow:none;border-radius:12px;text-align:start}
+#editor .cat-card:hover{transform:none;border-color:color-mix(in srgb,var(--cat,var(--accent)) 55%,var(--hair))}
+#editor .cat-card .cat-icon{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;color:color-mix(in srgb,var(--cat,var(--accent)) 72%,var(--text));background:color-mix(in srgb,var(--cat,var(--accent)) 14%,transparent)}
+#editor .cat-card .cat-icon svg{width:22px;height:22px}
+#editor .cat-card .cat-name{flex:1;font-size:13px;font-weight:600}
+#editor .cat-card .cat-check{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:transparent;border:1.5px solid var(--hair)}
+#editor .cat-card.selected{border-color:var(--cat,var(--accent));box-shadow:none;background:color-mix(in srgb,var(--cat,var(--accent)) 10%,var(--surf))}
+#editor .cat-card.selected .cat-check{background:var(--cat,var(--accent));border-color:var(--cat,var(--accent));color:#fff}
+#editor .upload-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+#editor .upload-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--hair)}
+#editor .upload-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+#editor .upload-thumb button{position:absolute;top:3px;inset-inline-start:3px;padding:0 6px;font-size:13px;line-height:20px;border-radius:50%}

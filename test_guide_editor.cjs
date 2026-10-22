@@ -54,7 +54,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     const change=(s,checked)=>{$(s).checked=checked;$(s).dispatchEvent(new w.Event('change',{bubbles:true}));};
     const guideWrap=()=>$('#guidePreview').shadowRoot.querySelector('.wrap');
     const hidden=s=>$(s).classList.contains('hidden');
-    assert.equal(all('#categoryChoices [name="guide-category"]').length,7);
+    assert.equal(all('#categoryChoices [name="guide-category"]').length,4);const pickCat=id=>{const sel=$('#specialType');sel.value=id;sel.dispatchEvent(new w.Event('change',{bubbles:true}))};
 
     // ---- a brand-new guide starts as a women's dress guide with its own theme and template list
     $('[data-edit="42"]').click();await settle();
@@ -66,14 +66,14 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     assert.equal($('#calculator').checked,true,'new guides get the size finder');assert.equal(hidden('.only-library'),true);assert.equal(hidden('.only-product'),false);
 
     // ---- category follows an untouched guide
-    $('[name="guide-category"][value="shoes"]').click();await settle();
+    pickCat('shoes');await settle();
     assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['UK','US','طول القدم','عرض القدم']);
     assert.equal($('[name="guide-theme"]:checked').value,'sport');assert.equal($('#guideColor').value,'#d9480f');assert.equal(all('#gridEditor tbody tr').length,6);
-    $('[name="guide-category"][value="accessories"]').click();await settle();
+    pickCat('accessories');await settle();
     assert.deepEqual(all('#template option').map(o=>o.value),['acc-rings','acc-bracelets','acc-belts','acc-hats']);assert.equal($('[name="guide-theme"]:checked').value,'gold');
 
     // ---- theme, colour and style options reach the preview
-    $('[name="guide-category"][value="shoes"]').click();await settle();
+    pickCat('shoes');await settle();
     $('[name="guide-theme"][value="leather"]').click();await settle();
     assert.equal(guideWrap().dataset.theme,'leather');assert.equal($('#guideColor').value,'#8a5a35');
     input('#guideColor','#336699');assert.equal(guideWrap().style.getPropertyValue('--accent'),'#336699');
@@ -102,7 +102,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
 
     // ---- once numbers are entered, the category keeps them
     input('#gridEditor [data-row="0"][data-cell="2"]','24.5');input('#guideTitle','دليل الأحذية');
-    $('[name="guide-category"][value="pets"]').click();await settle();
+    pickCat('pets');await settle();
     assert.equal($('#gridEditor [data-row="0"][data-cell="2"]').value,'24.5','entered data is never discarded');assert.equal($('[name="guide-theme"]:checked').value,'paws');assert.ok(all('#template option').some(o=>o.value==='pets-dog'));
     $('#template').value='pets-dog';confirmed=false;$('#applyTemplate').click();await settle();assert.equal($('#gridEditor thead th input').value,'UK','declined replacement keeps the table');
     confirmed=true;$('#applyTemplate').click();await settle();
@@ -223,7 +223,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
 
     // ---- a guide saved before these options existed opens with defaults
     $('#backCatalog').click();await settle();$('[data-edit="43"]').click();await settle();
-    assert.equal($('[name="guide-category"]:checked').value,'general');assert.equal($('[name="guide-theme"]:checked').value,'classic');assert.equal($('#guideColor').value,'#123456');
+    assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'classic');assert.equal($('#guideColor').value,'#123456');
     assert.equal($('#depth3d').checked,true);assert.equal($('[name="guide-size_style"]:checked').value,'chip');assert.equal($('#calculator').checked,false,'older guides keep the finder off');assert.equal(all('#template option').length,1);
     assert.equal($('#tc-status-header_bg').textContent,'تلقائي');
     w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new w.Event('close'));};

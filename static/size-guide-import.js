@@ -47,7 +47,7 @@ function toGrid(text){
   return {columns,rows:grid,sizeHeader:(header[0]||'').slice(0,20),warnings};
 }
 /* Shrink a photo before upload: the server accepts up to 4 MB and larger pictures add no accuracy. */
-function imageToDataUrl(file,maxSide=1600){
+function imageToDataUrl(file,maxSide=1600,quality=.88){
   return new Promise((resolve,reject)=>{
     if(!file||!/^image\/(png|jpe?g|webp)$/.test(file.type))return reject(new Error('استخدم صورة PNG أو JPEG أو WebP.'));
     const url=URL.createObjectURL(file),img=new Image();
@@ -55,7 +55,7 @@ function imageToDataUrl(file,maxSide=1600){
       const scale=Math.min(1,maxSide/Math.max(img.width,img.height)),canvas=document.createElement('canvas');
       canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
       const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(img,0,0,canvas.width,canvas.height);
-      URL.revokeObjectURL(url);resolve(canvas.toDataURL('image/jpeg',.88));
+      URL.revokeObjectURL(url);resolve(canvas.toDataURL('image/jpeg',quality));
     };
     img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('تعذر قراءة الصورة.'));};img.src=url;
   });
