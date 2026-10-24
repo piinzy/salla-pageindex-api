@@ -32,7 +32,7 @@ function show(tab){
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===(tab==='editor'?(mode==='library'?'library':'catalog'):tab)));
 }
 function changed(){dirty=true;$('#editState').textContent=(published?'يوجد جدول منشور · ':'مسودة · ')+'تعديلات غير محفوظة';syncColors();preview()}
-function preview(){if(guide)window.SizeGuideUI.preview($('#guidePreview'),guide,editing?.title||'')}
+function preview(){if(guide)window.SizeGuideUI.preview($('#guidePreview'),guide,editing?.title||'',paintOn?{onPick:pickPart,selected:picked}:undefined)}
 
 /* ---------- store, catalog and bulk actions ---------- */
 async function boot(){
@@ -264,7 +264,7 @@ function fill(){
   $('#editState').textContent=linkedTo?'هذا الجدول يتبع الجدول المشترك؛ التعديل من هناك.':published?'الجدول منشور للعميل؛ حفظ المسودة لا يغيّره.':version?'مسودة محفوظة؛ لا تظهر للعميل.':'جدول جديد؛ لم يُحفظ بعد.';
   $('#unpublish').disabled=!published;
   $('#copyFrom').innerHTML='<option value="">اختر المنتج المصدر…</option>'+guideIndex.filter(g=>g.product_id!==editing.product_id).map(g=>`<option value="${esc(g.product_id)}">${esc(g.title)} ${g.sku?'• '+esc(g.sku):''}</option>`).join('');
-  applyMode();fillTemplates();renderThemes();syncChoices();syncAdvanced();styleSnapshot=null;$('#undoStyle').classList.add('hidden');$('#brandColor').value=rememberedBrand()||guide.color;renderPresets();renderPhrases();renderLibraryProducts();renderLinkResults();hidePending();drawGrid();preview();
+  applyMode();fillTemplates();renderThemes();syncChoices();syncAdvanced();styleSnapshot=null;picked=null;syncPaint();$('#undoStyle').classList.add('hidden');$('#brandColor').value=rememberedBrand()||guide.color;renderPresets();renderPhrases();renderLibraryProducts();renderLinkResults();hidePending();drawGrid();preview();
 }
 function fillTemplates(){const list=Catalog?Catalog.forCategory(guide.category):[{id:'dresses',name:'فساتين'}];$('#template').innerHTML=list.map(t=>`<option value="${esc(t.id)}">${esc('هيكل '+t.name)}</option>`).join('')}
 const recommended=theme=>theme.cats.includes(guide?.category);
@@ -289,6 +289,7 @@ const SEGMENTS=[
   ['headerStyleSeg','header_style',[['auto','حسب الثيم'],['tint','هادئة'],['solid','ممتلئة'],['plain','شفافة'],['line','بخط']]],
   ['borderStyleSeg','border_style',[['auto','حسب الثيم'],['none','بلا'],['thin','رفيعة'],['strong','سميكة']]],
   ['fontScaleSeg','font_scale',[['small','صغير'],['medium','متوسط'],['large','كبير']]],
+  ['sideLayoutSeg','side_layout',[['auto','تلقائي'],['none','بدون'],['start','قبل الجدول'],['end','بعد الجدول']]],
   ['howArtSeg','how_art',[['auto','حسب الفئة'],['women','نسائي'],['men','رجالي'],['kids','أطفال'],['none','بدون']]],
   ['languageSeg','language',[['ar','العربية'],['en','English'],['auto','حسب المتجر']]],
 ];
@@ -329,6 +330,7 @@ function syncChoices(){
   for(const [name,value] of [['guide-category',groupOf(guide.category)],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
     document.querySelectorAll(`#editor [name="${name}"]`).forEach(r=>{r.checked=r.value===value;r.closest('label').classList.toggle('selected',r.checked)});
   $('#specialRow').classList.toggle('hidden',!SPECIAL.includes(guide.category));$('#specialType').value=guide.category;
+  $('#side3d').checked=guide.side_3d===true;
   $('#depth3d').checked=guide.depth3d!==false;$('#headerIcon').checked=guide.header_icon!==false;
 }
 /* Colour pickers show the colour in effect: the merchant's own, or the one the theme would use. */
@@ -352,7 +354,7 @@ function setCategory(id){
   fillTemplates();renderThemes();syncChoices();drawGrid();changed();
   if(!blank)toast('تغيّرت الفئة والثيم فقط. اختر هيكلًا من القائمة ثم «استخدام الهيكل» إن أردت أعمدة جديدة.');
 }
-function drawGrid(){let html='<table><thead><tr><th>المقاس</th>'+guide.columns.map((c,i)=>`<th><input aria-label="اسم العمود ${i+1}" data-col="${i}" maxlength="40" value="${esc(c.label)}"><select aria-label="نوع العمود ${i+1}" data-kind="${i}"><option value="measurement" ${c.kind==='measurement'?'selected':''}>قياس: يتحول سم/إنش</option><option value="text" ${c.kind==='text'?'selected':''}>نص: EU / UK / غيره</option></select><button type="button" class="remove fill" data-fill="${i}" aria-label="إكمال العمود ${i+1} بنفس الفرق">أكمل العمود ⇣</button><button type="button" class="remove" data-remove-col="${i}" aria-label="حذف العمود ${i+1}">حذف العمود ×</button></th>`).join('')+'<th></th></tr></thead><tbody>'+guide.rows.map((r,i)=>`<tr><td><input aria-label="اسم المقاس ${i+1}" maxlength="30" data-size="${i}" value="${esc(r.size)}"></td>`+r.values.map((v,j)=>`<td><input aria-label="${esc(r.size)} ${esc(guide.columns[j].label)}" maxlength="60" data-row="${i}" data-cell="${j}" value="${esc(v)}" placeholder="—"></td>`).join('')+`<td><button type="button" class="remove" data-remove-row="${i}" aria-label="حذف المقاس ${esc(r.size)}">×</button></td></tr>`).join('')+'</tbody></table>';$('#gridEditor').innerHTML=html;
+function drawGrid(){drawWidths();let html='<table><thead><tr><th>المقاس</th>'+guide.columns.map((c,i)=>`<th><input aria-label="اسم العمود ${i+1}" data-col="${i}" maxlength="40" value="${esc(c.label)}"><select aria-label="نوع العمود ${i+1}" data-kind="${i}"><option value="measurement" ${c.kind==='measurement'?'selected':''}>قياس: يتحول سم/إنش</option><option value="text" ${c.kind==='text'?'selected':''}>نص: EU / UK / غيره</option></select><button type="button" class="remove fill" data-fill="${i}" aria-label="إكمال العمود ${i+1} بنفس الفرق">أكمل العمود ⇣</button><button type="button" class="remove" data-remove-col="${i}" aria-label="حذف العمود ${i+1}">حذف العمود ×</button></th>`).join('')+'<th></th></tr></thead><tbody>'+guide.rows.map((r,i)=>`<tr><td><input aria-label="اسم المقاس ${i+1}" maxlength="30" data-size="${i}" value="${esc(r.size)}"></td>`+r.values.map((v,j)=>`<td><input aria-label="${esc(r.size)} ${esc(guide.columns[j].label)}" maxlength="60" data-row="${i}" data-cell="${j}" value="${esc(v)}" placeholder="—"></td>`).join('')+`<td><button type="button" class="remove" data-remove-row="${i}" aria-label="حذف المقاس ${esc(r.size)}">×</button></td></tr>`).join('')+'</tbody></table>';$('#gridEditor').innerHTML=html;
 $('#gridEditor').querySelectorAll('[data-col]').forEach(x=>x.oninput=()=>{guide.columns[+x.dataset.col].label=x.value;changed()});$('#gridEditor').querySelectorAll('[data-kind]').forEach(x=>x.onchange=()=>{guide.columns[+x.dataset.kind].kind=x.value;changed()});$('#gridEditor').querySelectorAll('[data-size]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.size].size=x.value;changed()});$('#gridEditor').querySelectorAll('[data-cell]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.row].values[+x.dataset.cell]=x.value;changed()});$('#gridEditor').querySelectorAll('[data-fill]').forEach(x=>x.onclick=()=>fillColumn(+x.dataset.fill));$('#gridEditor').querySelectorAll('[data-remove-col]').forEach(x=>x.onclick=async()=>{if(guide.columns.length<=1)return toast('يجب إبقاء عمود قياس واحد على الأقل.');if(!(await confirmAction('حذف هذا العمود وقيمه من المسودة؟')))return;const i=+x.dataset.removeCol;guide.columns.splice(i,1);guide.rows.forEach(r=>r.values.splice(i,1));drawGrid();changed()});$('#gridEditor').querySelectorAll('[data-remove-row]').forEach(x=>x.onclick=async()=>{if(guide.rows.length<=1)return toast('يجب إبقاء مقاس واحد على الأقل.');if(!(await confirmAction('حذف صف المقاس من المسودة؟')))return;guide.rows.splice(+x.dataset.removeRow,1);drawGrid();changed()})}
 async function save(action){
   if(!editing||saving||linkedTo)return;
@@ -395,6 +397,7 @@ document.querySelectorAll('#sideRow [data-up]').forEach(b=>b.onclick=()=>{sideSl
 $('#sideFile').onchange=async()=>{const file=$('#sideFile').files[0];$('#sideFile').value='';if(!file||!guide||!sideSlot)return;
   try{let data=await Import.imageToDataUrl(file,900,.8);if(data.length>280000)data=await Import.imageToDataUrl(file,640,.7);if(data.length>290000)return toast('الصورة كبيرة جدًا حتى بعد التصغير.');
     guide[sideSlot]=data;drawSide();changed();toast('تمت إضافة الصورة. اضغط حفظ لتظهر للعملاء.')}catch(error){toast(error.message||'تعذر رفع الصورة.')}};
+$('#side3d').onchange=()=>{if(!guide)return;guide.side_3d=$('#side3d').checked;changed()};
 $('#howUploadBtn').onclick=()=>$('#howUploadFile').click();
 $('#howUploadFile').onchange=async()=>{
   const file=$('#howUploadFile').files[0];$('#howUploadFile').value='';if(!file||!guide)return;
@@ -432,7 +435,18 @@ const IMPORT_EXTRAS=[
   ['language','لغة النافذة',()=>guide.language,v=>languageName[v],v=>{guide.language=v;syncChoices()}],
   ['instructions','إرشادات طريقة القياس',()=>guide.instructions,v=>v,v=>{guide.instructions=v;$('#instructions').value=v}],
   ['notes','الملاحظات',()=>guide.notes,v=>v,v=>{guide.notes=v;$('#notes').value=v}],
+  ['look_style','تصميم الجدول في الصورة (ألوان وشكل)',()=>'',v=>{const n=['color','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'].filter(k=>v[k]).length;return (n||v.table_style)?`${n} من الألوان${v.table_style?' + نمط الصفوف والزوايا':''}`:''},v=>applyStyle({...styleOf(guide),...v},'من الصورة')],
+  ['look_frame','تخطيط الجدول (عرض الأعمدة ومكان الصورة)',()=>'',v=>[(v.col_widths||[]).length?'نِسَب عرض الأعمدة':'',v.image_side&&v.image_side!=='none'?'مكان لصورة المنتج':''].filter(Boolean).join(' + '),v=>applyFrame(v)],
 ];
+const rtl=()=>guide.language!=='en';
+function applyFrame(frame){
+  guide.col_widths=(frame.col_widths||[]).length===guide.columns.length+1?[...frame.col_widths]:[];
+  if(frame.image_side&&frame.image_side!=='none'){
+    const left=frame.image_side==='left';guide.side_layout=left===rtl()?'end':'start';guide.side_3d=true;
+    toast('تركتُ مكانًا للصورة بجانب الجدول. ارفع صورة فستانك أو قطعتك من «ميزات للعميل».');
+  }
+  syncChoices();drawWidths();changed();
+}
 function renderExtras(){
   const list=$('#importExtraList');list.replaceChildren();let count=0;
   for(const [key,label,current,show] of IMPORT_EXTRAS){
@@ -465,6 +479,66 @@ $('#importApply').onclick=async()=>{
   for(const [key,,,,apply] of IMPORT_EXTRAS)if(ticked.has(key)&&pending[key]){apply(pending[key]);applied++}
   hidePending();drawGrid();changed();toast('طُبّق الجدول المستورد'+(applied?' مع '+applied+' من الحقول المقروءة':'')+'. راجع الأرقام والنصوص ثم احفظ.');
 };
+
+/* ---- column widths: relative shares of the table's width */
+function drawWidths(){
+  const box=$('#widthEditor');box.replaceChildren();if(!guide)return;
+  let widths=guide.col_widths||[];if(widths.length&&widths.length!==guide.columns.length+1){guide.col_widths=widths=[]}
+  box.classList.remove('hidden');
+  if(!widths.length){const b=mk('button','secondary small','ضبط عرض الأعمدة (اختياري)');b.type='button';b.onclick=()=>{guide.col_widths=[16,...guide.columns.map(()=>Math.max(8,Math.round(84/Math.max(guide.columns.length,1))))];drawWidths();changed()};box.append(b);return}
+  box.append(mk('span','opt-label','عرض كل عمود (نسبة من عرض الجدول)'));const row=mk('div','width-row');
+  const names=[guide.size_label||'المقاس',...guide.columns.map(c=>c.label||'—')];
+  widths.forEach((n,i)=>{const label=mk('label','',names[i]),input=mk('input');input.type='number';input.min=3;input.max=80;input.step=1;input.value=n;input.setAttribute('aria-label','عرض '+names[i]);
+    input.oninput=()=>{const v=Math.round(Number(input.value));if(v>=3&&v<=80){guide.col_widths[i]=v;changed()}};label.append(input);row.append(label)});
+  const reset=mk('button','secondary small','إعادة العرض إلى تلقائي');reset.type='button';reset.onclick=()=>{guide.col_widths=[];drawWidths();changed()};box.append(row,reset);
+}
+/* ---- paint mode: click a part of the live table, then colour it on its own */
+let paintOn=false,picked=null,paintScope='this';
+const clean=entry=>!entry.bg&&!entry.fg&&!entry.bold&&!entry.align;
+const partName=p=>p.part==='head'?(p.col===-2?'عنوان المقاس':'عنوان «'+(guide.columns[p.col]?.label||'')+'»'):p.part==='size'?'مقاس «'+(guide.rows[p.row]?.size||'')+'»':'خلية «'+(guide.columns[p.col]?.label||'')+'» في صف «'+(guide.rows[p.row]?.size||'')+'»';
+function scopes(p){
+  if(p.part==='head')return[['this',partName(p),{target:'head',row:-1,col:p.col}],['all','كل الترويسة',{target:'head',row:-1,col:-1}]];
+  if(p.part==='size')return[['this','هذا المقاس',{target:'size',row:p.row,col:-1}],['col','كل المقاسات',{target:'size',row:-1,col:-1}],['row','الصف كله',{target:'row',row:p.row,col:-1}]];
+  return[['this','هذه الخلية',{target:'cell',row:p.row,col:p.col}],['row','الصف كله',{target:'row',row:p.row,col:-1}],['col','العمود كله',{target:'col',row:-1,col:p.col}]];
+}
+const sameTarget=(a,b)=>a.target===b.target&&(a.row??-1)===b.row&&(a.col??-1)===b.col;
+const currentTarget=()=>picked&&(scopes(picked).find(x=>x[0]===paintScope)||scopes(picked)[0])[2];
+const entryOf=t=>t&&(guide.cell_styles||[]).find(x=>sameTarget(x,t));
+function setPart(change){
+  const t=currentTarget();if(!t||!guide)return;const list=guide.cell_styles=guide.cell_styles||[];let entry=entryOf(t);
+  if(!entry){entry={...t,bg:'',fg:'',bold:false,align:''};list.push(entry)}
+  Object.assign(entry,change);if(clean(entry))guide.cell_styles=list.filter(x=>x!==entry);
+  if(guide.cell_styles.length>150){guide.cell_styles=guide.cell_styles.slice(0,150);toast('وصلت للحد الأقصى من الأجزاء الملوّنة (150).')}
+  changed();syncPaint();
+}
+function pickPart(p){picked=p;if(!scopes(p).some(x=>x[0]===paintScope))paintScope='this';syncPaint();preview()}
+function syncPaint(){
+  const panel=$('#paintPanel');panel.classList.toggle('hidden',!paintOn);if(!paintOn||!guide)return;
+  $('#paintTarget').textContent=picked?'المحدد: '+partName(picked):'انقر على جزء من الجدول في المعاينة.';
+  const seg=$('#paintScope');seg.replaceChildren();seg.classList.toggle('hidden',!picked);
+  for(const [id,label] of (picked?scopes(picked):[])){const l=mk('label'),r=mk('input');r.type='radio';r.name='paint-scope';r.value=id;r.checked=id===paintScope;l.classList.toggle('selected',r.checked);l.append(r,mk('span','',label));seg.append(l);r.onchange=()=>{if(r.checked){paintScope=id;syncPaint()}}}
+  const entry=entryOf(currentTarget())||{bg:'',fg:'',bold:false,align:''};
+  for(const [key,id] of [['bg','paintBg'],['fg','paintFg']]){$('#'+id).value=entry[key]||(key==='bg'?'#ffffff':'#000000');$('#'+id+'State').textContent=entry[key]?entry[key]:'تلقائي';$('#'+id).disabled=!picked;$('#'+id+'Reset').disabled=!picked}
+  $('#paintBold').checked=!!entry.bold;$('#paintAlign').value=entry.align||'';$('#paintBold').disabled=$('#paintAlign').disabled=!picked;
+  $('#paintClearPart').disabled=!picked||!entryOf(currentTarget());$('#paintClearAll').disabled=!(guide.cell_styles||[]).length;
+}
+$('#paintMode').onchange=()=>{paintOn=$('#paintMode').checked;if(!paintOn)picked=null;syncPaint();preview()};
+$('#paintBg').oninput=()=>setPart({bg:$('#paintBg').value});$('#paintFg').oninput=()=>setPart({fg:$('#paintFg').value});
+$('#paintBgReset').onclick=()=>setPart({bg:''});$('#paintFgReset').onclick=()=>setPart({fg:''});
+$('#paintBold').onchange=()=>setPart({bold:$('#paintBold').checked});$('#paintAlign').onchange=()=>setPart({align:$('#paintAlign').value});
+$('#paintClearPart').onclick=()=>{const t=currentTarget();if(!t||!guide)return;guide.cell_styles=(guide.cell_styles||[]).filter(x=>!sameTarget(x,t));changed();syncPaint()};
+$('#paintClearAll').onclick=async()=>{if(!guide||!(guide.cell_styles||[]).length)return;if(!(await confirmAction('مسح كل التلوين اليدوي من هذا الجدول؟')))return;guide.cell_styles=[];picked=null;changed();syncPaint()};
+
+/* ---- take the look of a table from a picture */
+$('#styleFromImage').onclick=()=>$('#styleFile').click();
+$('#styleFile').onchange=async()=>{
+  const file=$('#styleFile').files[0];$('#styleFile').value='';if(!file||!guide)return;const status=$('#styleStatus'),button=$('#styleFromImage');
+  button.disabled=true;status.textContent='جارٍ قراءة التصميم… قد يستغرق ذلك نصف دقيقة.';
+  try{
+    const image=await Import.imageToDataUrl(file);const d=await api('size-guide-ai-style'+qs(),{method:'POST',body:JSON.stringify({image})});
+    applyStyle({...styleOf(guide),...d.style},'من الصورة');status.textContent='طُبّق تصميم الصورة. يمكنك التراجع بزر «تراجع».';loadBilling();
+  }catch(e){status.textContent='';toast(e.message)}finally{button.disabled=false}
+};
 /* Plan banner: only shown once the server enforces plans (BILLING_ENFORCE). */
 async function loadBilling(){
   const bar=$('#billingBar');
@@ -479,11 +553,22 @@ async function loadBilling(){
 }
 async function checkAi(){
   if(aiChecked)return;aiChecked=true;
-  try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}else if(typeof d.remaining==='number')$('#aiHint').textContent='المتبقي لك: '+d.remaining.toLocaleString('ar')+' صورة.'}catch{aiChecked=false}
+  try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiClone').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}else if(typeof d.remaining==='number')$('#aiHint').textContent='المتبقي لك: '+d.remaining.toLocaleString('ar')+' صورة.'}catch{aiChecked=false}
 }
 $('#importPanel').addEventListener('toggle',()=>{if($('#importPanel').open)checkAi()});
 $('#aiFile').onchange=()=>{aiBlob=null};
 $('#importPanel').addEventListener('paste',event=>{const item=[...(event.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));if(!item)return;event.preventDefault();aiBlob=item.getAsFile();$('#aiStatus').textContent='تم لصق صورة. اضغط «قراءة الجدول من الصورة».'});
+$('#aiClone').onclick=async()=>{
+  const file=aiBlob||$('#aiFile').files[0];if(!file)return toast('اختر صورة أو الصقها أولًا.');
+  $('#aiClone').disabled=$('#aiRun').disabled=true;$('#aiStatus').textContent='جارٍ قراءة الجدول وتصميمه وتخطيطه… قد يستغرق ذلك نصف دقيقة.';
+  try{
+    const image=await Import.imageToDataUrl(file);const d=await api('size-guide-ai-clone'+qs(),{method:'POST',body:JSON.stringify({image})});
+    const frame=d.frame&&((d.frame.col_widths||[]).length||d.frame.image_side!=='none')?d.frame:null;
+    pending={...d,look_style:d.style&&Object.keys(d.style).length?d.style:null,look_frame:frame};delete pending.style;delete pending.frame;
+    showPending(['قُرئ الجدول وتصميمه وتخطيطه بالذكاء الاصطناعي وقد يخطئ في بعض الأرقام والألوان؛ راجع كل شيء قبل النشر. يمكنك إلغاء أي جزء لا تريده من القائمة أعلاه.']);loadBilling();
+    $('#aiStatus').textContent='تمت القراءة. راجع المعاينة وما قُرئ معها ثم اضغط «تطبيق على الجدول».';
+  }catch(e){hidePending();$('#aiStatus').textContent='';toast(e.message)}finally{$('#aiRun').disabled=$('#aiClone').disabled=false}
+};
 $('#aiRun').onclick=async()=>{
   const file=aiBlob||$('#aiFile').files[0];if(!file)return toast('اختر صورة أو الصقها أولًا.');
   $('#aiRun').disabled=true;$('#aiStatus').textContent='جارٍ قراءة الجدول… قد يستغرق ذلك نصف دقيقة.';

@@ -140,6 +140,60 @@ class AiImportTests(unittest.TestCase):
         import size_guides as sg
         sg.Guide(title='t', columns=data['columns'], rows=data['rows'])     # accepted by the guide model as it is
 
+    def style_post(self):
+        return self.client.post('/dashboard-api/size-guide-ai-style?merchant=123', json={'image': PNG})
+
+    def test_a_table_picture_becomes_an_appearance_proposal(self):
+        look = {'accent': '#B4456A', 'header_bg': '#F9E3EA', 'header_text': '#4A2332', 'row_alt': 'pink', 'border_color': '#f1dde4', 'text_color': '', 'paper_color': '#fffafb',
+                'size_bg': '#ffffff', 'size_text': 'javascript:alert(1)', 'table_style': 'cards', 'header_style': 'tint', 'size_style': 'blob', 'corners': 'round',
+                'density': 'compact', 'border_style': 'thin', 'font_scale': 'huge', 'title': 'ignored', 'rows': [1]}
+        with patch.object(ai.requests, 'post', return_value=gemini(look)) as call:
+            r = self.style_post()
+        self.assertEqual(r.status_code, 200)
+        style = r.json()['style']
+        self.assertEqual((style['color'], style['header_bg'], style['paper_color']), ('#b4456a', '#f9e3ea', '#fffafb'))
+        self.assertEqual((style['row_alt'], style['size_text'], style['text_color']), ('', '', ''), 'anything that is not #rrggbb is dropped')
+        self.assertEqual((style['table_style'], style['corners'], style['density']), ('cards', 'round', 'compact'))
+        for gone in ('size_style', 'font_scale', 'title', 'rows'):
+            self.assertNotIn(gone, style)
+        sent = call.call_args.kwargs['json']
+        self.assertIn('visual design', sent['contents'][0]['parts'][0]['text']); self.assertIn('header_bg', sent['generationConfig']['responseSchema']['properties'])
+    def test_an_empty_style_answer_is_refused_politely(self):
+        with patch.object(ai.requests, 'post', return_value=gemini({'accent': 'none'})):
+            r = self.style_post()
+        self.assertEqual(r.status_code, 502); self.assertIn('تصميم الجدول', r.json()['detail'])
+    def test_style_read_needs_the_same_checks_as_the_import(self):
+        self.assertEqual(self.client.post('/dashboard-api/size-guide-ai-style?merchant=123', json={'image': 'AAAA' * 10}).status_code, 400)
+
+    def test_the_whole_table_comes_back_in_one_read_and_costs_one_credit(self):
+        full = {**CHART, 'columns': ['الصدر', 'الخصر'], 'rows': [{'size': 'S', 'values': ['90', '70']}], 'layout': 'sizes_down',
+                'design': {'accent': '#B4456A', 'header_bg': '#f9e3ea', 'table_style': 'lines', 'corners': 'bogus'},
+                'frame': {'column_widths': [20, 40, 40], 'has_image': True, 'image_side': 'left', 'image_kind': 'dress', 'image_views': 2}}
+        with patch.object(ai.requests, 'post', return_value=gemini(full)) as call, patch('billing.consume_ai', return_value='plan') as take, patch('billing.refund_ai') as refund:
+            r = self.client.post('/dashboard-api/size-guide-ai-clone?merchant=123', json={'image': PNG})
+        self.assertEqual(r.status_code, 200); body = r.json()
+        self.assertEqual([c['label'] for c in body['columns']], ['الصدر', 'الخصر']); self.assertEqual(body['rows'][0]['values'], ['90', '70'])
+        self.assertEqual((body['style']['color'], body['style']['header_bg'], body['style']['table_style']), ('#b4456a', '#f9e3ea', 'lines')); self.assertNotIn('corners', body['style'])
+        self.assertEqual(body['frame'], {'col_widths': [20, 40, 40], 'image_side': 'left', 'image_kind': 'dress', 'image_views': 2})
+        self.assertEqual(call.call_count, 1); take.assert_called_once(); refund.assert_not_called()
+        props = call.call_args.kwargs['json']['generationConfig']['responseSchema']['properties']
+        self.assertTrue({'rows', 'design', 'frame'} <= set(props))
+    def test_odd_layout_answers_are_dropped_not_trusted(self):
+        grid = {'columns': [{'label': 'a'}, {'label': 'b'}], 'rows': [], 'layout': 'sizes_down'}
+        for widths in ([50, 50], [1, 2, 3, 4], 'wide', [10, 'x', 5], [10, True, 5], [0, 5, 5]):
+            with self.subTest(widths=widths):
+                self.assertEqual(ai.to_frame({'column_widths': widths}, grid)['col_widths'], [])
+        self.assertEqual(ai.to_frame({'column_widths': [1, 1, 98]}, grid)['col_widths'], [3, 3, 80], 'widths stay in 3-80')
+        self.assertEqual(ai.to_frame({'column_widths': [10, 10, 10]}, {**grid, 'layout': 'sizes_across'})['col_widths'], [], 'a flipped chart has no usable widths')
+        self.assertEqual(ai.to_frame({'has_image': True, 'image_side': 'up'}, grid)['image_side'], 'none')
+        self.assertEqual(ai.to_frame({'has_image': False, 'image_side': 'left'}, grid)['image_side'], 'none')
+        self.assertEqual(ai.to_frame({'has_image': True, 'image_side': 'right', 'image_kind': 'spaceship', 'image_views': 9}, grid), {'col_widths': [], 'image_side': 'right', 'image_kind': 'other', 'image_views': 1})
+        self.assertEqual(ai.to_clone({**CHART, 'design': 'nonsense', 'frame': None})['style'], {})
+    def test_a_failed_whole_table_read_is_refunded(self):
+        with patch.object(ai.requests, 'post', return_value=gemini({'columns': [], 'rows': []})), patch('billing.consume_ai', return_value='plan'), patch('billing.refund_ai') as refund:
+            r = self.client.post('/dashboard-api/size-guide-ai-clone?merchant=123', json={'image': PNG})
+        self.assertEqual(r.status_code, 502); refund.assert_called_once_with('123', 'plan')
+
     def test_bad_images_never_reach_the_service(self):
         big = base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'0' * (ai.MAX_IMAGE_BYTES + 1)).decode()
         with patch.object(ai.requests, 'post') as call:

@@ -35,6 +35,22 @@ class SizeGuideTests(unittest.TestCase):
         self.assertEqual(ok.theme,'linen');self.assertEqual(sg.Guide(**G).side_image,'')
         for bad in ['http://x.example.com/a.png','javascript:alert(1)','data:image/svg+xml;base64,'+'A'*100]:
             with self.subTest(bad=bad[:30]),self.assertRaises(ValidationError):sg.Guide(**{**G,'side_image':bad})
+    def test_painted_parts_are_checked(self):
+        good=[{'target':'head','col':-1},{'target':'head','col':-2,'bg':'#ffffff'},{'target':'head','col':3},{'target':'size','row':-1},{'target':'size','row':2,'fg':'#101010','bold':True},
+              {'target':'col','col':1},{'target':'row','row':0,'align':'center'},{'target':'cell','row':1,'col':1,'bg':'#abcdef'}]
+        self.assertEqual(len(sg.Guide(**{**G,'cell_styles':good}).cell_styles),8);self.assertEqual(sg.Guide(**G).cell_styles,[])
+        for bad in [{'target':'head','col':-3},{'target':'head','row':0,'col':1},{'target':'size','row':-2},{'target':'size','row':1,'col':1},{'target':'col'},{'target':'row'},{'target':'cell','row':1},
+                    {'target':'col','row':2,'col':1},{'target':'x'},{'target':'cell','row':1,'col':1,'bg':'red'},{'target':'cell','row':1,'col':1,'align':'left'},{'target':'cell','row':30,'col':1},
+                    {'target':'cell','row':1,'col':1,'extra':1}]:
+            with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,'cell_styles':[bad]})
+        with self.assertRaises(ValidationError):sg.Guide(**{**G,'cell_styles':[{'target':'col','col':0}]*151})
+        self.assertNotIn('cell_styles',sg.STYLE_FIELDS,'painted parts belong to one table, not to a reusable look')
+    def test_side_layout_and_column_widths_are_checked(self):
+        ok=sg.Guide(**{**G,'side_layout':'start','side_3d':True,'col_widths':[20,40,40]})
+        self.assertEqual((ok.side_layout,ok.side_3d,ok.col_widths),('start',True,[20,40,40]))
+        old=sg.Guide(**G);self.assertEqual((old.side_layout,old.side_3d,old.col_widths),('auto',False,[]))
+        for bad in [{'side_layout':'left'},{'side_3d':'maybe'},{'col_widths':[2]},{'col_widths':[81]},{'col_widths':['x']},{'col_widths':[10]*12}]:
+            with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,**bad})
     def test_themes_and_categories_match_the_window_script(self):
         import re,pathlib
         script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')

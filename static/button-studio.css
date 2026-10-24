@@ -264,3 +264,5 @@ label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:
 #editor .upload-thumb button{position:absolute;top:3px;inset-inline-start:3px;padding:0 6px;font-size:13px;line-height:20px;border-radius:50%}
 #editor .side-slots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}#editor .side-slot{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 #billingBar{margin:14px 0 0;padding:11px 16px;border-radius:12px;font-size:13px;line-height:1.8;background:#eef5f1;color:#2b5b49;border:1px solid #d9e8df}#billingBar[data-tone=warn]{background:#fff3e2;color:#8a5a14;border-color:#f0dcb6}
+#editor .paint-panel{margin-top:14px;display:grid;gap:12px}#editor .paint-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#editor .tool-row small{flex-basis:100%}
+#editor .width-editor{margin-top:10px;display:grid;gap:8px}#editor .width-row{display:flex;gap:8px;flex-wrap:wrap}#editor .width-row label{display:grid;gap:4px;font-size:12px;min-width:84px}#editor .width-row input{width:84px;min-height:44px}
