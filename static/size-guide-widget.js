@@ -3,11 +3,17 @@
   const script=document.currentScript;
   if (!script?.src) return;
   const base=(script.dataset.base||new URL(script.src).origin).replace(/\/$/,'');
-  const merchant=script.dataset.merchant;
-  if (!/^\d+$/.test(merchant||'')) return;
+  // One code for every store: without data-merchant the store is read from the storefront's own configuration.
+  let merchant=script.dataset.merchant||'';
+  if (merchant&&!/^\d+$/.test(merchant)) return;
   window.__sizeGuideWidgets=window.__sizeGuideWidgets||new Set();
-  if (window.__sizeGuideWidgets.has(merchant)) return;
-  window.__sizeGuideWidgets.add(merchant);
+  if (window.__sizeGuideWidgets.has(merchant||'auto')) return;
+  window.__sizeGuideWidgets.add(merchant||'auto');
+  function knowStore() {
+    if (merchant) return true;
+    try {const id=String(window.salla?.config?.get('store.id','')||'');if (/^\d+$/.test(id)) {merchant=id;return true;}} catch {/* the storefront is not ready yet */}
+    return false;
+  }
   let current='',host=null,loading=false,timer;
   function context() {
     const get=key=>{try{return window.salla?.config?.get(key,'')}catch{return ''}};
@@ -53,7 +59,7 @@
     host=slots[0].host;
   }
   async function mount() {
-    if (loading) return;
+    if (loading||!knowStore()) return;
     const ctx=context(),key=ctx?.key||'';
     if (key===current&&(!host||host.isConnected)) {for(const slot of slots)place(slot,ctx);return;}
     current=key;teardown();if(!ctx)return;

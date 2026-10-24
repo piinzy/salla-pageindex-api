@@ -11,6 +11,13 @@ from dashboard import query, authenticated, require_store
 from button_settings import ButtonSettings
 
 router=APIRouter()
+SNIPPET='''(() => {
+  const script = document.createElement('script');
+  script.src = BASE + '/size-guide-widget.js';
+  script.dataset.base = BASE;STORE
+  script.defer = true;
+  document.head.appendChild(script);
+})();'''
 HEX_OR_EMPTY=r'^(#[0-9a-fA-F]{6})?$'
 DATA_IMAGE=re.compile(r'data:image/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]{20,300000}')
 HTTPS_URL=re.compile(r'https://[^\s"\'<>\\]{4,480}')
@@ -251,19 +258,15 @@ def renderer():
     return FileResponse(Path(__file__).parent/'static/size-guide-renderer.js',media_type='application/javascript',headers={'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'})
 
 @router.get('/dashboard-api/size-guide-snippet',dependencies=[Depends(authenticated)])
-def snippet(merchant:str,request:Request):
+def snippet(merchant:str,request:Request,generic:bool=False):
+    """generic=true: one code for every store, pasted once in the partner portal's App Snippets (the store is read from the storefront).
+    Otherwise a code tied to this store only."""
     require_store(merchant)
     # Origin is the dashboard origin; the snippet contains public identifiers only.
     origin=str(request.base_url).rstrip('/')
-    js='''(() => {
-  const script = document.createElement('script');
-  script.src = BASE + '/size-guide-widget.js';
-  script.dataset.base = BASE;
-  script.dataset.merchant = MERCHANT;
-  script.defer = true;
-  document.head.appendChild(script);
-})();'''.replace('BASE',json.dumps(origin)).replace('MERCHANT',json.dumps(merchant))
-    return {'javascript':js}
+    store='' if generic else '\n  script.dataset.merchant = '+json.dumps(merchant)+';'
+    js=SNIPPET.replace('BASE',json.dumps(origin)).replace('STORE',store)
+    return {'javascript':js,'generic':generic}
 
 @router.get('/size-guide-admin.js',include_in_schema=False)
 def admin_script():

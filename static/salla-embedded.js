@@ -3,7 +3,7 @@
   'use strict';
   let sdk, session = '', appId = '', connected = false, expired = false;
   const navValues = new Set();
-  const titles = {catalog:'المنتجات والمقاسات', editor:'تحرير دليل المقاسات', library:'مكتبة الجداول', quick:'تعديل المنتج', buttonSettings:'إعدادات الزر', stats:'الإحصاءات', install:'تركيب زر المتجر', activity:'سجل المزامنة'};
+  const titles = {catalog:'المنتجات والمقاسات', editor:'تحرير دليل المقاسات', library:'مكتبة الجداول', home:'الرئيسية', buttonSettings:'إعدادات الزر', stats:'الإحصاءات'};
   const applyTheme = value => { document.documentElement.dataset.theme = value === 'dark' ? 'dark' : 'light'; };
   applyTheme(new URLSearchParams(location.search).get('theme'));
   function status(message, loading = false) {
@@ -50,24 +50,26 @@
   }
   async function setupNavigation() {
     const hostPath = '/embedded/app/' + appId + '/size-guide';
-    for (const tab of ['catalog', 'buttonSettings', 'quick', 'library', 'stats', 'activity', 'install']) {
+    for (const tab of ['home', 'catalog', 'library', 'buttonSettings', 'stats']) {
       const value = 'size-guide-' + tab;
       try {
-        await sdk.nav.addNavItem({title:titles[tab], value, url:hostPath, active:tab === 'catalog'});
+        await sdk.nav.addNavItem({title:titles[tab], value, url:hostPath, active:tab === 'home'});
         navValues.add(value);
       } catch { /* In-content links remain available if this host lacks injected tabs. */ }
     }
     sdk.nav.onNavItemClick(async ({value}) => {
       const tab = value.replace(/^size-guide-/, '');
-      if (!['catalog','buttonSettings','quick','library','stats','activity','install'].includes(tab)) return;
+      if (!['home','catalog','library','buttonSettings','stats'].includes(tab)) return;
       if (!(await mayLeave())) { navigate(view); return; }
       dirty = false; show(tab);
-      try { if (tab === 'catalog') await loadProducts(); if (tab === 'activity') await loadJobs(); }
+      try { if (tab === 'catalog') await loadProducts(); }
       catch (error) { toast(error.message); }
     });
     // Task links are also useful when a merchant lands deep in the editor.
+    // Only when the host could not add its own tabs: otherwise its side menu is the navigation and a second row would just add clutter.
+    if (navValues.size) return;
     const links = document.createElement('div'); links.className = 'embedded-help-links';
-    for (const tab of ['catalog', 'buttonSettings', 'quick', 'library', 'stats', 'activity', 'install']) {
+    for (const tab of ['home', 'catalog', 'library', 'buttonSettings', 'stats']) {
       const button = document.createElement('button'); button.className = 'secondary'; button.textContent = titles[tab];
       button.onclick = () => document.querySelector('[data-tab="' + tab + '"]').click(); links.append(button);
     }
