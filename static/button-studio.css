@@ -309,3 +309,92 @@ main .tab{margin-top:18px}
 #billingBar{background:var(--tag-bg,#eef5f1)!important;color:var(--tag-ink,#2b5b49)!important;border-color:var(--sh-line)!important}#billingBar[data-tone=warn]{background:var(--warn-bg,#fff3e2)!important;color:var(--warn-ink,#7a4f10)!important}
 .home .hero{margin-bottom:14px}#catalog>.tablewrap td:last-child{width:170px}
 #catalog .missing-bar{background:var(--warn-bg,#fff3e2);color:var(--warn-ink,#8a5a14);border-color:var(--sh-line)}
+
+/* ===== Dashboard motion and polish (interface only; never the guide shown to shoppers) ===== */
+:root{--ease:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);--t1:.15s;--t2:.22s;--t3:.34s}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes pop{from{transform:scale(.4);opacity:.3}}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px) scale(.96)}}
+@keyframes shimmer{from{background-position:120% 0}to{background-position:-120% 0}}
+/* buttons: lift on hover, press on click, one calm focus ring */
+#app button{transition:transform var(--t1) var(--ease),box-shadow var(--t2) var(--ease),background-color var(--t2),color var(--t2),border-color var(--t2),filter var(--t2),opacity var(--t2)}
+#app button:not(:disabled):active{transform:scale(.97);transition-duration:.07s}
+:is(.hero,.panelhead,.savebar,.toolbar,.row-actions,.rule-add,.bulk-buttons,.checklist,.attention,.insight-alert,#missingBar) button:not(:disabled):hover{transform:translateY(-1px)}
+:is(.hero,.panelhead)>button:not(.secondary),.savebar button:not(.secondary):not(.danger){box-shadow:0 1px 0 #ffffff2e inset,0 8px 16px -10px var(--sh-accent)}
+:is(.hero,.panelhead)>button:not(.secondary):not(:disabled):hover{box-shadow:0 1px 0 #ffffff2e inset,0 12px 20px -10px var(--sh-accent)}
+#app :is(button,a,summary,select,input,textarea):focus-visible{outline:2px solid var(--focus,var(--sh-accent));outline-offset:2px}
+#app :is(input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),select,textarea){transition:border-color var(--t2),box-shadow var(--t2)}
+#app :is(input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),select,textarea):focus{border-color:var(--sh-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--sh-accent) 18%,transparent)}
+/* cards */
+:is(.kpi,.home-card,.lib-card,.preset-card,.theme-card,.cat-card,.button-design-option,.studio-choice,.qcard,.insight-alert,.rule-row){transition:transform var(--t2) var(--ease),box-shadow var(--t2) var(--ease),border-color var(--t2),background-color var(--t2)}
+:is(.kpi,.home-card,.lib-card,.qcard):hover{transform:translateY(-2px);box-shadow:0 18px 30px -22px rgba(16,40,35,.45);border-color:color-mix(in srgb,var(--sh-accent) 38%,var(--sh-line))}
+:is(.preset-card,.theme-card,.button-design-option,.studio-choice):hover{transform:translateY(-2px);box-shadow:0 14px 24px -18px rgba(16,40,35,.45)}
+/* sidebar: a bar that grows on the active section, icons that nudge */
+aside nav button{overflow:hidden}aside nav button.active{box-shadow:none}
+aside nav button::before{content:'';position:absolute;inset-block:10px;inset-inline-start:0;width:3px;border-radius:3px;background:#8bd4ae;transform:scaleY(0);transition:transform var(--t2) var(--spring)}
+aside nav button.active::before{transform:scaleY(1)}
+aside nav button .nav-ico{transition:transform var(--t2) var(--spring)}aside nav button:hover .nav-ico{transform:scale(1.12)}
+/* a section arrives with a short rise; its cards follow one after another */
+main .tab:not(.hidden){animation:rise var(--t3) var(--ease) backwards}
+.kpis>*,.home-grid>*,.strip{animation:rise var(--t3) var(--ease) backwards}
+.kpis>:nth-child(2){animation-delay:.04s}.kpis>:nth-child(3){animation-delay:.08s}.kpis>:nth-child(4){animation-delay:.12s}.home-grid>:nth-child(1){animation-delay:.14s}.home-grid>:nth-child(2){animation-delay:.18s}.strip{animation-delay:.22s}
+.fold[open]>:not(summary){animation:rise var(--t2) var(--ease) backwards}
+.checklist li.done .mark{animation:pop .42s var(--spring)}
+.attention li,.insight-alert{animation:rise var(--t3) var(--ease) backwards}
+#toast:not(.hidden){animation:toastIn .28s var(--spring)}
+/* numbers load as a soft shimmer instead of a dash */
+.kpi b.sk{color:transparent;border-radius:8px;background:linear-gradient(90deg,var(--sh-soft) 25%,color-mix(in srgb,var(--sh-line) 70%,var(--sh-soft)) 50%,var(--sh-soft) 75%);background-size:300% 100%;animation:shimmer 1.3s linear infinite;width:3.2ch;user-select:none}
+/* calmer tables and segmented controls */
+tbody tr{transition:background-color var(--t1)}
+:is(#buttonSettings,#editor) .seg label{transition:background-color var(--t2),color var(--t2),box-shadow var(--t2)}
+#editor .switch .knob:after{transition:inset-inline-start .22s var(--spring)}
+/* home hero gets a soft tint instead of a bare title */
+.home .hero{padding:22px 24px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--sh-accent) 9%,transparent),transparent 62%)}
+@media(prefers-reduced-motion:reduce){#app *,#app *::before,#app *::after{animation:none!important;transition:none!important}:is(.kpi,.home-card,.lib-card,.qcard,.preset-card,.theme-card,.button-design-option,.studio-choice):hover,#app button:hover,#app button:active{transform:none!important}}
+
+/* ===== Interface motion, second pass (each rule is transform or opacity only) ===== */
+.num,.kpi b,.strip b,#statsCards b,#insightCards b{font-variant-numeric:tabular-nums}
+/* icon nudge: only the arrow moves, the label and the button keep their size */
+.has-nudge{display:inline-flex;align-items:center;gap:7px}
+.nudge-ico{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s cubic-bezier(.25,1,.5,1)}
+.has-nudge:hover .nudge-ico,.has-nudge:focus-visible .nudge-ico{transform:translate(var(--nx,4px),var(--ny,0px))}
+/* input glow: the border changes on the first frame, the soft bloom follows in 200ms; on blur both go at once */
+#app :is(input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),select,textarea){transition:none}
+#app :is(input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),select,textarea):focus{border-color:var(--sh-accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--sh-accent) 15%,transparent);transition:box-shadow .2s ease-out;animation:glowIn .2s ease-out}
+@keyframes glowIn{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--sh-accent) 15%,transparent)}}
+/* toggle: the knob glides across on a calm 220ms ease-out, no overshoot */
+#editor .switch .knob:after{inset-inline-start:3px;transform:translateX(0);transition:transform .22s cubic-bezier(.2,.7,.2,1)}
+#editor .switch input:checked+.knob:after{inset-inline-start:3px;transform:translateX(18px)}
+html[dir=rtl] #editor .switch input:checked+.knob:after{transform:translateX(-18px)}
+/* toasts: a stack that rises in and glides */
+#toast.stack{display:flex;flex-direction:column;gap:10px;padding:0;background:transparent;box-shadow:none;max-width:min(420px,calc(100vw - 32px));top:24px;bottom:auto;left:24px;position:fixed;z-index:50}
+.toast-item{padding:14px 20px;background:#193e32;color:#fff;border-radius:12px;box-shadow:0 10px 30px #102f2930;line-height:1.7;cursor:pointer;will-change:transform,opacity}
+.toast-item.toast-in{animation:toastRise .28s ease-out}
+@keyframes toastRise{from{opacity:0;transform:translateY(20px)}}
+.toast-item.motion-out{opacity:0;transform:translateY(8px);transition:opacity .18s ease-out,transform .18s ease-out}
+.motion-in{animation:fadeIn .2s ease-out}.motion-out{opacity:0;transition:opacity .2s ease-out}
+@keyframes fadeIn{from{opacity:0}}
+#toast:not(.hidden){animation:none}
+/* cards arrive one after another: scale from .8 while fading, 50ms apart, under 600ms in all */
+@keyframes cardIn{from{opacity:0;transform:scale(.8)}}
+:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>*{animation:cardIn .28s cubic-bezier(.22,1,.36,1) backwards}
+:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(2){animation-delay:.05s}:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(3){animation-delay:.1s}
+:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(4){animation-delay:.15s}:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(5){animation-delay:.2s}
+:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(n+6){animation-delay:.25s}
+/* tabs: the panel content cross-fades while the strip stays still */
+.studio-pane:not([hidden]){animation:fadeIn .2s ease-out}
+/* the moving pill behind the active item */
+.has-pill{position:relative}.has-pill>button{position:relative;z-index:1}
+.motion-pill{position:absolute;left:0;top:0;z-index:0;border-radius:12px;pointer-events:none;transform-origin:0 0;opacity:0;will-change:transform}
+aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.active{background:transparent}
+#buttonSettings .studio-tabs.has-pill .motion-pill{background:var(--surf);border-radius:10px;box-shadow:0 1px 0 var(--shine) inset,0 2px 0 var(--hair),0 8px 14px -8px #0004}
+#buttonSettings .studio-tabs.has-pill button[aria-selected=true]{background:transparent;box-shadow:none}
+/* progress meter: only the fill moves */
+.meter{height:6px;border-radius:99px;background:var(--sh-soft);overflow:hidden;margin-top:6px}
+.meter>i{display:block;height:100%;width:100%;border-radius:99px;background:var(--sh-accent);transform:scaleX(0);transform-origin:right center;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+/* a line that draws itself */
+.spark-host{margin-top:8px;height:44px}.spark{display:block;width:100%;height:44px;overflow:visible}
+.spark .line{stroke:var(--sh-accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:1;animation:drawLine .9s cubic-bezier(.16,1,.3,1) forwards}
+.spark .area{fill:color-mix(in srgb,var(--sh-accent) 14%,transparent);opacity:0;animation:fadeInKeep .4s ease-out .7s forwards}
+@keyframes drawLine{to{stroke-dashoffset:0}}@keyframes fadeInKeep{to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.spark .line{animation:none;stroke-dashoffset:0}.spark .area{animation:none;opacity:1}.meter>i,.nudge-ico,#editor .switch .knob:after,.toast-item{transition:none!important}.motion-pill{transition:none}}

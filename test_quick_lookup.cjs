@@ -25,7 +25,7 @@ function makeApp(url){
     else if(p==='products'&&method==='GET')data={items:state.catalog.map(x=>({product_id:x.product_id,title:x.title,sku:x.sku,price:x.price,currency:x.currency,quantity:x.quantity,status:x.status,image:x.image,url:x.url})),pages:1,total:state.catalog.length};
     else if(p==='product-lookup'){const q=(u.searchParams.get('q')||'').toLowerCase();data={items:state.catalog.filter(x=>!q||x.title.toLowerCase().includes(q)||x.sku.toLowerCase().includes(q))}}
     else if(p==='size-rules')data={rules:[],categories:[],missing:1,latest:[]};
-    else if(p==='size-guide-stats')data={days:30,opens:120,calcs:14,published_guides:2,daily:[],top:[]};
+    else if(p==='size-guide-stats')data={days:30,opens:state.opens??120,calcs:14,published_guides:2,daily:[],top:[]};
     else if(p==='size-insights')data={days:90,since:null,sold:0,returned:0,rate:0,alerts:[{kind:'size',product_id:'42',title:'x',size:'M',sold:9,returned:5,rate:.5,message:'m'}],products:[]};
     else if(p==='billing')data={enforced:true,plan:'trial',trial_days_left:2,price:389,paid_until:null,ai:{limit:3,used:0,plan_remaining:3,extra:0,remaining:3}};
     else if(p==='size-guide-snippet')data={javascript:'(() => {})();',generic:u.searchParams.get('generic')==='true'};
@@ -74,6 +74,10 @@ function makeApp(url){
     $('[data-tab="home"]').click();await settle();assert.equal(hidden('#home'),false);assert.equal(hidden('#catalog'),true);
     $('#homeSync').click();await settle();assert.equal(call('POST','sync').length,1,'the home button runs the same sync');
 
+    // numbers count up when the browser can animate, and land exactly on the real value
+    w.requestAnimationFrame=cb=>setTimeout(()=>cb(w.performance.now()+700),0);state.opens=300;
+    $('[data-tab="catalog"]').click();await settle();$('[data-tab="home"]').click();await wait(40);await settle();assert.match($('#kpiOpens').textContent,/300|٣٠٠/);assert.equal($('#kpiOpens').classList.contains('sk'),false,'the shimmer is gone once the numbers arrive');
+    delete w.requestAnimationFrame;
     // ---- the catalog: product, status, guide, one action
     $('[data-tab="catalog"]').click();await settle();
     assert.equal(all('#catalog > .tablewrap thead th').length,5);assert.equal(all('#rows tr').length,3);

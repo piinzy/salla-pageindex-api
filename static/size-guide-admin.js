@@ -20,7 +20,7 @@ function fresh(templateId,category='women'){
   const cols=legacyTemplates.dresses;
   return {...withDefaults({}),title:'دليل المقاسات',button_label:'دليل المقاسات',unit:'cm',measurement_type:'garment',columns:cols.map(label=>({label,kind:'measurement'})),rows:['S','M','L','XL'].map(size=>({size,values:cols.map(()=> '')})),notes:'',instructions:'',color:'#177e65'};
 }
-function toast(s){if(window.SizeGuideEmbedded?.toast(s))return;$('#toast').textContent=s;$('#toast').classList.remove('hidden');setTimeout(()=>$('#toast').classList.add('hidden'),7000)}
+function toast(s){if(window.SizeGuideEmbedded?.toast(s))return;if(window.UIMotion?.toast(s))return;$('#toast').textContent=s;$('#toast').classList.remove('hidden');setTimeout(()=>$('#toast').classList.add('hidden'),7000)}
 async function api(path,options={}){if(window.SizeGuideEmbedded)return window.SizeGuideEmbedded.request(path,options);let r=await fetch('/dashboard-api/'+path,{...options,headers:{'Content-Type':'application/json','X-Dashboard-Request':'1',...options.headers},cache:'no-store'});let d=await r.json();if(!r.ok){if(r.status===401&&!path.startsWith('login')){clearInterval(poll);poll=null;$('#app').classList.add('hidden');$('#login').classList.remove('hidden')}let detail=typeof d.detail==='string'?d.detail:Array.isArray(d.detail)?'راجعي حقول الجدول: '+d.detail.map(x=>x.msg).join('، '):'تعذر تنفيذ الطلب.';throw Error(detail)}return d}
 async function confirmAction(message){return window.SizeGuideEmbedded?window.SizeGuideEmbedded.confirm(message):window.confirm(message)}
 async function mayLeave(){if(saving||window.SizeGuideSettings?.isBusy()){toast('انتظر اكتمال العملية أولًا.');return false}if(!dirty&&!window.SizeGuideSettings?.isDirty())return true;const confirmed=await confirmAction('لديك تعديلات غير محفوظة. هل تريد المغادرة دون حفظها؟');if(confirmed)window.SizeGuideSettings?.discard();return confirmed}
@@ -41,7 +41,7 @@ async function boot(){
   const wanted=new URLSearchParams(location.search).get('view');if(wanted==='quick')show('catalog');else if(['home','catalog','library','stats','buttonSettings'].includes(wanted))show(wanted);
 }
 async function bootStores(){stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
-async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent=merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling(),loadRules().catch(()=>{})]);loadHome().catch(()=>{})}
+async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;setCount($('#count'),Number(s.product_count));$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent=merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling(),loadRules().catch(()=>{})]);loadHome().catch(()=>{})}
 function stateOf(g){
   if(!g)return ['بدون جدول',false];
   const base=g.is_published?(g.has_changes?'منشور + تعديلات مسودة':'منشور'):'مسودة';
@@ -100,7 +100,7 @@ async function loadLibrary(){
 async function loadStats(){
   const days=Number($('#statsDays').value)||30,d=await api('size-guide-stats?'+new URLSearchParams({merchant,days}));
   const cards=[['فتح الجدول',d.opens],['استخدام «اعرف مقاسك»',d.calcs],['جداول منشورة',d.published_guides],['متوسط الفتح اليومي',(d.opens/days).toFixed(1)]];
-  $('#statsCards').replaceChildren(...cards.map(([label,value])=>{const c=mk('article','card');c.append(mk('label','',label),mk('b','',Number(value).toLocaleString('ar')));return c}));
+  $('#statsCards').replaceChildren(...cards.map(([label,value])=>{const c=mk('article','card'),b=mk('b','',Number(value).toLocaleString('ar'));c.append(mk('label','',label),b);if(Number.isInteger(Number(value)))setCount(b,Number(value));return c}));
   const byDay=new Map(d.daily.map(x=>[String(x.day).slice(0,10),x.opens])),chart=$('#statsChart'),top=Math.max(1,...byDay.values());chart.replaceChildren();
   for(let i=days-1;i>=0;i--){const day=new Date(Date.now()-i*864e5).toISOString().slice(0,10),n=byDay.get(day)||0,bar=mk('span','bar');bar.style.height=Math.max(n?6:2,Math.round(n/top*100))+'%';bar.title=day+': '+n;chart.append(bar)}
   chart.setAttribute('aria-label',`رسم بياني: ${d.opens} فتحة للجدول خلال آخر ${days} يومًا`);
@@ -109,11 +109,14 @@ async function loadStats(){
 }
 
 /* ---- home: what needs attention, how the guides are used, where to start */
-let homeStats=null,homeAlerts=0;
+let homeStats=null,homeAlerts=0,homeLoading=false;
+/* Numbers roll from the old value to the new one; where motion is unavailable they are simply set. */
+function setCount(el,value,format){if(window.UIMotion)return window.UIMotion.rollTo(el,value,{format});el.textContent=format?format(value):Number(value).toLocaleString('ar')}
 function renderPlan(){
   const b=billingState,card=$('#kpiPlan'),note=$('#kpiPlanNote');if(!card)return;
-  if(!b){card.textContent='مفتوحة';note.textContent='بلا قيود حاليًا';return}
+  if(!b){card.textContent='مفتوحة';note.textContent='بلا قيود حاليًا';$('#kpiMeterBox')?.classList.add('hidden');return}
   card.textContent=b.plan==='unlimited'?'كاملة':b.plan==='paid'?'مدفوعة':b.plan==='trial'?'تجربة مجانية':'منتهية';
+  const meter=$('#kpiMeterBox');if(meter){const ai=b.ai,show=b.plan!=='unlimited'&&ai&&ai.limit>0;meter.classList.toggle('hidden',!show);if(show)window.UIMotion?.fill($('#kpiMeter'),(ai.plan_remaining)/ai.limit)}
   note.textContent=b.plan==='unlimited'?'غير محدودة':b.plan==='trial'?`باقي ${Number(b.trial_days_left).toLocaleString('ar')} يوم`:b.plan==='paid'?(b.paid_until?'حتى '+new Date(b.paid_until).toLocaleDateString('ar-SA',{dateStyle:'medium'}):'فعّالة'):'اشترك من صفحة التطبيق';
 }
 function renderHome(){
@@ -121,15 +124,16 @@ function renderHome(){
   const published=guideIndex.filter(g=>g.is_published).length,drafts=guideIndex.filter(g=>g.has_changes).length,missing=rulesData.missing||0,products=Number(s.product_count)||0;
   $('#heading').textContent='أهلاً بك'+(s.store_name&&s.store_name!==s.merchant_id?'، '+s.store_name:'');
   $('#kpiWith').textContent=products?`${n(Math.max(products-missing,0))} منها بجدول مقاسات`:'اضغط «مزامنة المنتجات» للبدء';
-  $('#kpiPublished').textContent=n(published);$('#kpiDrafts').textContent=drafts?`${n(drafts)} فيها تعديلات غير منشورة`:'يراها العملاء الآن';
-  $('#kpiOpens').textContent=homeStats?n(homeStats.opens):'—';$('#kpiCalcs').textContent=homeStats?`${n(homeStats.calcs)} استخدام لـ«اعرف مقاسك»`:'من العملاء في متجرك';
+  setCount($('#kpiPublished'),published);$('#kpiDrafts').textContent=drafts?`${n(drafts)} فيها تعديلات غير منشورة`:'يراها العملاء الآن';
+  homeStats?setCount($('#kpiOpens'),homeStats.opens):($('#kpiOpens').textContent='—');$('#kpiOpens').classList.toggle('sk',homeLoading&&!homeStats);$('#kpiCalcs').textContent=homeStats?`${n(homeStats.calcs)} استخدام لـ«اعرف مقاسك»`:'من العملاء في متجرك';
+  const spark=$('#kpiSpark');if(spark&&window.UIMotion&&homeStats?.daily){const byDay=new Map(homeStats.daily.map(x=>[String(x.day).slice(0,10),x.opens])),values=[];for(let i=29;i>=0;i--)values.push(byDay.get(new Date(Date.now()-i*864e5).toISOString().slice(0,10))||0);const sig=values.join(',');if(spark.dataset.sig!==sig){spark.dataset.sig=sig;window.UIMotion.sparkline(spark,values,'اتجاه فتح الجدول خلال 30 يومًا')}}
   renderPlan();
   const steps=[[products>0,'زامن منتجاتك من سلة','يجلب أسماء المنتجات وصورها لتبدأ.',products>0?'':'مزامنة',()=>$('#sync').click()],
     [published>0,'أنشئ أول جدول مقاسات وانشره','اختر منتجًا، أو اصنع جدولًا مشتركًا لعدة منتجات.',published>0?'':'ابدأ',()=>show(libraries.length||products===0?'library':'catalog')],
     [false,'اضبط شكل الزر ومكانه','اختر تصميمه وموضعه في صفحة المنتج وجرّبه في المعاينة.','إعدادات الزر',()=>show('buttonSettings')]];
   $('#checklist').replaceChildren(...steps.map(([done,title,hint,action,go],i)=>{
     const li=mk('li',done?'done':''),mark=mk('span','mark',done?'✓':String(i+1)),text=mk('div','',''),strong=mk('strong','',title);text.append(strong,mk('small','',hint));li.append(mark,text);
-    if(action){const b=mk('button','secondary small',action);b.type='button';b.onclick=go;li.append(b)}return li}));
+    if(action){const b=mk('button','secondary small',action);b.type='button';b.dataset.nudge='forward';b.onclick=go;li.append(b)}return li}));
   const items=[];
   if(missing)items.push(['warn',`${n(missing)} منتج معروض بلا جدول مقاسات.`,'اعرضها',()=>{$('#guideFilter').value='none';page=1;show('catalog');loadProducts().catch(e=>toast(e.message))}]);
   if(homeAlerts)items.push(['warn',`${n(homeAlerts)} تنبيه عن مقاسات يرجعها العملاء كثيرًا.`,'راجعها',()=>show('stats')]);
@@ -137,12 +141,13 @@ function renderHome(){
   if(billingState&&billingState.plan==='expired')items.push(['warn','انتهت التجربة أو الاشتراك: جداولك مخفية عن العملاء.','',null]);
   else if(billingState&&billingState.plan==='trial'&&billingState.trial_days_left<=2)items.push(['warn',`تنتهي تجربتك خلال ${n(billingState.trial_days_left)} يوم.`,'',null]);
   $('#attention').replaceChildren(...(items.length?items:[['ok','كل شيء على ما يرام. لا يوجد ما يحتاج عملًا الآن.','',null]]).map(([tone,text,action,go])=>{
-    const li=mk('li',tone);li.append(mk('span','',text));if(action){const b=mk('button','secondary small',action);b.type='button';b.onclick=go;li.append(b)}return li}));
+    const li=mk('li',tone);li.append(mk('span','',text));if(action){const b=mk('button','secondary small',action);b.type='button';b.dataset.nudge='forward';b.onclick=go;li.append(b)}return li}));
+  window.UIMotion?.enhance($('#home'));
 }
 async function loadHome(){
-  renderHome();
+  homeLoading=true;renderHome();
   const [stats,insights]=await Promise.allSettled([api('size-guide-stats?'+new URLSearchParams({merchant,days:30})),api('size-insights?'+new URLSearchParams({merchant,days:90}))]);
-  homeStats=stats.status==='fulfilled'?stats.value:null;homeAlerts=insights.status==='fulfilled'?(insights.value.alerts||[]).length:0;renderHome();
+  homeStats=stats.status==='fulfilled'?stats.value:null;homeAlerts=insights.status==='fulfilled'?(insights.value.alerts||[]).length:0;homeLoading=false;renderHome();
 }
 $('#homeSync').onclick=()=>$('#sync').click();
 /* ---- products without a guide, and category rules */
@@ -158,12 +163,13 @@ function renderMissing(){
 }
 const show_=tab=>show(tab);
 function renderRules(){
-  const list=$('#rulesList');list.replaceChildren();
+  const list=$('#rulesList'),build=()=>{list.replaceChildren();
   for(const r of rulesData.rules){
     const row=mk('div','rule-row'),text=mk('span','',`${r.category_name||r.category_id} (${(r.products||0).toLocaleString('ar')} منتج) ← ${r.library_name||'جدول محذوف'}`),del=mk('button','secondary small danger','حذف');
-    del.type='button';del.setAttribute('aria-label','حذف قاعدة '+(r.category_name||r.category_id));del.onclick=async()=>{try{rulesData=normalRules(await api('size-rules/'+r.category_id+qs(),{method:'DELETE'}));renderMissing();renderRules()}catch(e){toast(e.message)}};row.append(text,del);list.append(row);
+    del.type='button';del.setAttribute('aria-label','حذف قاعدة '+(r.category_name||r.category_id));del.onclick=async()=>{try{rulesData=normalRules(await api('size-rules/'+r.category_id+qs(),{method:'DELETE'}));renderMissing();renderRules()}catch(e){toast(e.message)}};row.dataset.key='r'+r.category_id;row.append(text,del);list.append(row);
   }
-  if(!rulesData.rules.length)list.append(mk('p','micro','لا توجد قواعد بعد.'));
+  if(!rulesData.rules.length)list.append(mk('p','micro','لا توجد قواعد بعد.'));};
+  window.UIMotion?window.UIMotion.flip(list,build):build();
   const cat=$('#ruleCategory'),lib=$('#ruleLibrary');
   cat.replaceChildren(...(rulesData.categories.length?rulesData.categories:[{id:'',name:'لا توجد فئات: زامن المنتجات أولًا',products:0}]).map(c=>{const o=mk('option','',c.id?`${c.name||c.id} (${c.without_guide.toLocaleString('ar')} بلا جدول من ${c.products.toLocaleString('ar')})`:c.name);o.value=c.id;return o}));
   lib.replaceChildren(...(libraries.length?libraries:[{library_id:'',name:'أنشئ جدولًا مشتركًا أولًا'}]).map(l=>{const o=mk('option','',l.name);o.value=l.library_id;return o}));
