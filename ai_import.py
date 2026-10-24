@@ -308,7 +308,7 @@ def ai_status(merchant: str):
     result = {'available': bool(os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))}
     if enforcing():
         plan = state(merchant)
-        result.update(remaining=plan['ai']['remaining'], plan=plan['plan'])
+        result.update(remaining=plan['ai']['remaining'], plan=plan['plan'])   # remaining is None when the store is unlimited
     return result
 
 def guarded(merchant, body, prompt, schema, convert, unreadable):

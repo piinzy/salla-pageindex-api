@@ -17,6 +17,10 @@ def enforcing():
     """Plans are always recorded; limits only apply once BILLING_ENFORCE is switched on."""
     return os.getenv('BILLING_ENFORCE', '').strip().lower() in ('1', 'true', 'yes', 'on')
 
+def unlimited_stores():
+    """Store IDs the operator lists in BILLING_UNLIMITED_STORES (comma separated): full access, no limits, never billed."""
+    return {x.strip() for x in os.getenv('BILLING_UNLIMITED_STORES', '').split(',') if x.strip().isascii() and x.strip().isdigit()}
+
 def initialize():
     query('''CREATE TABLE IF NOT EXISTS store_billing (
         merchant_id TEXT PRIMARY KEY, plan TEXT NOT NULL DEFAULT 'trial', installed BOOLEAN NOT NULL DEFAULT TRUE,
@@ -46,8 +50,11 @@ def parse_time(value):
             continue
     return None
 
-def compute(row, now):
+def compute(row, now, unlimited=False):
     """Pure: what a store may do right now, from its billing row."""
+    if unlimited and row['installed']:
+        return {'plan': 'unlimited', 'active': True, 'price': 0, 'currency': CURRENCY, 'trial_days_left': None, 'paid_until': None,
+                'ai': {'limit': None, 'used': 0, 'plan_remaining': None, 'extra': row['extra_credits'], 'remaining': None}}
     paid_until = row.get('paid_until')
     paid = row['plan'] == 'paid' and (paid_until is None or now < paid_until + timedelta(days=GRACE_DAYS))
     trial = row['plan'] == 'trial' and now < row['trial_ends_at']
@@ -75,7 +82,7 @@ def get_row(merchant):
     return query('SELECT * FROM store_billing WHERE merchant_id=%s', (merchant,), True)
 
 def state(merchant):
-    result = compute(get_row(merchant), datetime.now(timezone.utc))
+    result = compute(get_row(merchant), datetime.now(timezone.utc), merchant in unlimited_stores())
     result['enforced'] = enforcing()
     return result
 
@@ -84,11 +91,11 @@ def storefront_allowed(merchant):
     if not enforcing():
         return True
     # A store that predates billing starts its trial the first time it is checked.
-    return compute(get_row(merchant), datetime.now(timezone.utc))['active']
+    return compute(get_row(merchant), datetime.now(timezone.utc), merchant in unlimited_stores())['active']
 
 def consume_ai(merchant):
     """Take one AI photo read from the store's allowance, then from its extra credits. Returns where it came from."""
-    if not enforcing():
+    if not enforcing() or merchant in unlimited_stores():
         return None
     now = datetime.now(timezone.utc)
     row = get_row(merchant)

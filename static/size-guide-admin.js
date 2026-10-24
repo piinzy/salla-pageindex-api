@@ -586,7 +586,8 @@ async function loadBilling(){
   try{const b=await api('billing'+qs());if(!b||!b.enforced){bar.classList.add('hidden');return}
     const ai=b.ai,n=x=>Number(x).toLocaleString('ar');
     let text,tone='ok';
-    if(b.plan==='trial')text=`تجربة مجانية: باقي ${n(b.trial_days_left)} يوم · صور الذكاء الاصطناعي المتبقية ${n(ai.remaining)} من ${n(ai.limit)}. للاشتراك (${n(b.price)} ر.س شهريًا) افتح صفحة التطبيق في سلة.`;
+    if(b.plan==='unlimited')text='صلاحية كاملة غير محدودة لهذا المتجر: كل المزايا وصور الذكاء الاصطناعي بلا حد.';
+    else if(b.plan==='trial')text=`تجربة مجانية: باقي ${n(b.trial_days_left)} يوم · صور الذكاء الاصطناعي المتبقية ${n(ai.remaining)} من ${n(ai.limit)}. للاشتراك (${n(b.price)} ر.س شهريًا) افتح صفحة التطبيق في سلة.`;
     else if(b.plan==='paid')text=`الاشتراك فعّال${b.paid_until?' حتى '+date(b.paid_until):''} · صور الذكاء الاصطناعي هذا الشهر: ${n(ai.plan_remaining)} من ${n(ai.limit)}${ai.extra?' + رصيد إضافي '+n(ai.extra):''}.`;
     else{text='انتهت التجربة أو الاشتراك: جداولك محفوظة لكنها مخفية عن عملائك حتى تشترك من صفحة التطبيق في سلة.';tone='warn'}
     bar.textContent=text;bar.dataset.tone=tone;bar.classList.remove('hidden');
@@ -594,7 +595,7 @@ async function loadBilling(){
 }
 async function checkAi(){
   if(aiChecked)return;aiChecked=true;
-  try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiClone').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}else if(typeof d.remaining==='number')$('#aiHint').textContent='المتبقي لك: '+d.remaining.toLocaleString('ar')+' صورة.'}catch{aiChecked=false}
+  try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiClone').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}else if(typeof d.remaining==='number')$('#aiHint').textContent='المتبقي لك: '+d.remaining.toLocaleString('ar')+' صورة.';else if(d.plan==='unlimited')$('#aiHint').textContent='صور الذكاء الاصطناعي غير محدودة لمتجرك.'}catch{aiChecked=false}
 }
 $('#importPanel').addEventListener('toggle',()=>{if($('#importPanel').open)checkAi()});
 $('#aiFile').onchange=()=>{aiBlob=null};

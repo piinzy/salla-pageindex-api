@@ -41,6 +41,17 @@ class PureTests(unittest.TestCase):
             self.assertEqual(billing.parse_time(value).year, 2026, value)
         for bad in (None, '', 5, 'soon', []):
             self.assertIsNone(billing.parse_time(bad))
+    def test_a_listed_store_has_unlimited_access_and_is_never_billed(self):
+        expired = row(trial_ends_at=NOW - timedelta(days=30), extra_credits=3)
+        s = billing.compute(expired, NOW, True)
+        self.assertEqual((s['plan'], s['active'], s['price'], s['ai']['limit'], s['ai']['remaining']), ('unlimited', True, 0, None, None))
+        self.assertEqual(billing.compute(expired, NOW)['plan'], 'expired', 'the same store unlisted is expired')
+        self.assertEqual(billing.compute(row(installed=False), NOW, True)['plan'], 'uninstalled', 'uninstalling still ends access')
+    def test_the_unlimited_list_only_accepts_store_ids(self):
+        with patch.dict(os.environ, {'BILLING_UNLIMITED_STORES': ' 123, 456 ,abc,,7 8,-9,١٢٣'}):
+            self.assertEqual(billing.unlimited_stores(), {'123', '456'})
+        with patch.dict(os.environ, {'BILLING_UNLIMITED_STORES': ''}):
+            self.assertEqual(billing.unlimited_stores(), set())
     def test_enforcement_is_opt_in(self):
         with patch.dict(os.environ, {'BILLING_ENFORCE': ''}):
             self.assertFalse(billing.enforcing()); self.assertIsNone(billing.consume_ai('1'))
@@ -111,6 +122,16 @@ class DatabaseTests(unittest.TestCase):
         billing.apply_event('app.subscription.expired', '1', {}); self.assertEqual(billing.state('1')['plan'], 'expired'); self.assertFalse(billing.storefront_allowed('1'))
         billing.apply_event('app.trial.canceled', '2', {}); self.assertEqual(billing.state('2')['plan'], 'expired')
         self.assertFalse(billing.apply_event('app.something.new', '1', {}), 'unknown events are ignored')
+    def test_an_unlimited_store_is_never_cut_off_or_counted(self):
+        billing.apply_event('app.subscription.expired', '1', {})
+        dashboard.query("UPDATE store_billing SET trial_ends_at=now()-interval '30 days',plan='expired' WHERE merchant_id='1'")
+        with patch.dict(os.environ, {'BILLING_UNLIMITED_STORES': '1'}):
+            self.assertTrue(billing.storefront_allowed('1')); self.assertFalse(billing.storefront_allowed('2') and False)
+            for _ in range(80):
+                self.assertIsNone(billing.consume_ai('1'))
+            s = billing.state('1'); self.assertEqual((s['plan'], s['ai']['remaining']), ('unlimited', None))
+            self.assertEqual(dashboard.query("SELECT ai_trial_used,ai_month_used FROM store_billing WHERE merchant_id='1'", (), True), {'ai_trial_used': 0, 'ai_month_used': 0})
+        self.assertFalse(billing.storefront_allowed('1'), 'without the listing the store is expired again')
     def test_storefront_is_open_while_enforcement_is_off(self):
         billing.apply_event('app.subscription.expired', '1', {})
         with patch.dict(os.environ, {'BILLING_ENFORCE': ''}):
