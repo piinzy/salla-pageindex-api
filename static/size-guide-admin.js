@@ -109,7 +109,14 @@ async function loadStats(){
 }
 
 /* ---- home: what needs attention, how the guides are used, where to start */
-let homeStats=null,homeAlerts=0;
+let homeStats=null,homeAlerts=0,homeLoading=false;
+/* Numbers count up once (easing out) when the screen can animate; otherwise they are simply set. */
+function setCount(el,value){
+  const text=Number(value).toLocaleString('ar'),reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if(!window.requestAnimationFrame||reduced||!Number.isFinite(value)||value<5||el.dataset.n===String(value)){el.textContent=text;el.dataset.n=String(value);return}
+  const from=Number(el.dataset.n)||0,start=performance.now();el.dataset.n=String(value);
+  const step=now=>{const k=Math.min(1,(now-start)/600),eased=1-Math.pow(1-k,3);el.textContent=Math.round(from+(value-from)*eased).toLocaleString('ar');if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step);
+}
 function renderPlan(){
   const b=billingState,card=$('#kpiPlan'),note=$('#kpiPlanNote');if(!card)return;
   if(!b){card.textContent='مفتوحة';note.textContent='بلا قيود حاليًا';return}
@@ -121,8 +128,8 @@ function renderHome(){
   const published=guideIndex.filter(g=>g.is_published).length,drafts=guideIndex.filter(g=>g.has_changes).length,missing=rulesData.missing||0,products=Number(s.product_count)||0;
   $('#heading').textContent='أهلاً بك'+(s.store_name&&s.store_name!==s.merchant_id?'، '+s.store_name:'');
   $('#kpiWith').textContent=products?`${n(Math.max(products-missing,0))} منها بجدول مقاسات`:'اضغط «مزامنة المنتجات» للبدء';
-  $('#kpiPublished').textContent=n(published);$('#kpiDrafts').textContent=drafts?`${n(drafts)} فيها تعديلات غير منشورة`:'يراها العملاء الآن';
-  $('#kpiOpens').textContent=homeStats?n(homeStats.opens):'—';$('#kpiCalcs').textContent=homeStats?`${n(homeStats.calcs)} استخدام لـ«اعرف مقاسك»`:'من العملاء في متجرك';
+  setCount($('#kpiPublished'),published);$('#kpiDrafts').textContent=drafts?`${n(drafts)} فيها تعديلات غير منشورة`:'يراها العملاء الآن';
+  homeStats?setCount($('#kpiOpens'),homeStats.opens):($('#kpiOpens').textContent='—');$('#kpiOpens').classList.toggle('sk',homeLoading&&!homeStats);$('#kpiCalcs').textContent=homeStats?`${n(homeStats.calcs)} استخدام لـ«اعرف مقاسك»`:'من العملاء في متجرك';
   renderPlan();
   const steps=[[products>0,'زامن منتجاتك من سلة','يجلب أسماء المنتجات وصورها لتبدأ.',products>0?'':'مزامنة',()=>$('#sync').click()],
     [published>0,'أنشئ أول جدول مقاسات وانشره','اختر منتجًا، أو اصنع جدولًا مشتركًا لعدة منتجات.',published>0?'':'ابدأ',()=>show(libraries.length||products===0?'library':'catalog')],
@@ -140,9 +147,9 @@ function renderHome(){
     const li=mk('li',tone);li.append(mk('span','',text));if(action){const b=mk('button','secondary small',action);b.type='button';b.onclick=go;li.append(b)}return li}));
 }
 async function loadHome(){
-  renderHome();
+  homeLoading=true;renderHome();
   const [stats,insights]=await Promise.allSettled([api('size-guide-stats?'+new URLSearchParams({merchant,days:30})),api('size-insights?'+new URLSearchParams({merchant,days:90}))]);
-  homeStats=stats.status==='fulfilled'?stats.value:null;homeAlerts=insights.status==='fulfilled'?(insights.value.alerts||[]).length:0;renderHome();
+  homeStats=stats.status==='fulfilled'?stats.value:null;homeAlerts=insights.status==='fulfilled'?(insights.value.alerts||[]).length:0;homeLoading=false;renderHome();
 }
 $('#homeSync').onclick=()=>$('#sync').click();
 /* ---- products without a guide, and category rules */
