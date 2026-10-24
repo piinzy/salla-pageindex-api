@@ -42,7 +42,25 @@
     }
     segs.push({box,key});
   }
-  function syncSegs(){for(const {box,key} of segs)box.querySelectorAll('input').forEach(radio=>{radio.checked=radio.value===String(target()[key]);radio.closest('label').classList.toggle('selected',radio.checked);});}
+  const dropdowns=[];
+  function syncSegs(){for(const {box,key} of segs)box.querySelectorAll('input').forEach(radio=>{radio.checked=radio.value===String(target()[key]);radio.closest('label').classList.toggle('selected',radio.checked);});dropdowns.forEach(refresh=>refresh());}
+  /* The icon choices live in a dropdown: the trigger shows the chosen icon, the panel fades in (150ms) and out (100ms) with no movement. */
+  function iconDropdown(panel){
+    const wrap=el('div',undefined,'icon-dd'),trigger=el('button',undefined,'icon-dd-trigger secondary'),glyph=el('span',undefined,'dd-glyph'),name=el('span',undefined,'dd-name'),caret=el('span','▾','dd-caret');
+    trigger.type='button';trigger.setAttribute('aria-haspopup','true');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls',panel.id);caret.setAttribute('aria-hidden','true');
+    trigger.append(glyph,name,caret);panel.before(wrap);wrap.append(trigger,panel);panel.classList.add('dd-panel');panel.setAttribute('aria-label','أيقونة الزر');
+    const radios=()=>[...panel.querySelectorAll('input')];let open=false;
+    function refresh(){const chosen=radios().find(r=>r.checked);glyph.replaceChildren();if(!chosen)return;const label=chosen.closest('label'),svg=label.querySelector('.icon');if(svg)glyph.append(svg.cloneNode(true));name.textContent=label.querySelector('span:last-child').textContent}
+    const set=value=>{open=value;panel.classList.toggle('open',value);trigger.setAttribute('aria-expanded',String(value))};
+    const close=focus=>{if(!open)return;set(false);if(focus)trigger.focus()};
+    const openIt=()=>{set(true);(radios().find(r=>r.checked)||radios()[0])?.focus()};
+    trigger.onclick=()=>open?close(false):openIt();
+    trigger.onkeydown=event=>{if(event.key==='ArrowDown'&&!open){event.preventDefault();openIt()}};
+    panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(true)}else if(event.key==='Tab')close(false)});
+    panel.addEventListener('change',()=>{refresh();close(true)});
+    document.addEventListener('pointerdown',event=>{if(open&&!wrap.contains(event.target))close(false)});
+    dropdowns.push(refresh);refresh();
+  }
   const tiles=[];
   function renderTiles(){
     const s=target();
@@ -123,6 +141,7 @@
     radio.onchange=()=>{if(radio.checked){target().design=design.id;populate();changed();}};
   }
   seg('buttonIconChoices','button-icon','icon',UI.icons.map(i=>[i.id,i.name,i.id==='none'?null:UI.icon(i.id)]));
+  iconDropdown(byId('buttonIconChoices'));
   for(const [group,title] of [['details','داخل تفاصيل المنتج'],['image','على الصورة الرئيسية'],['floating','مواضع ثابتة على الشاشة']]){
     byId('buttonPlacementChoices').append(el('p',title,'placement-group-label'));
     const grid=el('div',undefined,'placement-choices');

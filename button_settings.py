@@ -36,7 +36,8 @@ class ButtonStyle(BaseModel):
     radius: int = Field(default=-1, ge=-1, le=32, strict=True)
     depth: Literal['flat', 'soft', 'raised', 'deep'] = 'soft'
     effect: Literal['none', 'lift', 'tilt'] = 'lift'
-    icon: Literal['ruler', 'shirt', 'shoe', 'paw', 'tape', 'none'] = 'ruler'
+    icon: Literal['ruler', 'shirt', 'shoe', 'paw', 'tape', 'ruler_flat', 'ruler_tall', 'ruler_double', 'ruler_pencil', 'ruler_set',
+                  'tape_case', 'tape_retract', 'tape_coil', 'tape_wave', 'tape_body', 'none'] = 'ruler'
     edge_offset: int = Field(default=16, ge=0, le=48, strict=True)
     bottom_offset: int = Field(default=88, ge=0, le=240, strict=True)
 

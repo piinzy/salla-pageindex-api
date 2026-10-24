@@ -52,6 +52,18 @@ async function adminTests(){
     // size, depth, shape and icon controls drive the rendered button
     w.document.querySelector('[name="button-depth"][value="deep"]').click();
     w.document.querySelector('[name="button-icon"][value="shoe"]').click();
+    {const doc=w.document,trigger=doc.querySelector('.icon-dd-trigger'),panel=doc.getElementById('buttonIconChoices');
+     assert.equal(doc.querySelectorAll('#buttonIconChoices input').length,16,'five classic icons, ten new tape and ruler shapes, and none');
+     assert.equal(panel.classList.contains('open'),false);assert.equal(trigger.getAttribute('aria-expanded'),'false');assert.equal(trigger.getAttribute('aria-controls'),'buttonIconChoices');
+     assert.match(trigger.textContent,/حذاء/,'the trigger shows the chosen icon');assert.ok(trigger.querySelector('.dd-glyph svg'));
+     trigger.click();assert.equal(panel.classList.contains('open'),true);assert.equal(trigger.getAttribute('aria-expanded'),'true');
+     panel.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert.equal(panel.classList.contains('open'),false,'Escape closes it');
+     trigger.click();doc.querySelector('[name="button-icon"][value="tape_coil"]').click();
+     assert.equal(panel.classList.contains('open'),false,'choosing closes it');assert.match(trigger.textContent,/شريط ملفوف/);
+     trigger.click();doc.body.dispatchEvent(new w.Event('pointerdown',{bubbles:true}));assert.equal(panel.classList.contains('open'),false,'a click elsewhere closes it');
+     for(const iconId of ['ruler_flat','ruler_tall','ruler_double','ruler_pencil','ruler_set','tape_case','tape_retract','tape_coil','tape_wave','tape_body']){
+       doc.querySelector(`[name="button-icon"][value="${iconId}"]`).click();const svg=id('buttonLivePreview').shadowRoot.querySelector('.icon svg');assert.ok(svg&&svg.children.length>=2,iconId+' draws in the live button');}
+     doc.querySelector('[name="button-icon"][value="shoe"]').click();}
     w.document.querySelector('[name="button-width"][value="full"]').click();
     input('buttonScale','120');input('buttonRadius','20');
     button=id('buttonLivePreview').shadowRoot.querySelector('button');
