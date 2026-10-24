@@ -50,7 +50,10 @@
   ];
   const icons = [
     {id:'ruler',name:'مسطرة'},{id:'shirt',name:'قميص'},{id:'shoe',name:'حذاء'},
-    {id:'paw',name:'مخلب'},{id:'tape',name:'شريط قياس'},{id:'none',name:'بدون'},
+    {id:'paw',name:'مخلب'},{id:'tape',name:'شريط قياس'},
+    {id:'ruler_flat',name:'مسطرة أفقية'},{id:'ruler_tall',name:'مسطرة عمودية'},{id:'ruler_double',name:'مسطرة سم وإنش'},{id:'ruler_pencil',name:'مسطرة وقلم'},{id:'ruler_set',name:'مسطرة مثلثة'},
+    {id:'tape_case',name:'شريط بعلبة'},{id:'tape_retract',name:'شريط سحب'},{id:'tape_coil',name:'شريط ملفوف'},{id:'tape_wave',name:'شريط مرن'},{id:'tape_body',name:'شريط الخياطة'},
+    {id:'none',name:'بدون'},
   ];
   const depths = [{id:'flat',name:'مسطح'},{id:'soft',name:'ناعم'},{id:'raised',name:'بارز'},{id:'deep',name:'عميق'}];
   const effects = [{id:'none',name:'بدون'},{id:'lift',name:'رفع'},{id:'tilt',name:'إمالة 3D'}];
@@ -153,6 +156,17 @@
     paw:[['circle',{cx:5.5,cy:10.5,r:1.8}],['circle',{cx:9.5,cy:5.8,r:1.8}],['circle',{cx:14.5,cy:5.8,r:1.8}],['circle',{cx:18.5,cy:10.5,r:1.8}],
       ['path','M12 11c-3 0-5.5 3-5.5 5.5 0 2 1.5 3 3 3 1 0 1.5-.5 2.5-.5s1.5.5 2.5.5c1.5 0 3-1 3-3C17.5 14 15 11 12 11z']],
     tape:[['circle',{cx:9,cy:12,r:6}],['circle',{cx:9,cy:12,r:1.8}],['path','M15 14h7M17.5 14v2.5M20 14v1.5']],
+    ruler_flat:[['rect',{x:2,y:7,width:20,height:10,rx:1.6}],['path','M6 7v3.5M10 7v2M14 7v3.5M18 7v2']],
+    ruler_tall:[['rect',{x:7,y:2,width:10,height:20,rx:1.6}],['path','M7 6h3.5M7 10h2M7 14h3.5M7 18h2']],
+    ruler_double:[['rect',{x:2,y:6,width:20,height:12,rx:1.6}],['path','M6 6v3M9 6v2M12 6v3M15 6v2M18 6v3M5 18v-3M10 18v-2M15 18v-3M20 18v-2']],
+    ruler_pencil:[['rect',{x:2,y:16,width:14,height:6,rx:1.4}],['path','M6 16v2.2M9.5 16v1.4M13 16v2.2'],
+      ['path','M8 16l1-4 8.8-8.8a1.7 1.7 0 0 1 2.4 0l.6.6a1.7 1.7 0 0 1 0 2.4L12 15z'],['path','M15.5 5.5l3 3']],
+    ruler_set:[['path','M3.5 20.5v-17l17 17z'],['path','M3.5 8h2.6M3.5 12h1.6M3.5 16h2.6M8 20.5v-2.6M12 20.5v-1.6M16 20.5v-2.6']],
+    tape_case:[['rect',{x:2.5,y:5,width:13.5,height:14,rx:4.5}],['circle',{cx:9.2,cy:12,r:2.6}],['path','M16 10h5.5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H16'],['path','M18.5 10v1.7M20.5 10v1']],
+    tape_retract:[['path','M4 7h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z'],['path','M7.5 12h6M7.5 15h4M17 13h4.5M21.5 11v4']],
+    tape_coil:[['path','M20 12a8 8 0 1 1-8-8'],['path','M17 12a5 5 0 1 1-5-5'],['path','M14 12a2 2 0 1 1-2-2'],['path','M20 12h2.5M21 12v-1.7']],
+    tape_wave:[['path','M2 14c3-6 6-6 10-2s7 4 10-2'],['path','M2 20c3-6 6-6 10-2s7 4 10-2'],['path',{d:'M2 17c3-6 6-6 10-2s7 4 10-2','stroke-dasharray':'0.01 3','stroke-width':2.6}]],
+    tape_body:[['path','M8.5 3 4.5 6l2 3.2V21h11V9.2l2-3.2-4-3a4.2 4.2 0 0 1-7 0z'],['rect',{x:6.5,y:12.5,width:11,height:3.2}],['path','M9 12.5v1.3M11.5 12.5v.8M14 12.5v1.3M16.5 12.5v.8']],
   };
   function node(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
   function shape(svg, tag, attrs) {
