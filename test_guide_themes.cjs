@@ -4,7 +4,7 @@ const {JSDOM}=require('jsdom');
 const read=n=>fs.readFileSync(path.join(__dirname,'static',n),'utf8');
 const dom=new JSDOM('<body></body>',{url:'https://store.test/p42',runScripts:'outside-only'});
 const w=dom.window,d=w.document;
-try{
+(async()=>{try{
   w.eval(read('size-guide-renderer.js'));w.eval(read('size-guide-catalog.js'));
   const UI=w.SizeGuideUI,Catalog=w.SizeGuideCatalog;
   assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,13);
@@ -127,15 +127,26 @@ try{
    UI.preview(host,{...guide,how_art:'none'},'منتج');assert.equal(shadow(host).querySelector('.measure'),null);UI.preview(host,{...guide},'منتج');assert.equal(shadow(host).querySelector('.measure'),null,'old guides unchanged');
    UI.preview(host,{...guide,instructions:'',how_art:'auto',language:'en'},'x');assert.match(shadow(host).querySelector('.measure li').textContent,/[A-Za-z]/);
    {UI.preview(host,{...guide,category:'women',how_art:'auto',instructions:'الصدر: قياس أكبر جزء'},'منتج');const r=shadow(host);
-    assert.equal(r.querySelector('.measure .instructions.side').textContent,'الصدر: قياس أكبر جزء');assert.equal(r.querySelectorAll('#sg-how .instructions').length,1,'text only once, beside the picture');assert.equal(r.querySelector('.measure li'),null);
+    assert.equal(r.querySelector('.measure .instructions.beside').textContent,'الصدر: قياس أكبر جزء');assert.equal(r.querySelectorAll('#sg-how .instructions').length,1,'text only once, beside the picture');assert.equal(r.querySelector('.measure li'),null);
     UI.preview(host,{...guide,category:'women',how_art:'none',instructions:'نص'},'منتج');assert.equal(shadow(host).querySelector('.measure'),null);assert.equal(shadow(host).querySelector('#sg-how .instructions').textContent,'نص');
     assert.equal(UI.tipsFor('auto','men','ar').tips.length,4);}
-   {const lin={...guide,theme:'linen'},img='https://cdn.example.com/tee.png',back='data:image/jpeg;base64,'+'B'.repeat(60);
-    UI.preview(host,lin,'x');let r=shadow(host);assert.equal(r.querySelector('.wrap').dataset.split,'1');assert.ok(r.querySelector('#sg-table .tcol table'));assert.ok(r.querySelector('#sg-table .side svg'),'drawn garment when no photo');assert.equal(r.querySelector('.side .views'),null);
-    UI.preview(host,{...lin,side_image:img},'x');r=shadow(host);assert.equal(r.querySelector('.side img').src,img);assert.equal(r.querySelector('.side .views'),null);
-    UI.preview(host,{...lin,side_image:img,side_image_back:back,side_image:'javascript:alert(1)'},'x');assert.equal(shadow(host).querySelector('.side img'),null,'bad urls ignored');
-    UI.preview(host,{...lin,side_image:img,side_image_back:back},'x');r=shadow(host);assert.equal(r.querySelectorAll('.side .views button').length,2);r.querySelectorAll('.side .views button')[1].click();assert.equal(shadow(host).querySelector('.side img').src,back);
-    UI.preview(host,guide,'x');assert.equal(shadow(host).querySelector('.side'),null,'other themes unchanged');}
+   {const lin={...guide,theme:'linen',category:'women'},img='https://cdn.example.com/tee.png',back='data:image/jpeg;base64,'+'B'.repeat(60),W=()=>shadow(host).querySelector('.wrap');
+    UI.preview(host,lin,'x');let r=shadow(host);assert.equal(W().dataset.split,'end');assert.ok(r.querySelector('#sg-table .tcol table'));assert.ok(r.querySelector('#sg-table .side svg.figure'),'category drawing when no photo');assert.equal(r.querySelector('.side .views'),null);assert.equal(r.querySelector('.side').dataset.threed,'0');
+    UI.preview(host,{...lin,side_image:img},'x');r=shadow(host);assert.equal(r.querySelector('.side img.art').src,img);
+    UI.preview(host,{...lin,side_image:'javascript:alert(1)',side_image_back:back},'x');assert.equal(shadow(host).querySelector('.side img'),null,'bad urls ignored');
+    UI.preview(host,{...lin,side_image:img,side_image_back:back,side_3d:true},'x');r=shadow(host);assert.equal(r.querySelector('.side').dataset.threed,'1');assert.ok(r.querySelector('.stage .floor'));
+    const views=r.querySelectorAll('.side .views button');assert.equal(views.length,2);views[1].click();assert.equal(views[1].getAttribute('aria-pressed'),'true');assert.equal(views[0].getAttribute('aria-pressed'),'false');
+    assert.ok(r.querySelector('.stage').classList.contains('turning'),'flips');await new Promise(ok=>setTimeout(ok,200));assert.equal(r.querySelector('.side img.art').src,back);assert.equal(r.querySelector('.stage').classList.contains('turning'),false);
+    r.querySelector('.stage').dispatchEvent(new w.Event('pointermove'));views[0].click();await new Promise(ok=>setTimeout(ok,200));assert.equal(r.querySelector('.side img.art').src,img);
+    // placement is the guide's own choice, whatever the theme
+    UI.preview(host,{...guide,side_layout:'start',side_image:img},'x');assert.equal(W().dataset.split,'start');
+    UI.preview(host,{...guide,side_layout:'none',side_image:img,theme:'linen'},'x');assert.equal(W().dataset.split,'none');assert.equal(shadow(host).querySelector('.side'),null);
+    UI.preview(host,{...guide,side_image:img},'x');assert.equal(W().dataset.split,'end','a picture alone opens a side panel');
+    UI.preview(host,guide,'x');assert.equal(W().dataset.split,'none');assert.equal(shadow(host).querySelector('.side'),null,'other guides unchanged');
+    // column widths: only when they line up with the columns
+    const gw={...guide,columns:[{label:'a',kind:'measurement'},{label:'b',kind:'measurement'}],rows:[{size:'S',values:['1','2']}]};
+    UI.preview(host,{...gw,col_widths:[20,30,50]},'x');r=shadow(host);assert.deepEqual([...r.querySelectorAll('col')].map(c=>c.style.width),['20%','30%','50%']);assert.equal(r.querySelector('table').style.tableLayout,'fixed');
+    for(const bad of [[20,80],[1,2,3],[20,30,'x'],[20,30,500]]){UI.preview(host,{...gw,col_widths:bad},'x');assert.equal(shadow(host).querySelector('col'),null,JSON.stringify(bad))}}
    const up='data:image/jpeg;base64,'+'A'.repeat(60);UI.preview(host,{...guide,how_images:[up,'data:image/svg+xml;base64,'+'A'.repeat(60),'data:text/html;base64,'+'A'.repeat(60)]},'منتج');
    const imgs=[...shadow(host).querySelectorAll('.how-media img')];assert.equal(imgs.length,1);assert.equal(imgs[0].src,up);}
   // painted parts: narrower rules win, text turns readable on a painted background, picks report the clicked part
@@ -173,4 +184,4 @@ try{
    assert.equal(C.STYLE_FIELDS.filter(k=>['title','columns','rows','notes','instructions','category','language','calculator'].includes(k)).length,0,'content never travels with a look');
    for(const c of UI.categories){const list=C.phrasesFor(c.id);assert.ok(list.length>=4);assert.ok(list.every(x=>x.length<=300&&x.trim()));assert.equal(new Set(list).size,list.length)}}
   console.log('PASS: 7 categories x 13 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
-}finally{w.close();}
+}finally{w.close();}})().catch(error=>{console.error(error);process.exit(1)});

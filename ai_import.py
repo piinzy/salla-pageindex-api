@@ -201,6 +201,47 @@ def to_style(result):
         raise ValueError('no style')
     return style
 
+
+# ---- the whole table in one read: numbers, look and layout (column widths, picture beside the table)
+IMAGE_KINDS = ('dress', 'shirt', 'pants', 'mannequin', 'model', 'shoe', 'kids', 'pet', 'accessory', 'other')
+FRAME_PROMPT = ('LOOK: in "design" describe only the visual design of the chart, never its words. ' + STYLE_PROMPT[STYLE_PROMPT.index('Report colours'):STYLE_PROMPT.index(' Text inside')] + ' '
+                'LAYOUT: in "frame" report "column_widths", the share of the table width each printed column takes as a percentage, the size column first then the other columns in the same order as the "columns" you return, '
+                'and whether a picture sits beside the table: "has_image" is true for a photo, drawing, mannequin or model of a garment, shoe or pet that is NOT a diagram of how to measure; '
+                '"image_side" says where that picture is on the page (left, right or none), "image_kind" what it shows, and "image_views" how many views it has (1, or 2 for front and back).')
+CLONE_PROMPT = PROMPT + ' ' + FRAME_PROMPT
+CLONE_SCHEMA = {'type': 'OBJECT', 'properties': {
+    **SCHEMA['properties'],
+    'design': STYLE_SCHEMA,
+    'frame': {'type': 'OBJECT', 'properties': {
+        'column_widths': {'type': 'ARRAY', 'items': {'type': 'NUMBER'}},
+        'has_image': {'type': 'BOOLEAN'}, 'image_side': {'type': 'STRING', 'enum': ['left', 'right', 'none']},
+        'image_kind': {'type': 'STRING', 'enum': list(IMAGE_KINDS)}, 'image_views': {'type': 'INTEGER'}}}},
+    'required': SCHEMA['required']}
+
+def to_frame(result, grid):
+    """Column widths (only when they line up with the columns we kept) and where a picture sits; anything odd is dropped."""
+    frame = result if isinstance(result, dict) else {}
+    widths = frame.get('column_widths')
+    out = {'col_widths': [], 'image_side': 'none', 'image_kind': 'other', 'image_views': 1}
+    count = len(grid['columns']) + 1
+    if (grid.get('layout') != 'sizes_across' and isinstance(widths, list) and len(widths) == count
+            and all(isinstance(w, (int, float)) and not isinstance(w, bool) and w > 0 for w in widths)):
+        total = sum(widths)
+        out['col_widths'] = [max(3, min(80, round(w / total * 100))) for w in widths]
+    if frame.get('has_image') is True and frame.get('image_side') in ('left', 'right'):
+        out['image_side'] = frame['image_side']
+        out['image_kind'] = frame['image_kind'] if frame.get('image_kind') in IMAGE_KINDS else 'other'
+        out['image_views'] = 2 if frame.get('image_views') == 2 else 1
+    return out
+
+def to_clone(result):
+    grid = to_grid(result)
+    try:
+        style = to_style(result.get('design'))
+    except (ValueError, AttributeError):
+        style = {}
+    return {**grid, 'style': style, 'frame': to_frame(result.get('frame'), grid)}
+
 def candidates():
     configured = [m.strip() for m in os.getenv('GEMINI_MODEL', '').split(',') if m.strip()]
     ordered = ([_preferred] if _preferred else []) + configured + list(DEFAULT_MODELS)
@@ -293,6 +334,11 @@ def guarded(merchant, body, prompt, schema, convert, unreadable):
 @router.post('/dashboard-api/size-guide-ai-import', dependencies=[Depends(authenticated)])
 def ai_import(merchant: str, body: ImportRequest):
     return guarded(merchant, body, None, None, to_grid, 'لم أتمكن من قراءة جدول في هذه الصورة. جرّب صورة أوضح.')
+
+@router.post('/dashboard-api/size-guide-ai-clone', dependencies=[Depends(authenticated)])
+def ai_clone(merchant: str, body: ImportRequest):
+    """Everything in one read: the table's numbers and texts, its colours and shape, its column widths and the picture beside it."""
+    return guarded(merchant, body, CLONE_PROMPT, CLONE_SCHEMA, to_clone, 'لم أتمكن من قراءة جدول في هذه الصورة. جرّب صورة أوضح.')
 
 @router.post('/dashboard-api/size-guide-ai-style', dependencies=[Depends(authenticated)])
 def ai_style(merchant: str, body: ImportRequest):

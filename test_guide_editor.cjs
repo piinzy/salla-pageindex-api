@@ -43,6 +43,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
       else if(p.startsWith('size-presets/')&&method==='DELETE'){const id=p.split('/')[1].split('?')[0];presets.styles=presets.styles.filter(x=>x.preset_id!==id);presets.phrases=presets.phrases.filter(x=>x.preset_id!==id);data={deleted:true}}
       else if(p==='billing')data=billing;
       else if(p==='size-guide-ai-status')data={available:aiAvailable};
+      else if(p==='size-guide-ai-clone')data={columns:[{label:'الصدر',kind:'measurement'},{label:'الخصر',kind:'measurement'}],rows:[{size:'S',values:['86','70']},{size:'M',values:['90','74']}],unit:'cm',warnings:[],style:{color:'#336699',header_bg:'#e8eef5',table_style:'lines'},frame:{col_widths:[20,40,40],image_side:'left',image_kind:'dress',image_views:2}};
       else if(p==='size-guide-ai-style')data={style:{color:'#336699',header_bg:'#e8eef5',header_text:'',row_alt:'',border_color:'#ccd6e0',text_color:'',paper_color:'#ffffff',size_bg:'',size_text:'',table_style:'lines',corners:'sharp'}};
       else if(p==='size-guide-ai-import')data={columns:[{label:'الصدر',kind:'measurement'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['86','36']},{size:'M',values:['','38']}],unit:'in',notes:'ملاحظة من الصورة',warnings:['خانة فارغة'],title:'عنوان من الصورة',size_label:'المقاس',measurement_type:'garment',category:'pets',language:'ar',instructions:'تعليمات من الصورة'};
       else if(p==='size-guide-stats')data={days:+u.searchParams.get('days'),opens:12,calcs:3,published_guides:2,daily:[{day:new Date().toISOString().slice(0,10),opens:12,calcs:3}],top:[{product_id:'43',title:'منتج قديم',opens:12,calcs:3}]};
@@ -243,6 +244,22 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     ev=pasteInto('#gridEditor [data-row="0"][data-cell="0"]','a\nb\nc'.repeat(1)+'\n'+Array.from({length:40},(_,i)=>'r'+i).join('\n'));assert.equal(all('#gridEditor tbody tr').length,30,'the 30-row limit is respected');
     ev=pasteInto('#guideTitle','a\tb\nc\td');assert.equal(ev.defaultPrevented,false,'only the table grid takes blocks');
 
+    // ---- copy a whole table from a picture: numbers, look and layout, each part optional
+    {const file=new w.File(['x'],'full.png',{type:'image/png'});Object.defineProperty($('#aiFile'),'files',{value:[file],configurable:true});
+     $('#aiClone').click();await settle();
+     const req=calls.filter(c=>c.path.startsWith('size-guide-ai-clone')).pop();assert.equal(req.method,'POST');assert.deepEqual(Object.keys(req.body),['image']);
+     assert.equal(hidden('#importPreview'),false);const keys=all('#importExtraList input').map(i=>i.dataset.key);assert.ok(keys.includes('look_style')&&keys.includes('look_frame'));assert.ok(all('#importExtraList input').filter(i=>/^look_/.test(i.dataset.key)).every(i=>i.checked));
+     assert.match($('#importExtraList').textContent,/نِسَب عرض الأعمدة \+ مكان لصورة المنتج/);
+     $('#importApply').click();await settle();
+     assert.deepEqual(all('#widthEditor input').map(i=>i.value),['20','40','40']);assert.equal($('[name="guide-side_layout"]:checked').value,'end','left on a right-to-left page is after the table');assert.equal($('#side3d').checked,true);
+     assert.equal($('#guideColor').value,'#336699');assert.equal($('[name="guide-table_style"]:checked').value,'lines');
+     const root=()=>$('#guidePreview').shadowRoot;assert.equal(root().querySelectorAll('col').length,3);assert.ok(root().querySelector('aside.side'));
+     input('#widthEditor input','30');assert.equal(root().querySelector('col').style.width.slice(0,2),'27');
+     $('[name="guide-side_layout"][value="none"]').click();assert.equal(root().querySelector('aside.side'),null);$('[name="guide-side_layout"][value="start"]').click();assert.ok(root().querySelector('aside.side'));
+     all('#widthEditor button').pop().click();assert.equal(root().querySelector('col'),null);assert.equal(all('#widthEditor input').length,0);assert.equal(all('#widthEditor button').length,1,'offers to set widths again');
+     // each part can be left out
+     $('#aiClone').click();await settle();for(const i of all('#importExtraList input'))if(/^look_/.test(i.dataset.key))i.checked=false;
+     const colorBefore=$('#guideColor').value;$('#importApply').click();await settle();assert.equal($('#guideColor').value,colorBefore);assert.equal(all('#widthEditor input').length,0);}
     // ---- a guide saved before these options existed opens with defaults
     $('#backCatalog').click();await settle();$('[data-edit="43"]').click();await settle();
     assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'classic');assert.equal($('#guideColor').value,'#123456');

@@ -93,6 +93,9 @@ class Guide(BaseModel):
     calculator:bool=False
     language:Literal['ar','en','auto']='ar'
     how_images:list[str]=Field(default_factory=list,max_length=4)
+    side_layout:Literal['auto','none','start','end']='auto'
+    side_3d:bool=False
+    col_widths:list[int]=Field(default_factory=list,max_length=11)
     side_image:str=Field(default='',max_length=300100)
     side_image_back:str=Field(default='',max_length=300100)
     cell_styles:list[PartStyle]=Field(default_factory=list,max_length=150)
@@ -103,6 +106,11 @@ class Guide(BaseModel):
     @classmethod
     def check_images(cls,values):
         if any(not (HTTPS_URL.fullmatch(v) or DATA_IMAGE.fullmatch(v)) for v in values):raise ValueError('الصورة يجب أن تكون رابط https أو صورة مرفوعة (JPG أو PNG أو WebP)')
+        return values
+    @field_validator('col_widths')
+    @classmethod
+    def check_widths(cls,values):
+        if any(v<3 or v>80 for v in values):raise ValueError('عرض العمود يجب أن يكون بين 3 و80')
         return values
     @field_validator('side_image','side_image_back')
     @classmethod
