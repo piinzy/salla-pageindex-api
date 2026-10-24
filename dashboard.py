@@ -1,5 +1,5 @@
 """Product catalog for size guides; scoped merchant and operator dashboard access."""
-import hashlib, hmac, html, os, re, secrets, time, uuid
+import hashlib, hmac, html, logging, os, re, secrets, time, uuid
 from contextlib import closing
 from pathlib import Path
 import psycopg2
@@ -119,7 +119,7 @@ def require_store(merchant):
         raise HTTPException(404,'المتجر غير موجود.')
 
 @router.get('/dashboard-api/products',dependencies=[Depends(authenticated)])
-def products(merchant:str,q:str='',status:str='',page:int=1):
+def products(merchant:str,q:str='',status:str='',page:int=1,guide:str=''):
     require_store(merchant)
     if page<1 or len(q)>200: raise HTTPException(400,'معايير بحث غير صالحة.')
     clauses=['merchant_id=%s']; args=[merchant]
@@ -129,6 +129,8 @@ def products(merchant:str,q:str='',status:str='',page:int=1):
             word=word.replace('\\','\\\\').replace('%','\\%').replace('_','\\_')
             args.extend(['%'+word+'%']*3)
     if status: clauses.append('status=%s'); args.append(status)
+    if guide=='none': clauses.append('NOT EXISTS(SELECT 1 FROM product_size_guides g WHERE g.merchant_id=dashboard_catalog.merchant_id AND g.product_id=dashboard_catalog.product_id)')
+    elif guide: raise HTTPException(400,'معايير بحث غير صالحة.')
     where=' AND '.join(clauses)
     total=query('SELECT count(*) AS n FROM dashboard_catalog WHERE '+where,args,True)['n']
     rows=query('SELECT * FROM dashboard_catalog WHERE '+where+' ORDER BY title,product_id LIMIT 24 OFFSET %s',args+[(page-1)*24])
@@ -172,6 +174,7 @@ VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT(merchant_id,product_id) DO
  currency=EXCLUDED.currency,image=EXCLUDED.image,url=EXCLUDED.url,status=EXCLUDED.status,quantity=EXCLUDED.quantity,updated_at=now()'''
 
 def sync(merchant,job):
+    from size_rules import save_categories
     processed=0
     try:
         with closing(db()) as conn, conn, conn.cursor() as cur:
@@ -191,7 +194,7 @@ def sync(merchant,job):
                 for p in items:
                     record=normalize(p,merchant)
                     if record[1] in seen: raise RuntimeError('تكرار غير متوقع بين صفحات سلة. أعد المزامنة.')
-                    seen.add(record[1]); cur.execute(UPSERT,record); processed+=1
+                    seen.add(record[1]); cur.execute(UPSERT,record); save_categories(cur,merchant,p); processed+=1
                 query('UPDATE dashboard_jobs SET processed=%s,total=%s WHERE id=%s',(processed,pagination.get('total'),job))
                 if page>=totalpages: break
                 if not items or page>=2000: raise RuntimeError('لم تكتمل صفحات المنتجات؛ أعد المحاولة.')
@@ -201,6 +204,7 @@ def sync(merchant,job):
                 raise RuntimeError('تغير عدد المنتجات أثناء المزامنة؛ أعد المحاولة. تم الاحتفاظ بالكتالوج السابق.')
             # Only a complete successful snapshot removes stale local entries.
             cur.execute('DELETE FROM dashboard_catalog WHERE merchant_id=%s AND NOT (product_id=ANY(%s))',(merchant,list(seen)))
+            cur.execute('DELETE FROM product_categories WHERE merchant_id=%s AND NOT (product_id=ANY(%s))',(merchant,list(seen)))
         query("UPDATE dashboard_jobs SET state='success',processed=%s,finished_at=now(),message='اكتملت المزامنة' WHERE id=%s",(processed,job))
     except Exception as exc:
         message=str(exc) if isinstance(exc,RuntimeError) else 'تعذر إكمال المزامنة. تحقق من الاتصال بقاعدة البيانات وسلة ثم أعد المحاولة.'
@@ -225,9 +229,19 @@ def update_product_event(merchant,event,data):
         cur.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',('catalog:'+merchant,))
         if event=='product.deleted':
             cur.execute('DELETE FROM dashboard_catalog WHERE merchant_id=%s AND product_id=%s',(merchant,str(product_id)))
+            cur.execute('DELETE FROM product_categories WHERE merchant_id=%s AND product_id=%s',(merchant,str(product_id)))
         else:
             row=query('SELECT access_token FROM stores WHERE merchant_id=%s',(merchant,),True)
             if not row: raise HTTPException(404,'Unknown merchant')
             p=salla_get('/products/'+str(product_id),row['access_token'],None,merchant).get('data')
             if not isinstance(p,dict): raise HTTPException(502,'Invalid product response')
             cur.execute(UPSERT,normalize(p,merchant))
+            from size_rules import save_categories
+            save_categories(cur,merchant,p)
+    if event!='product.deleted':
+        # A new or moved product with no guide yet joins the shared guide of its category, when the store set such a rule.
+        try:
+            from size_rules import apply_rules
+            apply_rules(merchant,[str(product_id)])
+        except Exception as error:
+            logging.getLogger('salla_backend').error('Applying guide rules failed: %s',type(error).__name__)

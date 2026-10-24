@@ -30,8 +30,10 @@ from size_stats import router as stats_router, initialize as initialize_size_sta
 from ai_import import router as ai_router
 from size_presets import router as presets_router, initialize as initialize_size_presets
 from quick_edit import router as quick_router, initialize as initialize_quick_edit
+from size_sales import router as sales_router, initialize as initialize_size_sales, orders_event
+from size_rules import router as rules_router, initialize as initialize_size_rules
 from billing import router as billing_router, initialize as initialize_billing, apply_event as billing_event, ensure as billing_ensure
-for extra_router in (billing_router, library_router, stats_router, ai_router, presets_router, quick_router):
+for extra_router in (sales_router, rules_router, billing_router, library_router, stats_router, ai_router, presets_router, quick_router):
     app.include_router(extra_router)
 from embedded import router as embedded_router, RedactTokenQuery
 app.include_router(embedded_router)
@@ -94,6 +96,8 @@ def startup_event():
     initialize_size_presets()
     initialize_quick_edit()
     initialize_billing()
+    initialize_size_rules()
+    initialize_size_sales()
 
 
 @app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
@@ -296,6 +300,16 @@ async def salla_webhook(request: Request):
             raise HTTPException(status_code=400, detail="Invalid merchant ID")
         await run_in_threadpool(update_product_event, str(merchant), event, payload.get("data"))
         return {"status": "success", "event_received": event}
+    if event.startswith("order."):
+        merchant = payload.get("merchant")
+        if isinstance(merchant, bool) or not str(merchant).isascii() or not str(merchant).isdigit() or len(str(merchant)) > 30:
+            raise HTTPException(status_code=400, detail="Invalid merchant ID")
+        try:
+            handled = await run_in_threadpool(orders_event, event, str(merchant), payload.get("data"))
+        except Exception as error:   # a malformed order must never make Salla retry the webhook forever
+            logger.error("Order event %s failed: %s", event, type(error).__name__)
+            handled = False
+        return {"status": "success" if handled else "ignored", "event_received": event}
     if event.startswith("app.") and event != "app.store.authorize":
         merchant = payload.get("merchant")
         if isinstance(merchant, bool) or not str(merchant).isascii() or not str(merchant).isdigit() or len(str(merchant)) > 30:

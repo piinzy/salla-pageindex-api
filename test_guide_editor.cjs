@@ -12,7 +12,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
   const dom=new JSDOM(file('dashboard.html'),{url:'https://app.test/dashboard',runScripts:'dangerously',virtualConsole:console_}),w=dom.window,d=w.document;
   try{
     w.structuredClone=structuredClone;let confirmed=true;w.confirm=()=>confirmed;
-    const calls=[];let aiAvailable=true;let billing={enforced:true,plan:'trial',trial_days_left:5,price:389,paid_until:null,ai:{limit:3,used:0,plan_remaining:3,extra:0,remaining:3}};const presets={styles:[{preset_id:'s00000000001',name:'تصميم قديم',style:{theme:'velvet',color:'#7b2338',table_style:'cards',density:'compact',corners:'round',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'none',font_scale:'small',sticky_size:true,header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''}}],phrases:[{preset_id:'f00000000001',name:'جملتي',text:'جملة محفوظة من التاجر'}],n:1};
+    const calls=[];let aiAvailable=true;const rules={rules:[],categories:[{id:'100',name:'فساتين',products:3,without_guide:2}],missing:2,latest:[]};let billing={enforced:true,plan:'trial',trial_days_left:5,price:389,paid_until:null,ai:{limit:3,used:0,plan_remaining:3,extra:0,remaining:3}};const presets={styles:[{preset_id:'s00000000001',name:'تصميم قديم',style:{theme:'velvet',color:'#7b2338',table_style:'cards',density:'compact',corners:'round',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'none',font_scale:'small',sticky_size:true,header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''}}],phrases:[{preset_id:'f00000000001',name:'جملتي',text:'جملة محفوظة من التاجر'}],n:1};
     const call=(method,part)=>calls.filter(c=>c.method===method&&c.path.includes(part));
     const guideIndex=()=>[{product_id:'43',title:'منتج قديم',sku:'S2',version:3,is_published:true,has_changes:false,library_id:null},
       {product_id:'44',title:'منتج مرتبط',sku:'S3',version:1,is_published:true,has_changes:false,library_id:LIB,library_name:'فساتين'}];
@@ -41,6 +41,11 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
       else if(p==='size-presets'&&method==='GET')data={styles:presets.styles,phrases:presets.phrases};
       else if(p==='size-presets'&&method==='POST'){const item={preset_id:'p'+(presets.n++).toString(16).padStart(11,'0'),name:body.name,...(body.kind==='style'?{style:body.style}:{text:body.text})};presets[body.kind==='style'?'styles':'phrases'].push(item);data=item}
       else if(p.startsWith('size-presets/')&&method==='DELETE'){const id=p.split('/')[1].split('?')[0];presets.styles=presets.styles.filter(x=>x.preset_id!==id);presets.phrases=presets.phrases.filter(x=>x.preset_id!==id);data={deleted:true}}
+      else if(p==='size-rules'&&method==='GET')data=rules;
+      else if(p==='size-rules'&&method==='PUT'){rules.rules=[{category_id:body.category_id,category_name:'فساتين',library_id:body.library_id,library_name:'فساتين',products:3}];data=rules}
+      else if(p.startsWith('size-rules/')&&p!=='size-rules/apply'&&method==='DELETE'){rules.rules=[];data=rules}
+      else if(p==='size-rules/apply'){rules.missing=0;data={linked:2,...rules}}
+      else if(p==='size-insights')data={days:+u.searchParams.get('days'),since:'2026-10-01T00:00:00Z',sold:20,returned:5,rate:.25,alerts:[{kind:'size',product_id:'42',title:'فستان كريب',size:'M',sold:10,returned:4,rate:.4,message:'40% من مبيعات المقاس M رُجعت (4 من 10). راجع قياسات هذا المقاس في الجدول.'}],products:[{product_id:'42',title:'فستان كريب',sold:20,returned:5,rate:.25,sizes:[{size:'M',sold:10,returned:4,rate:.4},{size:'S',sold:10,returned:1,rate:.1}]}]};
       else if(p==='billing')data=billing;
       else if(p==='size-guide-ai-status')data={available:aiAvailable};
       else if(p==='size-guide-ai-clone')data={columns:[{label:'الصدر',kind:'measurement'},{label:'الخصر',kind:'measurement'}],rows:[{size:'S',values:['86','70']},{size:'M',values:['90','74']}],unit:'cm',warnings:[],style:{color:'#336699',header_bg:'#e8eef5',table_style:'lines'},frame:{col_widths:[20,40,40],image_side:'left',image_kind:'dress',image_views:2}};
@@ -61,6 +66,9 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
 
     // plan banner: trial days and AI allowance, hidden when plans are not enforced
     assert.equal(hidden('#billingBar'),false);assert.match($('#billingBar').textContent,/تجربة مجانية/);assert.match($('#billingBar').textContent,/389/);assert.equal($('#billingBar').dataset.tone,'ok');
+    // products without a guide are offered up front
+    assert.equal(hidden('#missingBar'),false);assert.match($('#missingBar').textContent,/2|٢/);assert.match($('#missingBar').textContent,/أنشئ قاعدة/);
+    $('#guideFilter').value='none';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();assert.match(calls.filter(c=>c.path.startsWith('products?')).pop().path,/guide=none/);$('#guideFilter').value='';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();
     // ---- a brand-new guide starts as a women's dress guide with its own theme and template list
     $('[data-edit="42"]').click();await settle();
     assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'women');assert.equal($('[name="guide-theme"]:checked').value,'rose');
@@ -296,6 +304,12 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // ---- library: list, create, link, edit, delete
     $('[data-tab="library"]').click();await settle();
     assert.equal(hidden('#library'),false);assert.equal(all('#libraryList .lib-card').length,1);assert.match($('#libraryList .lib-card').textContent,/فساتين/);assert.ok($('#libraryList svg.emblem'));
+    // category rules: choose a shared guide per category, then link the products that have none
+    assert.equal(all('#ruleCategory option').length,1);assert.equal($('#ruleLibrary').value.length>0,true);assert.equal($('#ruleApply').disabled,true,'nothing to apply before a rule exists');
+    $('#ruleSave').click();await settle();const rulePut=calls.filter(c=>c.method==='PUT'&&c.path.startsWith('size-rules')).pop();assert.deepEqual(Object.keys(rulePut.body).sort(),['category_id','library_id']);assert.equal(rulePut.body.category_id,'100');
+    assert.match($('#rulesList').textContent,/فساتين.*←/);assert.equal($('#ruleApply').disabled,false);
+    $('#ruleApply').click();await settle();assert.equal(calls.filter(c=>c.method==='POST'&&c.path.startsWith('size-rules/apply')).length,1);assert.equal(hidden('#missingBar'),true,'nothing left without a guide');
+    $('#rulesList .rule-row button').click();await settle();assert.equal(calls.filter(c=>c.method==='DELETE'&&c.path.startsWith('size-rules/100')).length,1);assert.equal(all('#rulesList .rule-row').length,0);
     $('#newLibrary').click();await settle();
     assert.equal(hidden('#editor'),false);assert.equal(hidden('.only-library'),false);assert.equal(hidden('.only-product'),true);assert.equal($('#editorKind').textContent,'جدول مشترك');assert.equal($('#linkSearch').disabled,true,'save first, then link');
     assert.equal($('[data-tab="library"]').classList.contains('active'),true);
@@ -318,6 +332,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // ---- statistics
     $('[data-tab="stats"]').click();await settle();
     assert.equal(hidden('#stats'),false);assert.equal(all('#statsCards .card').length,4);assert.match($('#statsCards').textContent,/12|١٢/);assert.equal(all('#statsChart .bar').length,30);
+    assert.match($('#insightCards').textContent,/20|٢٠/);assert.match($('#insightCards').textContent,/25%|٢٥%/);assert.equal(all('#insightAlerts .insight-alert').length,1);assert.match($('#insightAlerts').textContent,/المقاس M/);assert.ok($('#insightRows .size-chip.warn'),'the size with many returns is highlighted');assert.equal(hidden('#insightEmpty'),true);
     assert.match($('#statsTop').textContent,/منتج قديم/);assert.equal(hidden('#statsEmpty'),true);
     $('#statsDays').value='7';$('#statsDays').dispatchEvent(new w.Event('change'));await settle();assert.equal(all('#statsChart .bar').length,7);
     assert.equal(errors.length,0,errors.map(e=>e.message).join('\n'));

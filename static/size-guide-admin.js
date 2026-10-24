@@ -26,7 +26,7 @@ async function confirmAction(message){return window.SizeGuideEmbedded?window.Siz
 async function mayLeave(){if(saving||window.SizeGuideSettings?.isBusy()){toast('انتظر اكتمال العملية أولًا.');return false}if(!dirty&&!window.SizeGuideSettings?.isDirty())return true;const confirmed=await confirmAction('لديك تعديلات غير محفوظة. هل تريد المغادرة دون حفظها؟');if(confirmed)window.SizeGuideSettings?.discard();return confirmed}
 function show(tab){
   view=tab;if(tab==='buttonSettings')window.SizeGuideSettings?.load();
-  if(tab==='quick')window.SizeGuideQuick?.open();if(tab==='library')loadLibrary().catch(e=>toast(e.message));if(tab==='stats')loadStats().catch(e=>toast(e.message));
+  if(tab==='quick')window.SizeGuideQuick?.open();if(tab==='library')loadLibrary().catch(e=>toast(e.message));if(tab==='stats')loadStats().catch(e=>toast(e.message));if(tab==='catalog')loadRules().catch(()=>{});
   window.SizeGuideEmbedded?.navigate(tab);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('hidden',t.id!==tab));
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===(tab==='editor'?(mode==='library'?'library':'catalog'):tab)));
@@ -41,14 +41,14 @@ async function boot(){
   const wanted=new URLSearchParams(location.search).get('view');if(['quick','library','stats'].includes(wanted))show(wanted);
 }
 async function bootStores(){stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
-async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling()])}
+async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling(),loadRules().catch(()=>{})])}
 function stateOf(g){
   if(!g)return ['بدون جدول',false];
   const base=g.is_published?(g.has_changes?'منشور + تعديلات مسودة':'منشور'):'مسودة';
   return [g.library_id?'مرتبط · '+(g.library_name||'جدول مشترك')+(g.is_published?'':' (غير منشور)'):base,!g.is_published];
 }
 async function loadProducts(){
-  let current=merchant;let d=await api('products?'+new URLSearchParams({merchant,q:$('#filter').value,status:$('#status').value,page}));if(current!==merchant)return;pages=d.pages;
+  let current=merchant;let d=await api('products?'+new URLSearchParams({merchant,q:$('#filter').value,status:$('#status').value,guide:$('#guideFilter').value,page}));if(current!==merchant)return;pages=d.pages;
   $('#rows').innerHTML=d.items.map(p=>{
     const g=guideIndex.find(g=>g.product_id===p.product_id),[state,draft]=stateOf(g);
     return `<tr><td class="select-col"><input type="checkbox" data-select="${esc(p.product_id)}" ${selected.has(p.product_id)?'checked':''} aria-label="تحديد ${esc(p.title)}"></td><td><div class="product">${url(p.image)?`<img loading="lazy" src="${esc(url(p.image))}" alt="">`:'<div class="placeholder"></div>'}<div>${url(p.url)?`<a href="${esc(url(p.url))}" target="_blank" rel="noopener noreferrer">${esc(p.title)} ↗</a>`:esc(p.title)}<small>#${esc(p.product_id)}</small></div></div></td><td dir="ltr">${esc(p.sku)||'—'}</td><td>${p.price===null?'—':Number(p.price).toLocaleString('ar',{maximumFractionDigits:2})} ${esc(p.currency)}</td><td>${p.quantity===null?'—':esc(p.quantity)}</td><td><span class="tag ${p.status!=='sale'?'warn':''}">${esc(labels[p.status]||p.status||'—')}</span></td><td><span class="tag ${draft?'badgeDraft':''}">${esc(state)}</span></td><td><div class="row-actions"><button class="secondary" data-edit="${esc(p.product_id)}">${g?(g.library_id?'عرض الجدول':'تعديل الجدول'):'إضافة مقاسات'}</button><button class="secondary" data-edit-data="${esc(p.product_id)}" data-find="${esc(p.sku||p.title)}">تعديل البيانات</button></div></td></tr>`;
@@ -89,7 +89,7 @@ async function loadJobs(){let data=await api('jobs?'+new URLSearchParams({mercha
 /* ---------- library and statistics tabs ---------- */
 async function loadLibraryIndex(){libraries=await api('size-library'+qs());if(!Array.isArray(libraries))libraries=[];updateBulk()}
 async function loadLibrary(){
-  await loadLibraryIndex();const box=$('#libraryList');box.replaceChildren();$('#libraryEmpty').classList.toggle('hidden',libraries.length>0);
+  await Promise.all([loadLibraryIndex(),loadRules().catch(()=>{})]);renderRules();const box=$('#libraryList');box.replaceChildren();$('#libraryEmpty').classList.toggle('hidden',libraries.length>0);
   for(const l of libraries){
     const card=mk('article','lib-card'),icon=mk('div','lib-emblem'),info=mk('div','lib-info'),chips=mk('div','chips'),actions=mk('div','bulk-buttons');
     if(UIX?.emblem){icon.style.color=Catalog?.defaults[l.category]?.color||'#177e65';icon.append(UIX.emblem(l.category||'general'))}
@@ -105,8 +105,49 @@ async function loadStats(){
   for(let i=days-1;i>=0;i--){const day=new Date(Date.now()-i*864e5).toISOString().slice(0,10),n=byDay.get(day)||0,bar=mk('span','bar');bar.style.height=Math.max(n?6:2,Math.round(n/top*100))+'%';bar.title=day+': '+n;chart.append(bar)}
   chart.setAttribute('aria-label',`رسم بياني: ${d.opens} فتحة للجدول خلال آخر ${days} يومًا`);
   $('#statsTop').innerHTML=d.top.map(t=>`<tr><td>${esc(t.title)}</td><td>${t.opens}</td><td>${t.calcs}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">—</td></tr>';
-  $('#statsEmpty').classList.toggle('hidden',d.opens+d.calcs>0);
+  $('#statsEmpty').classList.toggle('hidden',d.opens+d.calcs>0);loadInsights().catch(()=>{});
 }
+/* ---- products without a guide, and category rules */
+let rulesData={rules:[],categories:[],missing:0,latest:[]};
+const normalRules=d=>({rules:[],categories:[],missing:0,latest:[],...(d&&typeof d==='object'&&!Array.isArray(d)?d:{})});
+async function loadRules(){rulesData=normalRules(await api('size-rules'+qs()));renderMissing();if(!$('#library').classList.contains('hidden'))renderRules()}
+function renderMissing(){
+  const bar=$('#missingBar'),n=rulesData.missing||0;bar.replaceChildren();bar.classList.toggle('hidden',n===0);if(!n)return;
+  bar.append(mk('span','',`${n.toLocaleString('ar')} منتج معروض بلا جدول مقاسات.`));
+  const show=mk('button','secondary small','اعرضها');show.type='button';show.onclick=()=>{$('#guideFilter').value='none';page=1;loadProducts().catch(e=>toast(e.message))};bar.append(show);
+  if(rulesData.rules.length){const apply=mk('button','small','اربطها حسب قواعد الفئات');apply.type='button';apply.onclick=applyRules;bar.append(apply)}
+  else{const go=mk('button','secondary small','أنشئ قاعدة ربط تلقائي');go.type='button';go.onclick=()=>show_('library');bar.append(go)}
+}
+const show_=tab=>show(tab);
+function renderRules(){
+  const list=$('#rulesList');list.replaceChildren();
+  for(const r of rulesData.rules){
+    const row=mk('div','rule-row'),text=mk('span','',`${r.category_name||r.category_id} (${(r.products||0).toLocaleString('ar')} منتج) ← ${r.library_name||'جدول محذوف'}`),del=mk('button','secondary small danger','حذف');
+    del.type='button';del.setAttribute('aria-label','حذف قاعدة '+(r.category_name||r.category_id));del.onclick=async()=>{try{rulesData=normalRules(await api('size-rules/'+r.category_id+qs(),{method:'DELETE'}));renderMissing();renderRules()}catch(e){toast(e.message)}};row.append(text,del);list.append(row);
+  }
+  if(!rulesData.rules.length)list.append(mk('p','micro','لا توجد قواعد بعد.'));
+  const cat=$('#ruleCategory'),lib=$('#ruleLibrary');
+  cat.replaceChildren(...(rulesData.categories.length?rulesData.categories:[{id:'',name:'لا توجد فئات: زامن المنتجات أولًا',products:0}]).map(c=>{const o=mk('option','',c.id?`${c.name||c.id} (${c.without_guide.toLocaleString('ar')} بلا جدول من ${c.products.toLocaleString('ar')})`:c.name);o.value=c.id;return o}));
+  lib.replaceChildren(...(libraries.length?libraries:[{library_id:'',name:'أنشئ جدولًا مشتركًا أولًا'}]).map(l=>{const o=mk('option','',l.name);o.value=l.library_id;return o}));
+  $('#ruleSave').disabled=!rulesData.categories.length||!libraries.length;$('#ruleApply').disabled=!rulesData.rules.length||!rulesData.missing;
+}
+$('#ruleSave').onclick=async()=>{try{rulesData=normalRules(await api('size-rules'+qs(),{method:'PUT',body:JSON.stringify({category_id:$('#ruleCategory').value,library_id:$('#ruleLibrary').value})}));renderMissing();renderRules();$('#ruleStatus').textContent='حُفظت القاعدة. اضغط «طبّق القواعد» لربط المنتجات الحالية.'}catch(e){toast(e.message)}};
+async function applyRules(){
+  try{const d=await api('size-rules/apply'+qs(),{method:'POST'});rulesData=normalRules(d);renderMissing();if(!$('#library').classList.contains('hidden'))renderRules();
+    guideIndex=await api('size-guides'+qs());await Promise.all([loadProducts(),loadLibraryIndex()]);toast(d.linked?`رُبط ${d.linked.toLocaleString('ar')} منتج بجداول الفئات.`:'لا توجد منتجات تنطبق عليها القواعد.');$('#ruleStatus').textContent=''}catch(e){toast(e.message)}
+}
+$('#ruleApply').onclick=applyRules;
+/* ---- sizes sold and sent back, from order events */
+async function loadInsights(){
+  const days=Number($('#insightDays').value)||90,d=await api('size-insights?'+new URLSearchParams({merchant,days})),n=x=>Number(x).toLocaleString('ar');
+  const cards=[['قطع مباعة مرصودة',n(d.sold)],['قطع مرتجعة',n(d.returned)],['نسبة الإرجاع',Math.round(d.rate*100)+'%'],['الرصد منذ',d.since?new Date(d.since).toLocaleDateString('ar-SA',{dateStyle:'medium'}):'لم يبدأ']];
+  $('#insightCards').replaceChildren(...cards.map(([label,value])=>{const c=mk('article','card');c.append(mk('label','',label),mk('b','',value));return c}));
+  const alerts=$('#insightAlerts');alerts.replaceChildren();
+  for(const a of d.alerts){const card=mk('article','insight-alert'),head=mk('strong','',a.title+(a.size?' · المقاس '+a.size:'')),body=mk('p','',a.message),open=mk('button','secondary small','فتح الجدول');open.type='button';open.onclick=()=>openEditor(a.product_id).catch(e=>toast(e.message));card.append(head,body,open);alerts.append(card)}
+  $('#insightRows').replaceChildren(...d.products.map(p=>{const tr=mk('tr'),sizes=mk('td','','');for(const s of p.sizes.slice(0,8)){const chip=mk('span','size-chip'+(s.rate>=.25&&s.returned>=2?' warn':''),`${s.size}: ${n(s.sold)} / ${n(s.returned)}`);sizes.append(chip)}tr.append(mk('td','',p.title),sizes,mk('td','',Math.round(p.rate*100)+'%'));return tr}));
+  $('#insightEmpty').classList.toggle('hidden',d.sold>0);
+}
+$('#insightDays').onchange=()=>loadInsights().catch(e=>toast(e.message));
 $('#statsDays').onchange=()=>loadStats().catch(e=>toast(e.message));
 
 /* ---------- editor: open, fill, save ---------- */
@@ -584,4 +625,4 @@ $('#backCatalog').onclick=async()=>{if(!(await mayLeave()))return;dirty=false;co
 $('#getSnippet').onclick=async()=>{try{let d=await api('size-guide-snippet'+qs());$('#snippet').value=d.javascript}catch(e){toast(e.message)}};$('#copySnippet').onclick=async()=>{if(!$('#snippet').value)return toast('ولّد الكود أولًا.');try{await navigator.clipboard.writeText($('#snippet').value);toast('تم نسخ الكود.')}catch{$('#snippet').select();toast('حدد الكود وانسخه يدويًا.')}};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();$('#loginButton').disabled=true;$('#error').textContent='';try{await api('login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await boot()}catch(e){$('#error').textContent=e.message}finally{$('#loginButton').disabled=false}};$('#logout').onclick=async()=>{if(!(await mayLeave()))return;await api('logout',{method:'POST'});dirty=false;location.reload()};
 $('#store').onchange=async()=>{if(!(await mayLeave())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;merchant=$('#store').value;page=1;selected.clear();libraries=[];savedStyles=[];savedPhrases=[];aiChecked=false;window.SizeGuideQuick?.clear();$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
-$('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),{method:'POST'});await loadJobs();toast('بدأت مزامنة المنتجات.')}catch(e){toast(e.message);$('#sync').disabled=false}};$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));if(window.SizeGuideEmbedded){window.SizeGuideEmbedded.start(boot)}else{boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message})}
+$('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),{method:'POST'});await loadJobs();toast('بدأت مزامنة المنتجات.')}catch(e){toast(e.message);$('#sync').disabled=false}};$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=$('#guideFilter').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));if(window.SizeGuideEmbedded){window.SizeGuideEmbedded.start(boot)}else{boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message})}

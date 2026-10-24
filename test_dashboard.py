@@ -38,17 +38,17 @@ class DashboardTests(unittest.TestCase):
         pages=[{'data':[{'id':1,'name':'فستان','price':{'amount':99}}],'pagination':{'totalPages':2,'total':2}}, {'data':[{'id':2,'name':'بلوزة'}],'pagination':{'totalPages':2,'total':2}}]
         conn,cur,q=self.run_sync(pages)
         self.assertEqual(sum(c.args[0]==d.UPSERT for c in cur.execute.call_args_list),2)
-        self.assertTrue(any(c.args[0].startswith('DELETE') for c in cur.execute.call_args_list))
+        self.assertTrue(any(c.args[0].startswith('DELETE FROM dashboard_catalog') for c in cur.execute.call_args_list))
         conn.__exit__.assert_called_with(None,None,None)
         self.assertIn("state='success'",q.call_args.args[0])
     def test_failed_second_page_keeps_old_snapshot(self):
         conn,cur,q=self.run_sync([{'data':[{'id':1}],'pagination':{'totalPages':2,'total':2}},RuntimeError('upstream failed')])
-        self.assertFalse(any(c.args[0].startswith('DELETE') for c in cur.execute.call_args_list))
+        self.assertFalse(any(c.args[0].startswith('DELETE FROM dashboard_catalog') for c in cur.execute.call_args_list))
         self.assertIs(conn.__exit__.call_args.args[0],RuntimeError)
         self.assertIn("state='failed'",q.call_args.args[0])
     def test_incomplete_count_keeps_old_snapshot(self):
         conn,cur,q=self.run_sync([{'data':[{'id':1}],'pagination':{'totalPages':1,'total':2}}])
-        self.assertFalse(any(c.args[0].startswith('DELETE') for c in cur.execute.call_args_list))
+        self.assertFalse(any(c.args[0].startswith('DELETE FROM dashboard_catalog') for c in cur.execute.call_args_list))
         self.assertIn("state='failed'",q.call_args.args[0])
     def test_normalize_strips_html(self):
         row=d.normalize({'id':12,'name':'Dress','description':'<p>Hello &amp; welcome</p>','price':{'amount':90,'currency':'SAR'}},'123')

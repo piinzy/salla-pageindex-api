@@ -24,6 +24,16 @@ class AppTests(unittest.TestCase):
             self.assertEqual(self.client.post('/webhook',headers=headers,json={'event':'app.new.thing','merchant':1}).json()['status'],'ignored')
         self.assertEqual(self.client.post('/webhook',json={'event':'app.uninstalled','merchant':1}).status_code,401)
 
+    def test_order_events_reach_the_size_insights_and_never_fail_the_webhook(self):
+        headers={'X-Salla-Token':'test-webhook-only'}
+        with patch.object(main,'orders_event',return_value=True) as orders:
+            r=self.client.post('/webhook',headers=headers,json={'event':'order.created','merchant':77,'data':{'id':5}})
+            self.assertEqual((r.status_code,r.json()['status']),(200,'success'));orders.assert_called_once_with('order.created','77',{'id':5})
+            self.assertEqual(self.client.post('/webhook',headers=headers,json={'event':'order.created','merchant':'x','data':{}}).status_code,400)
+        with patch.object(main,'orders_event',side_effect=RuntimeError('boom')):
+            r=self.client.post('/webhook',headers=headers,json={'event':'order.created','merchant':77,'data':{}})
+            self.assertEqual((r.status_code,r.json()['status']),(200,'ignored'),'a malformed order must not make Salla retry')
+
     def test_root_and_head_are_lightweight(self):
         with patch.object(main.psycopg2,'connect') as connect:
             self.assertEqual(self.client.get('/').json(),{'status':'ok','service':'salla-size-guides'})
