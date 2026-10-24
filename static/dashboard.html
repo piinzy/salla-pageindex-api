@@ -12,8 +12,8 @@
 <div class="kpis" aria-label="أرقام المتجر">
 <article class="kpi"><label>المنتجات</label><b id="count">—</b><small id="kpiWith">من متجرك في سلة</small></article>
 <article class="kpi"><label>جداول منشورة</label><b id="kpiPublished">—</b><small id="kpiDrafts">يراها العملاء الآن</small></article>
-<article class="kpi"><label>فتح الجدول (30 يومًا)</label><b id="kpiOpens">—</b><small id="kpiCalcs">من العملاء في متجرك</small></article>
-<article class="kpi"><label>الباقة</label><b id="kpiPlan" class="small">—</b><small id="kpiPlanNote">&nbsp;</small></article>
+<article class="kpi"><label>فتح الجدول (30 يومًا)</label><b id="kpiOpens">—</b><small id="kpiCalcs">من العملاء في متجرك</small><div id="kpiSpark" class="spark-host"></div></article>
+<article class="kpi"><label>الباقة</label><b id="kpiPlan" class="small">—</b><small id="kpiPlanNote">&nbsp;</small><div id="kpiMeterBox" class="meter hidden" aria-hidden="true"><i id="kpiMeter"></i></div></article>
 </div>
 <div class="home-grid">
 <section class="home-card"><h3>ابدأ من هنا</h3><ol id="checklist" class="checklist"></ol></section>
@@ -30,7 +30,7 @@
 <div class="note">المزامنة تحدّث بيانات المنتجات فقط وتحافظ على جداول المقاسات التي أدخلتها.</div>
 <details id="activityBox" class="fold"><summary>سجل المزامنة</summary><div class="panelhead"><span></span><button class="secondary" id="refreshJobs">تحديث السجل</button></div><p>نتيجة كل عملية، وعدد المنتجات التي تمت معالجتها.</p><div class="tablewrap"><table><thead><tr><th>بداية العملية</th><th>الحالة</th><th>المنتجات</th><th>التفاصيل</th></tr></thead><tbody id="jobs"></tbody></table></div></details></section>
 <section id="editor" class="panel tab hidden">
-<div class="panelhead"><div><span class="eyebrow" id="editorKind">تحرير دليل المنتج</span><h2 id="editorTitle"></h2><p id="editState" role="status"></p></div><button class="secondary" id="backCatalog">← العودة</button></div>
+<div class="panelhead"><div><span class="eyebrow" id="editorKind">تحرير دليل المنتج</span><h2 id="editorTitle"></h2><p id="editState" role="status"></p></div><button class="secondary" id="backCatalog" data-nudge="back">العودة</button></div>
 <div class="find-box"><div class="find-bar"><input id="editorFind" type="search" placeholder="ابحث عن منتج بالاسم أو SKU لفتح جدوله أو ربطه أو نسخ جدولك إليه بسرعة…" aria-label="بحث عن منتج" autocomplete="off"></div><div id="editorFindResults" class="quick-results compact"></div></div>
 <div id="linkedBanner" class="linked-banner hidden" role="status"><div><strong>هذا المنتج مرتبط بجدول مشترك: <span id="linkedName"></span></strong><p class="micro">تعديل الجدول المشترك يغيّر كل منتجاته. يمكنك فصل هذا المنتج ليصبح له جدول مستقل بنفس المحتوى الحالي.</p></div><div class="bulk-buttons"><button type="button" id="openLibraryFromProduct">فتح الجدول المشترك</button><button type="button" class="secondary" id="unlinkThis">فصل الارتباط</button></div></div>
 <div class="editor-layout"><fieldset class="edit-fields" id="editFields">
@@ -188,4 +188,4 @@
 <textarea id="snippet" rows="8" readonly dir="ltr" aria-label="كود تركيب الزر"></textarea></details>
 </section>
 </main></div><div id="toast" class="hidden" role="status"></div>
-<script src="/size-guide-renderer.js"></script><script src="/size-guide-catalog.js"></script><script src="/size-guide-import.js"></script><script src="/size-guide-button.js"></script><script src="/size-guide-placement.js"></script><script src="/button-settings-admin.js"></script><script src="/size-guide-admin.js"></script><script src="/size-guide-quick.js"></script></body></html>
+<script src="/ui-motion.js"></script><script src="/size-guide-renderer.js"></script><script src="/size-guide-catalog.js"></script><script src="/size-guide-import.js"></script><script src="/size-guide-button.js"></script><script src="/size-guide-placement.js"></script><script src="/button-settings-admin.js"></script><script src="/size-guide-admin.js"></script><script src="/size-guide-quick.js"></script></body></html>
