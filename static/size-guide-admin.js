@@ -26,7 +26,7 @@ async function confirmAction(message){return window.SizeGuideEmbedded?window.Siz
 async function mayLeave(){if(saving||window.SizeGuideSettings?.isBusy()){toast('انتظر اكتمال العملية أولًا.');return false}if(!dirty&&!window.SizeGuideSettings?.isDirty())return true;const confirmed=await confirmAction('لديك تعديلات غير محفوظة. هل تريد المغادرة دون حفظها؟');if(confirmed)window.SizeGuideSettings?.discard();return confirmed}
 function show(tab){
   view=tab;if(tab==='buttonSettings')window.SizeGuideSettings?.load();
-  if(tab==='quick')window.SizeGuideQuick?.open();if(tab==='library')loadLibrary().catch(e=>toast(e.message));if(tab==='stats')loadStats().catch(e=>toast(e.message));if(tab==='catalog')loadRules().catch(()=>{});
+  if(tab==='home')loadHome().catch(()=>{});if(tab==='library')loadLibrary().catch(e=>toast(e.message));if(tab==='stats')loadStats().catch(e=>toast(e.message));if(tab==='catalog')loadRules().catch(()=>{});
   window.SizeGuideEmbedded?.navigate(tab);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('hidden',t.id!==tab));
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===(tab==='editor'?(mode==='library'?'library':'catalog'):tab)));
@@ -38,10 +38,10 @@ function preview(){if(guide)window.SizeGuideUI.preview($('#guidePreview'),guide,
 async function boot(){
   await bootStores();
   // A dedicated Salla page can open straight on one tool: ...?view=quick
-  const wanted=new URLSearchParams(location.search).get('view');if(['quick','library','stats'].includes(wanted))show(wanted);
+  const wanted=new URLSearchParams(location.search).get('view');if(wanted==='quick')show('catalog');else if(['home','catalog','library','stats','buttonSettings'].includes(wanted))show(wanted);
 }
 async function bootStores(){stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
-async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent='معرّف المتجر: '+merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling(),loadRules().catch(()=>{})])}
+async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;$('#count').textContent=Number(s.product_count).toLocaleString('ar');$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent=merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling(),loadRules().catch(()=>{})]);loadHome().catch(()=>{})}
 function stateOf(g){
   if(!g)return ['بدون جدول',false];
   const base=g.is_published?(g.has_changes?'منشور + تعديلات مسودة':'منشور'):'مسودة';
@@ -51,12 +51,12 @@ async function loadProducts(){
   let current=merchant;let d=await api('products?'+new URLSearchParams({merchant,q:$('#filter').value,status:$('#status').value,guide:$('#guideFilter').value,page}));if(current!==merchant)return;pages=d.pages;
   $('#rows').innerHTML=d.items.map(p=>{
     const g=guideIndex.find(g=>g.product_id===p.product_id),[state,draft]=stateOf(g);
-    return `<tr><td class="select-col"><input type="checkbox" data-select="${esc(p.product_id)}" ${selected.has(p.product_id)?'checked':''} aria-label="تحديد ${esc(p.title)}"></td><td><div class="product">${url(p.image)?`<img loading="lazy" src="${esc(url(p.image))}" alt="">`:'<div class="placeholder"></div>'}<div>${url(p.url)?`<a href="${esc(url(p.url))}" target="_blank" rel="noopener noreferrer">${esc(p.title)} ↗</a>`:esc(p.title)}<small>#${esc(p.product_id)}</small></div></div></td><td dir="ltr">${esc(p.sku)||'—'}</td><td>${p.price===null?'—':Number(p.price).toLocaleString('ar',{maximumFractionDigits:2})} ${esc(p.currency)}</td><td>${p.quantity===null?'—':esc(p.quantity)}</td><td><span class="tag ${p.status!=='sale'?'warn':''}">${esc(labels[p.status]||p.status||'—')}</span></td><td><span class="tag ${draft?'badgeDraft':''}">${esc(state)}</span></td><td><div class="row-actions"><button class="secondary" data-edit="${esc(p.product_id)}">${g?(g.library_id?'عرض الجدول':'تعديل الجدول'):'إضافة مقاسات'}</button><button class="secondary" data-edit-data="${esc(p.product_id)}" data-find="${esc(p.sku||p.title)}">تعديل البيانات</button></div></td></tr>`;
+    return `<tr><td class="select-col"><input type="checkbox" data-select="${esc(p.product_id)}" ${selected.has(p.product_id)?'checked':''} aria-label="تحديد ${esc(p.title)}"></td><td><div class="product">${url(p.image)?`<img loading="lazy" src="${esc(url(p.image))}" alt="">`:'<div class="placeholder"></div>'}<div>${url(p.url)?`<a href="${esc(url(p.url))}" target="_blank" rel="noopener noreferrer">${esc(p.title)} ↗</a>`:esc(p.title)}<small dir="ltr">${esc(p.sku)||'#'+esc(p.product_id)}</small></div></div></td><td><span class="tag ${p.status!=='sale'?'warn':''}">${esc(labels[p.status]||p.status||'—')}</span></td><td><span class="tag ${draft?'badgeDraft':''}">${esc(state)}</span></td><td><div class="row-actions"><button class="secondary" data-edit="${esc(p.product_id)}">${g?(g.library_id?'عرض الجدول':'تعديل الجدول'):'إضافة مقاسات'}</button></div></td></tr>`;
+
   }).join('');
   $('#empty').classList.toggle('hidden',d.items.length>0);$('#empty').textContent=Number(stores.find(s=>s.merchant_id===merchant).product_count)?'لا توجد منتجات تطابق البحث.':'اضغط «مزامنة المنتجات» ثم أضف جدولًا للمنتج المطلوب.';
   $('#pageLabel').textContent=`${page} / ${pages} · ${d.total} منتج`;$('#prev').disabled=page<=1;$('#next').disabled=page>=pages;
   $('#rows').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(b.dataset.edit).catch(e=>toast(e.message)));
-  $('#rows').querySelectorAll('[data-edit-data]').forEach(b=>b.onclick=()=>window.SizeGuideQuick?.focus(b.dataset.editData,b.dataset.find));
   $('#rows').querySelectorAll('[data-select]').forEach(box=>box.onchange=()=>{box.checked?selected.add(box.dataset.select):selected.delete(box.dataset.select);updateBulk()});
   updateBulk();
 }
@@ -107,10 +107,48 @@ async function loadStats(){
   $('#statsTop').innerHTML=d.top.map(t=>`<tr><td>${esc(t.title)}</td><td>${t.opens}</td><td>${t.calcs}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">—</td></tr>';
   $('#statsEmpty').classList.toggle('hidden',d.opens+d.calcs>0);loadInsights().catch(()=>{});
 }
+
+/* ---- home: what needs attention, how the guides are used, where to start */
+let homeStats=null,homeAlerts=0;
+function renderPlan(){
+  const b=billingState,card=$('#kpiPlan'),note=$('#kpiPlanNote');if(!card)return;
+  if(!b){card.textContent='مفتوحة';note.textContent='بلا قيود حاليًا';return}
+  card.textContent=b.plan==='unlimited'?'كاملة':b.plan==='paid'?'مدفوعة':b.plan==='trial'?'تجربة مجانية':'منتهية';
+  note.textContent=b.plan==='unlimited'?'غير محدودة':b.plan==='trial'?`باقي ${Number(b.trial_days_left).toLocaleString('ar')} يوم`:b.plan==='paid'?(b.paid_until?'حتى '+new Date(b.paid_until).toLocaleDateString('ar-SA',{dateStyle:'medium'}):'فعّالة'):'اشترك من صفحة التطبيق';
+}
+function renderHome(){
+  if(!$('#home'))return;const n=x=>Number(x).toLocaleString('ar'),s=stores.find(x=>x.merchant_id===merchant);if(!s)return;
+  const published=guideIndex.filter(g=>g.is_published).length,drafts=guideIndex.filter(g=>g.has_changes).length,missing=rulesData.missing||0,products=Number(s.product_count)||0;
+  $('#heading').textContent='أهلاً بك'+(s.store_name&&s.store_name!==s.merchant_id?'، '+s.store_name:'');
+  $('#kpiWith').textContent=products?`${n(Math.max(products-missing,0))} منها بجدول مقاسات`:'اضغط «مزامنة المنتجات» للبدء';
+  $('#kpiPublished').textContent=n(published);$('#kpiDrafts').textContent=drafts?`${n(drafts)} فيها تعديلات غير منشورة`:'يراها العملاء الآن';
+  $('#kpiOpens').textContent=homeStats?n(homeStats.opens):'—';$('#kpiCalcs').textContent=homeStats?`${n(homeStats.calcs)} استخدام لـ«اعرف مقاسك»`:'من العملاء في متجرك';
+  renderPlan();
+  const steps=[[products>0,'زامن منتجاتك من سلة','يجلب أسماء المنتجات وصورها لتبدأ.',products>0?'':'مزامنة',()=>$('#sync').click()],
+    [published>0,'أنشئ أول جدول مقاسات وانشره','اختر منتجًا، أو اصنع جدولًا مشتركًا لعدة منتجات.',published>0?'':'ابدأ',()=>show(libraries.length||products===0?'library':'catalog')],
+    [false,'اضبط شكل الزر ومكانه','اختر تصميمه وموضعه في صفحة المنتج وجرّبه في المعاينة.','إعدادات الزر',()=>show('buttonSettings')]];
+  $('#checklist').replaceChildren(...steps.map(([done,title,hint,action,go],i)=>{
+    const li=mk('li',done?'done':''),mark=mk('span','mark',done?'✓':String(i+1)),text=mk('div','',''),strong=mk('strong','',title);text.append(strong,mk('small','',hint));li.append(mark,text);
+    if(action){const b=mk('button','secondary small',action);b.type='button';b.onclick=go;li.append(b)}return li}));
+  const items=[];
+  if(missing)items.push(['warn',`${n(missing)} منتج معروض بلا جدول مقاسات.`,'اعرضها',()=>{$('#guideFilter').value='none';page=1;show('catalog');loadProducts().catch(e=>toast(e.message))}]);
+  if(homeAlerts)items.push(['warn',`${n(homeAlerts)} تنبيه عن مقاسات يرجعها العملاء كثيرًا.`,'راجعها',()=>show('stats')]);
+  if(drafts)items.push(['info',`${n(drafts)} جدول فيه تعديلات لم تُنشر بعد.`,'افتح المنتجات',()=>show('catalog')]);
+  if(billingState&&billingState.plan==='expired')items.push(['warn','انتهت التجربة أو الاشتراك: جداولك مخفية عن العملاء.','',null]);
+  else if(billingState&&billingState.plan==='trial'&&billingState.trial_days_left<=2)items.push(['warn',`تنتهي تجربتك خلال ${n(billingState.trial_days_left)} يوم.`,'',null]);
+  $('#attention').replaceChildren(...(items.length?items:[['ok','كل شيء على ما يرام. لا يوجد ما يحتاج عملًا الآن.','',null]]).map(([tone,text,action,go])=>{
+    const li=mk('li',tone);li.append(mk('span','',text));if(action){const b=mk('button','secondary small',action);b.type='button';b.onclick=go;li.append(b)}return li}));
+}
+async function loadHome(){
+  renderHome();
+  const [stats,insights]=await Promise.allSettled([api('size-guide-stats?'+new URLSearchParams({merchant,days:30})),api('size-insights?'+new URLSearchParams({merchant,days:90}))]);
+  homeStats=stats.status==='fulfilled'?stats.value:null;homeAlerts=insights.status==='fulfilled'?(insights.value.alerts||[]).length:0;renderHome();
+}
+$('#homeSync').onclick=()=>$('#sync').click();
 /* ---- products without a guide, and category rules */
 let rulesData={rules:[],categories:[],missing:0,latest:[]};
 const normalRules=d=>({rules:[],categories:[],missing:0,latest:[],...(d&&typeof d==='object'&&!Array.isArray(d)?d:{})});
-async function loadRules(){rulesData=normalRules(await api('size-rules'+qs()));renderMissing();if(!$('#library').classList.contains('hidden'))renderRules()}
+async function loadRules(){rulesData=normalRules(await api('size-rules'+qs()));renderMissing();renderHome();if(!$('#library').classList.contains('hidden'))renderRules()}
 function renderMissing(){
   const bar=$('#missingBar'),n=rulesData.missing||0;bar.replaceChildren();bar.classList.toggle('hidden',n===0);if(!n)return;
   bar.append(mk('span','',`${n.toLocaleString('ar')} منتج معروض بلا جدول مقاسات.`));
@@ -581,16 +619,17 @@ $('#styleFile').onchange=async()=>{
   }catch(e){status.textContent='';toast(e.message)}finally{button.disabled=false}
 };
 /* Plan banner: only shown once the server enforces plans (BILLING_ENFORCE). */
+let billingState=null;
 async function loadBilling(){
   const bar=$('#billingBar');
-  try{const b=await api('billing'+qs());if(!b||!b.enforced){bar.classList.add('hidden');return}
+  try{const b=await api('billing'+qs());billingState=b&&b.enforced?b:null;if(!b||!b.enforced){bar.classList.add('hidden');renderPlan();return}
     const ai=b.ai,n=x=>Number(x).toLocaleString('ar');
     let text,tone='ok';
     if(b.plan==='unlimited')text='صلاحية كاملة غير محدودة لهذا المتجر: كل المزايا وصور الذكاء الاصطناعي بلا حد.';
     else if(b.plan==='trial')text=`تجربة مجانية: باقي ${n(b.trial_days_left)} يوم · صور الذكاء الاصطناعي المتبقية ${n(ai.remaining)} من ${n(ai.limit)}. للاشتراك (${n(b.price)} ر.س شهريًا) افتح صفحة التطبيق في سلة.`;
     else if(b.plan==='paid')text=`الاشتراك فعّال${b.paid_until?' حتى '+date(b.paid_until):''} · صور الذكاء الاصطناعي هذا الشهر: ${n(ai.plan_remaining)} من ${n(ai.limit)}${ai.extra?' + رصيد إضافي '+n(ai.extra):''}.`;
     else{text='انتهت التجربة أو الاشتراك: جداولك محفوظة لكنها مخفية عن عملائك حتى تشترك من صفحة التطبيق في سلة.';tone='warn'}
-    bar.textContent=text;bar.dataset.tone=tone;bar.classList.remove('hidden');
+    bar.textContent=text;bar.dataset.tone=tone;bar.classList.remove('hidden');renderPlan();
   }catch{bar.classList.add('hidden')}
 }
 async function checkAi(){
@@ -623,7 +662,7 @@ $('#aiRun').onclick=async()=>{
 
 /* ---------- navigation and session ---------- */
 $('#backCatalog').onclick=async()=>{if(!(await mayLeave()))return;dirty=false;const back=mode==='library'?'library':'catalog';show(back);if(back==='catalog')loadProducts().catch(e=>toast(e.message))};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=async()=>{if(!(await mayLeave()))return;dirty=false;show(b.dataset.tab);if(b.dataset.tab==='catalog')loadProducts().catch(e=>toast(e.message))});window.addEventListener('beforeunload',e=>{if(dirty||window.SizeGuideSettings?.isDirty()||window.SizeGuideSettings?.isBusy()){e.preventDefault();e.returnValue=''}});
-$('#getSnippet').onclick=async()=>{try{let d=await api('size-guide-snippet'+qs());$('#snippet').value=d.javascript}catch(e){toast(e.message)}};$('#copySnippet').onclick=async()=>{if(!$('#snippet').value)return toast('ولّد الكود أولًا.');try{await navigator.clipboard.writeText($('#snippet').value);toast('تم نسخ الكود.')}catch{$('#snippet').select();toast('حدد الكود وانسخه يدويًا.')}};
+$('#getSnippet').onclick=async()=>{try{let d=await api('size-guide-snippet'+qs()+'&generic=true');$('#snippet').value=d.javascript}catch(e){toast(e.message)}};$('#copySnippet').onclick=async()=>{if(!$('#snippet').value)return toast('ولّد الكود أولًا.');try{await navigator.clipboard.writeText($('#snippet').value);toast('تم نسخ الكود.')}catch{$('#snippet').select();toast('حدد الكود وانسخه يدويًا.')}};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();$('#loginButton').disabled=true;$('#error').textContent='';try{await api('login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await boot()}catch(e){$('#error').textContent=e.message}finally{$('#loginButton').disabled=false}};$('#logout').onclick=async()=>{if(!(await mayLeave()))return;await api('logout',{method:'POST'});dirty=false;location.reload()};
 $('#store').onchange=async()=>{if(!(await mayLeave())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;merchant=$('#store').value;page=1;selected.clear();libraries=[];savedStyles=[];savedPhrases=[];aiChecked=false;window.SizeGuideQuick?.clear();$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
 $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),{method:'POST'});await loadJobs();toast('بدأت مزامنة المنتجات.')}catch(e){toast(e.message);$('#sync').disabled=false}};$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=$('#guideFilter').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));if(window.SizeGuideEmbedded){window.SizeGuideEmbedded.start(boot)}else{boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message})}

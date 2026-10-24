@@ -106,13 +106,20 @@ async function widgetSetup(settings,options={}){
   w.SizeGuideUI={open:(...args)=>opened.push(args)};
   w.fetch=async(url,opts)=>{calls.push({url,opts});if(options.wait)await options.wait;
     return {ok:response!==null,status:response===null?404:200,json:async()=>structuredClone(response)};};
-  Object.defineProperty(w.document,'currentScript',{value:{src:'https://app.test/size-guide-widget.js',dataset:{merchant:'123',base:'https://app.test'}}});
+  if(options.storeId!==undefined)w.salla={config:{get:key=>key==='store.id'?options.storeId:''}};
+  Object.defineProperty(w.document,'currentScript',{value:{src:'https://app.test/size-guide-widget.js',dataset:options.generic?{base:'https://app.test'}:{merchant:'123',base:'https://app.test'}}});
   Object.defineProperty(w.document,'readyState',{value:'complete'});
   w.eval(file('size-guide-widget.js'));await flush();await flush();
   return {dom,w,opened,calls,setResponse:value=>{response=value;},host:()=>w.document.getElementById('product-size-guide')};
 }
 
 async function widgetTests(){
+  // one code for every store: the store id comes from the storefront, and nothing is requested until it is known
+  {const ready=await widgetSetup({design:'pill'},{generic:true,storeId:'555'});
+   try{assert.match(ready.calls[0].url,/\/public\/size-guides\/555\/42$/);assert.ok(ready.host());}finally{ready.dom.window.close();}
+   for(const storeId of [undefined,'','abc','55 5']){const f=await widgetSetup({design:'pill'},{generic:true,...(storeId===undefined?{}:{storeId})});
+     try{assert.equal(f.calls.length,0,'no request without a valid store id: '+storeId);assert.equal(f.host(),null);}finally{f.dom.window.close();}}
+   const bad=await widgetSetup({design:'pill'},{});bad.dom.window.close();}
   for(const design of ['link','outline','pill','band','floating','card']){
     const fixture=await widgetSetup({design,background_color:'#112233',text_color:'#ffffff'});
     try{

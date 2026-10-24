@@ -1,4 +1,4 @@
-// Quick product lookup: the standalone tab, the search box inside the editor, editing product data, linking and copying.
+// Dashboard shell: navigation, the home screen, the tidier catalog, and the product finder inside the guide editor.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');
 const file=name=>fs.readFileSync(path.join(__dirname,'static',name),'utf8');
@@ -24,7 +24,11 @@ function makeApp(url){
     if(p==='stores')data=[{merchant_id:'123',store_name:'متجر',product_count:3,connected:true}];
     else if(p==='products'&&method==='GET')data={items:state.catalog.map(x=>({product_id:x.product_id,title:x.title,sku:x.sku,price:x.price,currency:x.currency,quantity:x.quantity,status:x.status,image:x.image,url:x.url})),pages:1,total:state.catalog.length};
     else if(p==='product-lookup'){const q=(u.searchParams.get('q')||'').toLowerCase();data={items:state.catalog.filter(x=>!q||x.title.toLowerCase().includes(q)||x.sku.toLowerCase().includes(q))}}
-    else if(/^products\/\d+$/.test(p)&&method==='PUT'){const item=state.catalog.find(x=>x.product_id===p.split('/')[1]);Object.assign(item,{...(body.name&&{title:body.name}),...(body.price&&{price:body.price}),...(body.quantity!==undefined&&{quantity:body.quantity})});data={product:{...item},changed:{}}}
+    else if(p==='size-rules')data={rules:[],categories:[],missing:1,latest:[]};
+    else if(p==='size-guide-stats')data={days:30,opens:120,calcs:14,published_guides:2,daily:[],top:[]};
+    else if(p==='size-insights')data={days:90,since:null,sold:0,returned:0,rate:0,alerts:[{kind:'size',product_id:'42',title:'x',size:'M',sold:9,returned:5,rate:.5,message:'m'}],products:[]};
+    else if(p==='billing')data={enforced:true,plan:'trial',trial_days_left:2,price:389,paid_until:null,ai:{limit:3,used:0,plan_remaining:3,extra:0,remaining:3}};
+    else if(p==='size-guide-snippet')data={javascript:'(() => {})();',generic:u.searchParams.get('generic')==='true'};
     else if(p==='button-settings')data={settings:{design:'outline'},version:0};
     else if(p==='size-guides')data=state.catalog.filter(x=>x.has_guide).map(x=>({product_id:x.product_id,title:x.title,sku:x.sku,version:2,is_published:x.is_published,has_changes:false,library_id:x.library_id,library_name:x.library_name}));
     else if(p==='size-library'&&method==='GET')data=[{library_id:LIB,name:'فساتين',version:2,is_published:true,has_changes:false,category:'women',theme:'rose',product_count:1}];
@@ -53,82 +57,50 @@ function makeApp(url){
   try{
     await settle();assert.equal(app.errors.length,0,app.errors.map(e=>e.message).join('\n'));
 
-    // ---- the section sits beside "products and tables" and "button settings", and every product row can open it
-    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['catalog','buttonSettings','quick','library','stats','install','activity'],'tab order');
-    assert.match($('aside nav [data-tab="quick"]').textContent,/تعديل المنتج/);assert.match($('#quick h2').textContent,/تعديل المنتج/);
-    assert.equal(all('#rows tr').length,3);
-    for(const row of all('#rows tr')){const labels=[...row.querySelectorAll('.row-actions button')].map(b=>b.textContent);assert.equal(labels.length,2);assert.equal(labels[1],'تعديل البيانات')}
-    assert.equal($('[data-edit="42"]').textContent,'إضافة مقاسات');assert.equal($('[data-edit="43"]').textContent,'تعديل الجدول');
-    $('[data-edit-data="44"]').click();await settle();
-    assert.equal(hidden('#quick'),false);assert.equal(hidden('#catalog'),true);assert.equal($('#quickSearch').value,'PT-44');
-    assert.equal(all('#quickResults .qcard').length,1);assert.ok($('#quickResults .qcard[data-product="44"] .qedit'),'the data form is already open');assert.equal($('#quickResults .qcard[data-product="44"] .qedit input').value,'طوق جلدي');
-    assert.equal($('aside nav [data-tab="quick"]').classList.contains('active'),true);
+    // ---- five sections only; the product-data tool, the sync log tab and the install tab are gone
+    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['home','catalog','library','buttonSettings','stats'],'tab order');
+    assert.ok(all('aside nav [data-tab] svg.nav-ico').length===5,'icons are vector, not emoji');
+    for(const gone of ['#quick','#install','#activity','#quickSearch','#quickResults'])assert.equal($(gone),null,gone+' was removed');
+    assert.equal(hidden('#home'),false);assert.equal(hidden('#catalog'),true);assert.equal($('aside nav [data-tab="home"]').classList.contains('active'),true);
+
+    // ---- home: numbers, a short checklist and what needs attention
+    assert.equal($('#count').textContent.replace(/\D/g,'').length>0,true);assert.match($('#kpiPublished').textContent,/2|٢/);assert.match($('#kpiOpens').textContent,/120|١٢٠/);assert.match($('#kpiPlan').textContent,/تجربة/);assert.match($('#kpiPlanNote').textContent,/2|٢/);
+    assert.equal(all('#checklist li').length,3);assert.equal(all('#checklist li.done').length,2,'products synced and a guide published');
+    const attention=$('#attention').textContent;assert.match(attention,/بلا جدول/);assert.match(attention,/تنبيه/);assert.match(attention,/تنتهي تجربتك/);
+    assert.equal(call('GET','size-guide-stats').length>=1,true);
+    all('#attention button').find(b=>b.textContent==='اعرضها').click();await settle();
+    assert.equal(hidden('#catalog'),false);assert.equal($('#guideFilter').value,'none');assert.match(call('GET','products').pop().search,/guide=none/);
+    $('#guideFilter').value='';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();
+    $('[data-tab="home"]').click();await settle();assert.equal(hidden('#home'),false);assert.equal(hidden('#catalog'),true);
+    $('#homeSync').click();await settle();assert.equal(call('POST','sync').length,1,'the home button runs the same sync');
+
+    // ---- the catalog: product, status, guide, one action
     $('[data-tab="catalog"]').click();await settle();
-    // an unknown product says so and opens nothing
-    await w.SizeGuideQuick.focus('999','لا يوجد');assert.equal(all('#quickResults .qcard').length,0);assert.equal(all('#quickResults .qedit').length,0);
-    // unsaved work in the guide editor is protected
-    $('[data-tab="catalog"]').click();await settle();$('[data-edit="43"]').click();await settle();$('#guideTitle').value='غير محفوظ';$('#guideTitle').dispatchEvent(new w.Event('input',{bubbles:true}));
-    state.confirmed=false;await w.SizeGuideQuick.focus('43','SH-43');assert.equal(hidden('#editor'),false,'declining keeps the editor open');assert.equal(hidden('#quick'),true);
-    state.confirmed=true;await w.SizeGuideQuick.focus('43','SH-43');assert.equal(hidden('#quick'),false);assert.ok($('#quickResults .qcard[data-product="43"] .qedit'));
-    $('[data-tab="catalog"]').click();await settle();$('#quickSearch').value='';
+    assert.equal(all('#catalog > .tablewrap thead th').length,5);assert.equal(all('#rows tr').length,3);
+    for(const row of all('#rows tr')){const labels=[...row.querySelectorAll('.row-actions button')].map(b=>b.textContent);assert.equal(labels.length,1);assert.notEqual(labels[0],'تعديل البيانات')}
+    assert.equal($('[data-edit="42"]').textContent,'إضافة مقاسات');assert.equal($('[data-edit="43"]').textContent,'تعديل الجدول');assert.match($('#rows tr').textContent,/DR-42/);
+    assert.equal($('#rows [data-edit-data]'),null);assert.equal($('#catalog #activityBox').tagName,'DETAILS');assert.match($('#activityBox summary').textContent,/سجل المزامنة/);
+    $('[data-tab="buttonSettings"]').click();await settle();
+    assert.equal($('#buttonSettings #installBox').tagName,'DETAILS');$('#getSnippet').click();await settle();assert.equal(call('GET','size-guide-snippet').pop().search.includes('generic=true'),true,'one code for every store');assert.ok($('#snippet').value.length>0);
 
-    // ---- the standalone tab: compact cards for the first products, then a search by name or SKU
-    $('[data-tab="quick"]').click();await settle();
-    assert.equal(hidden('#quick'),false);assert.equal(all('#quickResults .qcard').length,3);assert.match($('#quickCount').textContent,/3|٣/);
-    const dress=cardOf('#quickResults','فستان كريب');
-    assert.match(dress.textContent,/DR-42/);assert.match(dress.textContent,/240|٢٤٠/);assert.match(dress.textContent,/معروض للبيع/);assert.match(dress.textContent,/بدون جدول/);
-    assert.equal(dress.querySelector('a.qtitle').href,'https://shop.example.com/p42');assert.equal(dress.querySelector('a.qtitle').rel,'noopener noreferrer');assert.equal(dress.querySelector('img.qthumb').src,'https://cdn.example.com/a.jpg');
-    assert.match(cardOf('#quickResults','حذاء رياضي').textContent,/نفدت الكمية.*منشور|منشور.*نفدت الكمية/s);assert.match(cardOf('#quickResults','طوق جلدي').textContent,/مرتبط · فساتين/);
-    await type('#quickSearch','sh-4');assert.deepEqual(all('#quickResults .qtitle').map(x=>x.textContent),['حذاء رياضي'],'SKU search');
-    await type('#quickSearch','كريب');assert.equal(all('#quickResults .qcard').length,1);
-    await type('#quickSearch','لا شيء مطلقا');assert.equal(all('#quickResults .qcard').length,0);assert.match($('#quickResults').textContent,/لا توجد منتجات تطابق/);
-    await type('#quickSearch','<img src=x onerror=alert(1)>');assert.equal($('#quickResults img[src="x"]'),null,'the search text is never rendered as markup');
-    await type('#quickSearch','');assert.equal(all('#quickResults .qcard').length,3);
-
-    // ---- edit the product's data in Salla
-    let card=cardOf('#quickResults','فستان كريب');press(card,'تعديل البيانات');
-    assert.equal(card.querySelector('.qpanel.hidden'),card.querySelectorAll('.qpanel')[1],'only the edit panel is open');
-    const panel=card.querySelector('.qedit'),[name,price,qty]=panel.querySelectorAll('input');assert.deepEqual([name.value,price.value,qty.value],['فستان كريب','240','5']);
-    panel.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();assert.match(card.querySelector('.qerror').textContent,/لا يوجد تغيير/);assert.equal(call('PUT','products/').length,0);
-    name.value='';price.value='199';panel.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();assert.equal(call('PUT','products/').length,0,'an empty name is not sent');
-    name.value='فستان كريب';price.value='199.5';state.confirmed=false;panel.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();assert.equal(call('PUT','products/').length,0,'declining the confirmation sends nothing');
-    state.confirmed=true;state.fail='سلة رفضت التعديل: لا توجد صلاحية';panel.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();
-    assert.equal(call('PUT','products/').length,1);assert.match(card.querySelector('.qerror').textContent,/لا توجد صلاحية/);assert.equal(state.catalog[0].price,240,'a refused edit changes nothing');
-    panel.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();
-    const put=call('PUT','products/42')[1];assert.deepEqual(put.body,{price:199.5},'only what changed is sent');
-    assert.match(cardOf('#quickResults','فستان كريب').textContent,/199/);assert.equal(cardOf('#quickResults','فستان كريب').querySelector('.qpanel:not(.hidden)'),null,'the card is redrawn with the saved values');
-    press(cardOf('#quickResults','فستان كريب'),'تعديل البيانات');
-    const again=cardOf('#quickResults','فستان كريب').querySelector('.qedit');again.querySelectorAll('input')[0].value='فستان جديد';again.querySelectorAll('input')[2].value='9';again.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();
-    assert.deepEqual(call('PUT','products/42')[2].body,{name:'فستان جديد',quantity:9});
-
-    // ---- link to a shared guide, unlink, publish
-    card=cardOf('#quickResults','فستان جديد');press(card,'ربط بجدول مشترك');const select=card.querySelector('.qpanel:not(.hidden) select');assert.ok([...select.options].some(o=>o.value===LIB));
-    const linkButton=[...card.querySelectorAll('.qpanel:not(.hidden) button')].find(b=>b.textContent==='ربط');linkButton.click();await settle();assert.equal(call('POST','/link').length,0,'a table must be chosen');
-    select.value=LIB;state.confirmed=false;linkButton.click();await settle();assert.equal(call('POST','/link').length,0);state.confirmed=true;linkButton.click();await settle();
-    assert.deepEqual(call('POST','/link')[0].body.product_ids,['42']);assert.equal(call('POST','/link')[0].path,`size-library/${LIB}/link`);
-    press(cardOf('#quickResults','طوق جلدي'),'فصل الارتباط');await settle();assert.deepEqual(call('POST','size-guides/unlink')[0].body.product_ids,['44']);
-    assert.equal([...cardOf('#quickResults','طوق جلدي').querySelectorAll('button')].some(b=>b.textContent==='نشر'),false,'a linked product has no publish button of its own');
-    press(cardOf('#quickResults','حذاء رياضي'),'إيقاف الظهور');await settle();const bulk=call('POST','size-guides/bulk')[0].body;assert.deepEqual([bulk.action,bulk.product_ids],['unpublish',['43']]);
-    state.catalog[1].is_published=false;await w.SizeGuideQuick.run('quick');await settle();state.bulkSkip=true;press(cardOf('#quickResults','حذاء رياضي'),'نشر');await settle();assert.equal(call('POST','size-guides/bulk')[1].body.action,'publish');state.bulkSkip=false;
-    assert.equal(all('#quickResults .qcard').length,3,'results are refreshed after every action');
-
-    // ---- open a guide from a card, then use the search box inside the editor
-    press(cardOf('#quickResults','فستان جديد'),'إضافة جدول');await settle();assert.equal(hidden('#editor'),false);assert.equal($('#editorFind').value,'');
-    await type('#editorFind','حذاء');assert.equal(all('#editorFindResults .qcard').length,1);
-    card=cardOf('#editorFindResults','حذاء رياضي');
+    // ---- the finder inside the editor: link, unlink, publish, copy
+    $('[data-tab="catalog"]').click();await settle();$('[data-edit="42"]').click();await settle();assert.equal(hidden('#editor'),false);assert.equal($('#editorFind').value,'');
+    await type('#editorFind','sh-4');assert.deepEqual(all('#editorFindResults .qtitle').map(x=>x.textContent),['حذاء رياضي'],'SKU search');
+    await type('#editorFind','لا شيء مطلقا');assert.equal(all('#editorFindResults .qcard').length,0);assert.match($('#editorFindResults').textContent,/لا توجد منتجات تطابق/);
+    await type('#editorFind','<img src=x onerror=alert(1)>');assert.equal($('#editorFindResults img[src="x"]'),null,'the search text is never rendered as markup');
+    await type('#editorFind','حذاء');let card=cardOf('#editorFindResults','حذاء رياضي');
+    assert.match(card.textContent,/SH-43/);assert.match(card.textContent,/نفدت الكمية/);assert.doesNotMatch(card.textContent,/310|السعر|الكمية:/,'no price or stock here any more');assert.equal([...card.querySelectorAll('button')].some(b=>b.textContent==='تعديل البيانات'),false);
+    press(card,'إيقاف الظهور');await settle();const bulk=call('POST','size-guides/bulk')[0].body;assert.deepEqual([bulk.action,bulk.product_ids],['unpublish',['43']]);
+    await type('#editorFind','طوق');card=cardOf('#editorFindResults','طوق جلدي');assert.match(card.textContent,/مرتبط · فساتين/);press(card,'فصل الارتباط');await settle();assert.deepEqual(call('POST','size-guides/unlink')[0].body.product_ids,['44']);
+    await type('#editorFind','حذاء');card=cardOf('#editorFindResults','حذاء رياضي');
     press(card,'نسخ جدولي الحالي إليه');await settle();assert.equal(call('POST','size-guides/copy').length,0,'an unsaved guide cannot be copied');
     $('#saveDraft').click();await settle();state.catalog[0].has_guide=true;
     card=cardOf('#editorFindResults','حذاء رياضي')||(await type('#editorFind','حذاء'),cardOf('#editorFindResults','حذاء رياضي'));
-    $('#guideTitle').value='x';$('#guideTitle').dispatchEvent(new w.Event('input',{bubbles:true}));press(card,'نسخ جدولي الحالي إليه');await settle();assert.equal(call('POST','size-guides/copy').length,0,'unsaved edits block the copy');
-    $('#saveDraft').click();await settle();card=cardOf('#editorFindResults','حذاء رياضي')||(await type('#editorFind','حذاء'),cardOf('#editorFindResults','حذاء رياضي'));
     state.confirmed=false;press(card,'نسخ جدولي الحالي إليه');await settle();assert.equal(call('POST','size-guides/copy').length,0,'replacing an existing guide asks first');
     state.confirmed=true;press(card,'نسخ جدولي الحالي إليه');await settle();
     const copy=call('POST','size-guides/copy')[0].body;assert.deepEqual([copy.source_product_id,copy.product_ids,copy.overwrite,copy.publish],['42',['43'],true,false]);
-    await type('#editorFind','فستان جديد');assert.equal(cardOf('#editorFindResults','فستان جديد').textContent.includes('نسخ جدولي الحالي إليه'),false,'a product cannot be copied onto itself');
-    // data editing works from the editor too and keeps the open guide's title in step
-    press(cardOf('#editorFindResults','فستان جديد'),'تعديل البيانات');const editorForm=cardOf('#editorFindResults','فستان جديد').querySelector('.qedit');editorForm.querySelectorAll('input')[0].value='فستان الربيع';editorForm.dispatchEvent(new w.Event('submit',{cancelable:true}));await settle();
-    assert.match($('#editorTitle').textContent,/فستان الربيع/);
-    await type('#editorFind','');assert.equal(all('#editorFindResults .qcard').length,0,'an empty search clears the editor results');
+    await type('#editorFind','كريب');assert.equal(cardOf('#editorFindResults','فستان كريب').textContent.includes('نسخ جدولي الحالي إليه'),false,'a product cannot be copied onto itself');
+    await type('#editorFind','');assert.equal(all('#editorFindResults .qcard').length,0,'an empty search clears the results');
 
     // ---- inside a shared guide the same card links products to it
     $('[data-tab="library"]').click();await settle();$('#libraryList .lib-card button').click();await settle();assert.equal($('#libraryName').value,'فساتين');
@@ -139,13 +111,12 @@ function makeApp(url){
     assert.equal(app.errors.length,0,app.errors.map(e=>e.message).join('\n'));
   }finally{app.dom.window.close();}
 
-  // ---- a dedicated Salla page can open straight on the quick tool
-  const deep=makeApp('https://app.test/salla/embedded?view=quick');
-  try{
-    await settle();assert.equal(deep.d.querySelector('#quick').classList.contains('hidden'),false);assert.equal(deep.d.querySelector('#catalog').classList.contains('hidden'),true);
-    assert.equal(deep.d.querySelectorAll('#quickResults .qcard').length,3);assert.equal(deep.errors.length,0);
-  }finally{deep.dom.window.close();}
-  const plain=makeApp('https://app.test/dashboard?view=unknown');
-  try{await settle();assert.equal(plain.d.querySelector('#catalog').classList.contains('hidden'),false,'an unknown view is ignored');}finally{plain.dom.window.close();}
-  console.log('PASS: quick lookup (tab and editor search), SKU/name search, product data edit with confirmation and errors, link/unlink/publish, copy rules, deep link.');
+  // ---- a dedicated Salla page can open straight on one section; the retired quick link lands on the products
+  for(const [view,shown] of [['stats','stats'],['library','library'],['home','home'],['buttonSettings','buttonSettings'],['quick','catalog'],['unknown','home']]){
+    const deep=makeApp('https://app.test/salla/embedded?view='+view);
+    try{await settle();assert.equal(deep.d.querySelector('#'+shown).classList.contains('hidden'),false,view+' opens '+shown);
+      for(const other of ['home','catalog','library','stats','buttonSettings'])if(other!==shown)assert.equal(deep.d.querySelector('#'+other).classList.contains('hidden'),true,other+' is hidden for '+view);
+      assert.equal(deep.errors.length,0,deep.errors.map(e=>e.message).join('\n'));}finally{deep.dom.window.close();}
+  }
+  console.log('PASS: dashboard shell (five sections, home, tidier catalog, developer folds) and the editor finder: SKU/name search, link/unlink/publish, copy rules, deep links.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

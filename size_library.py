@@ -155,7 +155,8 @@ def link_products(lib: str, merchant: str, body: ProductIds):
         ON CONFLICT(merchant_id,product_id) DO UPDATE SET library_id=EXCLUDED.library_id,
         version=product_size_guides.version+1,updated_at=now() RETURNING product_id''',
                  (body.product_ids, merchant, lib, merchant))
-    done = [r['product_id'] for r in rows]
+    returned = {r['product_id'] for r in rows}
+    done = [p for p in body.product_ids if p in returned]   # in the order asked, whatever order the database answered
     return {'linked': done, 'skipped': [p for p in body.product_ids if p not in done]}
 
 @router.post('/dashboard-api/size-guides/unlink', dependencies=[Depends(authenticated)])
@@ -166,7 +167,8 @@ def unlink_products(merchant: str, body: ProductIds):
         library_id=NULL,version=g.version+1,updated_at=now() FROM size_guide_library l
         WHERE g.merchant_id=%s AND g.product_id=ANY(%s) AND g.library_id IS NOT NULL
         AND l.merchant_id=g.merchant_id AND l.library_id=g.library_id RETURNING g.product_id''', (merchant, body.product_ids))
-    done = [r['product_id'] for r in rows]
+    returned = {r['product_id'] for r in rows}
+    done = [p for p in body.product_ids if p in returned]   # in the order asked, whatever order the database answered
     return {'unlinked': done, 'skipped': [p for p in body.product_ids if p not in done]}
 
 @router.post('/dashboard-api/size-guides/copy', dependencies=[Depends(authenticated)])
@@ -198,7 +200,8 @@ def copy_guide(merchant: str, body: CopyBody):
         published_at=CASE WHEN %s THEN EXCLUDED.published_at ELSE product_size_guides.published_at END,
         library_id=NULL,version=product_size_guides.version+1,updated_at=now() RETURNING product_id''',
                  (merchant, Json(data), body.publish, Json(data), body.publish, targets, merchant, body.publish, body.publish))
-    done = [r['product_id'] for r in rows]
+    returned = {r['product_id'] for r in rows}
+    done = [p for p in body.product_ids if p in returned]   # in the order asked, whatever order the database answered
     return {'copied': done, 'skipped': [p for p in body.product_ids if p not in done]}
 
 @router.post('/dashboard-api/size-guides/bulk', dependencies=[Depends(authenticated)])

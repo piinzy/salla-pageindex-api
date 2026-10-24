@@ -29,11 +29,11 @@ from size_library import router as library_router
 from size_stats import router as stats_router, initialize as initialize_size_stats
 from ai_import import router as ai_router
 from size_presets import router as presets_router, initialize as initialize_size_presets
-from quick_edit import router as quick_router, initialize as initialize_quick_edit
+from product_lookup import router as lookup_router
 from size_sales import router as sales_router, initialize as initialize_size_sales, orders_event
 from size_rules import router as rules_router, initialize as initialize_size_rules
 from billing import router as billing_router, initialize as initialize_billing, apply_event as billing_event, ensure as billing_ensure
-for extra_router in (sales_router, rules_router, billing_router, library_router, stats_router, ai_router, presets_router, quick_router):
+for extra_router in (sales_router, rules_router, billing_router, library_router, stats_router, ai_router, presets_router, lookup_router):
     app.include_router(extra_router)
 from embedded import router as embedded_router, RedactTokenQuery
 app.include_router(embedded_router)
@@ -94,7 +94,6 @@ def startup_event():
     initialize_button_settings()
     initialize_size_stats()
     initialize_size_presets()
-    initialize_quick_edit()
     initialize_billing()
     initialize_size_rules()
     initialize_size_sales()

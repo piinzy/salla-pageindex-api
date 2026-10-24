@@ -51,6 +51,17 @@ class SizeGuideTests(unittest.TestCase):
         old=sg.Guide(**G);self.assertEqual((old.side_layout,old.side_3d,old.col_widths),('auto',False,[]))
         for bad in [{'side_layout':'left'},{'side_3d':'maybe'},{'col_widths':[2]},{'col_widths':[81]},{'col_widths':['x']},{'col_widths':[10]*12}]:
             with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,**bad})
+    def test_snippet_is_per_store_or_one_for_every_store(self):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        app=FastAPI();app.include_router(sg.router);app.dependency_overrides[sg.authenticated]=lambda:None
+        with patch.object(sg,'require_store'):
+            client=TestClient(app)
+            own=client.get('/dashboard-api/size-guide-snippet?merchant=123').json()
+            every=client.get('/dashboard-api/size-guide-snippet?merchant=123&generic=true').json()
+        self.assertIn('script.dataset.merchant = "123"',own['javascript']);self.assertFalse(own['generic'])
+        self.assertNotIn('merchant',every['javascript']);self.assertNotIn('123',every['javascript']);self.assertTrue(every['generic'])
+        self.assertIn('/size-guide-widget.js',every['javascript']);self.assertNotIn('BASE',every['javascript']);self.assertNotIn('STORE',every['javascript'])
     def test_themes_and_categories_match_the_window_script(self):
         import re,pathlib
         script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')
