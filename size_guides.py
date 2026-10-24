@@ -41,6 +41,23 @@ class SizeRow(BaseModel):
     size:str=Field(max_length=30)
     values:list[str]=Field(min_length=1,max_length=10)
 
+class PartStyle(BaseModel):
+    """Colours a single part of the table: the header, size labels, a column, a row or one cell."""
+    model_config=ConfigDict(extra='forbid')
+    target:Literal['head','size','col','row','cell']
+    row:int=Field(default=-1,ge=-1,le=29)
+    col:int=Field(default=-1,ge=-2,le=9)
+    bg:str=Field(default='',pattern=HEX_OR_EMPTY)
+    fg:str=Field(default='',pattern=HEX_OR_EMPTY)
+    bold:bool=False
+    align:Literal['','start','center','end']=''
+    @model_validator(mode='after')
+    def check_target(self):
+        r,c=self.row,self.col
+        valid={'head':r==-1,'size':c==-1,'col':r==-1 and c>=0,'row':c==-1 and r>=0,'cell':r>=0 and c>=0}[self.target]
+        if not valid:raise ValueError('موضع التلوين غير صالح')
+        return self
+
 class Guide(BaseModel):
     model_config=ConfigDict(extra='forbid')
     title:str=Field(default='دليل المقاسات',min_length=1,max_length=100)
@@ -78,6 +95,7 @@ class Guide(BaseModel):
     how_images:list[str]=Field(default_factory=list,max_length=4)
     side_image:str=Field(default='',max_length=300100)
     side_image_back:str=Field(default='',max_length=300100)
+    cell_styles:list[PartStyle]=Field(default_factory=list,max_length=150)
     how_art:Literal['none','auto','women','men','kids']='none'
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)

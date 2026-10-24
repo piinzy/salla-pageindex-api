@@ -26,7 +26,7 @@
 <section class="ed-card" id="presetCard"><h3><span class="step-no">✦</span> أنماط جاهزة وتصاميمي</h3><p class="micro">اختر نمطًا ليُطبَّق على المظهر فقط؛ أرقام جدولك ونصوصه لا تتغير، ويمكنك التراجع.</p>
 <div id="presetChoices" class="preset-grid" role="group" aria-label="أنماط جاهزة"></div>
 <h4 class="sub-title" id="myPresetsTitle">تصاميمي المحفوظة</h4><div id="myPresets" class="preset-grid" role="group" aria-label="تصاميمي المحفوظة"></div>
-<div class="preset-tools"><div class="tool-row"><label for="brandColor">لون متجرك</label><input type="color" id="brandColor" value="#177e65"><button type="button" class="secondary small" id="applyBrand">طبّق لون متجري على الجدول</button></div>
+<div class="preset-tools"><div class="tool-row"><label for="styleFile">من صورة جدول</label><input type="file" id="styleFile" accept="image/png,image/jpeg,image/webp" hidden><button type="button" class="secondary small" id="styleFromImage">🎨 خذ التصميم من صورة جدول بالذكاء الاصطناعي</button><small id="styleStatus" class="micro" role="status"></small></div><div class="tool-row"><label for="brandColor">لون متجرك</label><input type="color" id="brandColor" value="#177e65"><button type="button" class="secondary small" id="applyBrand">طبّق لون متجري على الجدول</button></div>
 <div class="tool-row"><input id="presetName" maxlength="40" placeholder="اسم لتصميمك الحالي (مثال: تصميم متجري)" aria-label="اسم التصميم"><button type="button" class="secondary small" id="savePreset">حفظ التصميم الحالي</button></div>
 <button type="button" class="secondary small hidden" id="undoStyle">↶ تراجع عن آخر تغيير للمظهر</button></div></section>
 <section class="ed-card"><h3><span class="step-no">2</span> الثيم والمظهر</h3><div id="themeChoices" class="theme-grid" role="radiogroup" aria-label="ثيم الجدول"></div>
@@ -47,6 +47,18 @@
 <label class="switch"><input type="checkbox" id="stickySize" role="switch"><span class="knob" aria-hidden="true"></span><span>تثبيت عمود المقاس أثناء التمرير</span></label></div>
 <h4 class="sub-title">ألوان الجدول</h4><div id="tableColors" class="color-grid"></div>
 <div class="toolbar"><button type="button" class="secondary small" id="resetTableColors">إعادة كل الألوان إلى «تلقائي»</button></div></section>
+<section class="ed-card" id="paintCard"><h3><span class="step-no">🖌</span> ارسم جدولك: انقر ولوّن</h3>
+<p class="micro">فعّل الوضع، ثم انقر على أي خلية أو صف أو عمود أو عنوان في المعاينة لتلوينه بشكل مستقل عن بقية الجدول.</p>
+<label class="switch"><input type="checkbox" id="paintMode" role="switch"><span class="knob" aria-hidden="true"></span><span>وضع التلوين (انقر على الجدول في المعاينة)</span></label>
+<div id="paintPanel" class="paint-panel hidden">
+<p id="paintTarget" class="micro" aria-live="polite">انقر على جزء من الجدول في المعاينة.</p>
+<div class="seg" id="paintScope" role="radiogroup" aria-label="نطاق التلوين"></div>
+<div class="paint-grid">
+<div class="color-field"><label for="paintBg">لون الخلفية</label><input type="color" id="paintBg" value="#ffffff"><small id="paintBgState">تلقائي</small><button type="button" class="secondary small" id="paintBgReset" aria-label="إعادة الخلفية إلى تلقائي">×</button></div>
+<div class="color-field"><label for="paintFg">لون النص</label><input type="color" id="paintFg" value="#000000"><small id="paintFgState">تلقائي</small><button type="button" class="secondary small" id="paintFgReset" aria-label="إعادة لون النص إلى تلقائي">×</button></div>
+<label class="switch"><input type="checkbox" id="paintBold" role="switch"><span class="knob" aria-hidden="true"></span><span>خط عريض</span></label>
+<label class="ed-opt">محاذاة النص<select id="paintAlign"><option value="">تلقائي</option><option value="start">بداية الخلية</option><option value="center">وسط</option><option value="end">نهاية الخلية</option></select></label></div>
+<div class="toolbar"><button type="button" class="secondary small" id="paintClearPart">مسح تلوين هذا الجزء</button><button type="button" class="secondary small danger" id="paintClearAll">مسح كل التلوين</button></div></div></section>
 <section class="ed-card"><h3><span class="step-no">4</span> ميزات للعميل</h3>
 <div class="ed-options"><label class="switch"><input type="checkbox" id="calculator" role="switch"><span class="knob" aria-hidden="true"></span><span>حاسبة «اعرف مقاسك»</span></label>
 <div class="ed-opt"><span class="opt-label">لغة النافذة</span><div class="seg" id="languageSeg" role="radiogroup" aria-label="لغة النافذة"></div></div>

@@ -140,6 +140,31 @@ class AiImportTests(unittest.TestCase):
         import size_guides as sg
         sg.Guide(title='t', columns=data['columns'], rows=data['rows'])     # accepted by the guide model as it is
 
+    def style_post(self):
+        return self.client.post('/dashboard-api/size-guide-ai-style?merchant=123', json={'image': PNG})
+
+    def test_a_table_picture_becomes_an_appearance_proposal(self):
+        look = {'accent': '#B4456A', 'header_bg': '#F9E3EA', 'header_text': '#4A2332', 'row_alt': 'pink', 'border_color': '#f1dde4', 'text_color': '', 'paper_color': '#fffafb',
+                'size_bg': '#ffffff', 'size_text': 'javascript:alert(1)', 'table_style': 'cards', 'header_style': 'tint', 'size_style': 'blob', 'corners': 'round',
+                'density': 'compact', 'border_style': 'thin', 'font_scale': 'huge', 'title': 'ignored', 'rows': [1]}
+        with patch.object(ai.requests, 'post', return_value=gemini(look)) as call:
+            r = self.style_post()
+        self.assertEqual(r.status_code, 200)
+        style = r.json()['style']
+        self.assertEqual((style['color'], style['header_bg'], style['paper_color']), ('#b4456a', '#f9e3ea', '#fffafb'))
+        self.assertEqual((style['row_alt'], style['size_text'], style['text_color']), ('', '', ''), 'anything that is not #rrggbb is dropped')
+        self.assertEqual((style['table_style'], style['corners'], style['density']), ('cards', 'round', 'compact'))
+        for gone in ('size_style', 'font_scale', 'title', 'rows'):
+            self.assertNotIn(gone, style)
+        sent = call.call_args.kwargs['json']
+        self.assertIn('visual design', sent['contents'][0]['parts'][0]['text']); self.assertIn('header_bg', sent['generationConfig']['responseSchema']['properties'])
+    def test_an_empty_style_answer_is_refused_politely(self):
+        with patch.object(ai.requests, 'post', return_value=gemini({'accent': 'none'})):
+            r = self.style_post()
+        self.assertEqual(r.status_code, 502); self.assertIn('تصميم الجدول', r.json()['detail'])
+    def test_style_read_needs_the_same_checks_as_the_import(self):
+        self.assertEqual(self.client.post('/dashboard-api/size-guide-ai-style?merchant=123', json={'image': 'AAAA' * 10}).status_code, 400)
+
     def test_bad_images_never_reach_the_service(self):
         big = base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'0' * (ai.MAX_IMAGE_BYTES + 1)).decode()
         with patch.object(ai.requests, 'post') as call:

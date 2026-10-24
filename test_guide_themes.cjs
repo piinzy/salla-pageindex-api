@@ -138,6 +138,23 @@ try{
     UI.preview(host,guide,'x');assert.equal(shadow(host).querySelector('.side'),null,'other themes unchanged');}
    const up='data:image/jpeg;base64,'+'A'.repeat(60);UI.preview(host,{...guide,how_images:[up,'data:image/svg+xml;base64,'+'A'.repeat(60),'data:text/html;base64,'+'A'.repeat(60)]},'منتج');
    const imgs=[...shadow(host).querySelectorAll('.how-media img')];assert.equal(imgs.length,1);assert.equal(imgs[0].src,up);}
+  // painted parts: narrower rules win, text turns readable on a painted background, picks report the clicked part
+  {const host=d.createElement('div'),g={...guide,instructions:'',columns:[{label:'الصدر',kind:'measurement'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['90','36']},{size:'M',values:['94','38']}],
+     cell_styles:[{target:'col',row:-1,col:0,bg:'#112233',fg:'',bold:false,align:''},{target:'row',row:1,col:-1,bg:'#ffeeaa',fg:'',bold:true,align:''},{target:'cell',row:1,col:0,bg:'#00ff00',fg:'#101010',bold:false,align:'center'},
+       {target:'head',row:-1,col:-1,bg:'#222222',fg:'',bold:false,align:''},{target:'head',row:-1,col:1,bg:'#ff0000',fg:'',bold:false,align:''},{target:'size',row:0,col:-1,bg:'#abcdef',fg:'',bold:false,align:''},
+       {target:'cell',row:0,col:1,bg:'red',fg:'url(x)',bold:'yes',align:'left'},{target:'bogus',row:0,col:0,bg:'#123456'}]};
+   const rgb=h=>{const n=parseInt(h.slice(1),16);return `rgb(${n>>16}, ${(n>>8)&255}, ${n&255})`};
+   UI.preview(host,g,'x');let r=shadow(host);const cells=[...r.querySelectorAll('tbody tr')].map(tr=>[...tr.children]),heads=[...r.querySelectorAll('thead th')];
+   assert.equal(cells[0][1].style.background,rgb('#112233'),'column colour');assert.equal(cells[0][1].style.color,'rgb(255, 255, 255)','readable text on a dark background');
+   assert.equal(cells[1][2].style.background,rgb('#ffeeaa'),'row beats nothing else here');assert.equal(cells[1][2].style.fontWeight,'700');
+   assert.equal(cells[1][1].style.background,rgb('#00ff00'),'cell beats row and column');assert.equal(cells[1][1].style.color,'rgb(16, 16, 16)');assert.equal(cells[1][1].style.textAlign,'center');
+   assert.equal(heads[0].style.background,rgb('#222222'));assert.equal(heads[1].style.background,rgb('#222222'));assert.equal(heads[2].style.background,rgb('#ff0000'),'one header beats all headers');
+   assert.equal(cells[0][0].querySelector('.chip').style.background,rgb('#abcdef'));assert.equal(cells[0][2].style.background,'','bad colours and unknown targets are ignored');assert.equal(cells[0][2].style.color,'');
+   assert.equal(r.querySelector('.pick'),null,'not clickable outside paint mode');
+   const picks=[];UI.preview(host,g,'x',{onPick:p=>picks.push(p),selected:{part:'cell',row:1,col:0}});r=shadow(host);
+   r.querySelectorAll('tbody tr')[1].children[1].click();r.querySelector('thead th:nth-child(3)').click();r.querySelectorAll('tbody tr')[0].querySelector('.chip').click();r.querySelector('thead th').click();
+   assert.deepEqual(picks.map(p=>JSON.stringify(p)),['{"part":"cell","row":1,"col":0}','{"part":"head","row":-1,"col":1}','{"part":"size","row":0,"col":-1}','{"part":"head","row":-1,"col":-2}']);
+   assert.equal(r.querySelectorAll('.sel').length,1);}
   // the store's colour: kept when readable, nudged when not, header suited to its weight
   {const b=UI.brandStyle('#7b2338');assert.equal(b.color,'#7b2338');assert.equal(b.adjusted,false);assert.equal(b.header_style,'solid');
    const pale=UI.brandStyle('#ffe9a8');assert.equal(pale.adjusted,true);assert.ok(UI.contrast(pale.color,'#ffffff')>=3,'a pale brand colour is darkened until it reads');
