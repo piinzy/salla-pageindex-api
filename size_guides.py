@@ -103,6 +103,7 @@ class Guide(BaseModel):
     header_style:Literal['auto','tint','solid','plain','line']='auto'
     border_style:Literal['auto','none','thin','strong']='auto'
     font_scale:Literal['small','medium','large']='medium'
+    font_family:Literal['','tajawal','cairo','almarai','ibm_plex_arabic','noto_kufi','noto_naskh','readex','changa','el_messiri','amiri','lemonada','inter','poppins','playfair']=''
     sticky_size:bool=True
     size_label:str=Field(default='',max_length=20)
     header_bg:str=Field(default='',pattern=HEX_OR_EMPTY)
@@ -165,7 +166,7 @@ class Guide(BaseModel):
 
 # Appearance only (never the table's contents): what a saved design ("preset") may carry.
 STYLE_FIELDS=('theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style',
-              'font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text')
+              'font_scale','font_family','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text')
 GuideStyle=create_model('GuideStyle',__config__=ConfigDict(extra='forbid'),
                         **{name:(Guide.model_fields[name].annotation,Guide.model_fields[name]) for name in STYLE_FIELDS})
 
