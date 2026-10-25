@@ -72,7 +72,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // ---- a brand-new guide starts as a women's dress guide with its own theme and template list
     $('[data-edit="42"]').click();await settle();
     assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'women');assert.equal($('[name="guide-theme"]:checked').value,'rose');
-    assert.equal(all('#themeChoices [name="guide-theme"]').length,13);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'rose','recommended themes come first');
+    assert.equal(all('#themeChoices [name="guide-theme"]').length,14);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'rose','recommended themes come first');
     assert.ok($('#themeChoices .theme-card small'),'recommended badge');
     assert.deepEqual(all('#template option').map(o=>o.value),['women-dresses','women-tops','women-pants','women-skirts','women-lingerie','women-abaya']);
     assert.equal(all('#gridEditor thead th input').length,4);assert.equal(guideWrap().dataset.theme,'rose');assert.ok($('#guidePreview').shadowRoot.querySelector('svg.emblem'));
@@ -231,12 +231,12 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     aiAvailable=false;
 
     // ---- ready-made looks change only the appearance, and can be undone (none ship by default; the owner adds their own)
-    assert.equal(w.SizeGuideCatalog.stylePresets.length,1);assert.equal(all('#presetChoices .preset-card').length,1);assert.equal(hidden('#presetChoices'),false);
+    assert.equal(w.SizeGuideCatalog.stylePresets.length,2);assert.equal(all('#presetChoices .preset-card').length,2);assert.equal(hidden('#presetChoices'),false);
     w.SizeGuideCatalog.stylePresets.push({id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large',header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',sticky_size:true}});
     $('#backCatalog').click();await settle();$('[data-edit="42"]').click();await settle();
     const before={rows:JSON.stringify(guideCopy().rows),columns:JSON.stringify(guideCopy().columns),title:$('#guideTitle').value};
     function guideCopy(){return {rows:all('#gridEditor tbody tr').map(tr=>[...tr.querySelectorAll('input')].map(i=>i.value)),columns:all('#gridEditor thead th input').map(i=>i.value)}}
-    assert.equal(all('#presetChoices .preset-card').length,2);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
+    assert.equal(all('#presetChoices .preset-card').length,3);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
     assert.equal($('#undoStyle').classList.contains('hidden'),true);
     const oldStyle=[$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value];
     all('#presetChoices .preset-pick').find(b=>/جريء/.test(b.textContent)).click();

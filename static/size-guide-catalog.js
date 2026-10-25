@@ -63,6 +63,9 @@ const noCustomColors={font_family:'',header_bg:'',header_text:'',row_alt:'',bord
 const stylePresets=[
   {id:'pure',name:'نمط 1 — نقي',hint:'أبيض صافٍ، ترويسة رمادية خفيفة وحدود رفيعة، تبويبات بخط سفلي أسود وزر وحدات أسود',
    style:{theme:'minimal',color:'#2b2b2b',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:false,size_style:'plain',header_style:'solid',border_style:'thin',font_scale:'medium',sticky_size:true,
+          header_bg:'#f6f6f6',header_text:'#000000',row_alt:'#f5f5f5',border_color:'#e5e5e5',text_color:'#000000',paper_color:'#ffffff',size_bg:'#f6f6f6',size_text:'#000000'}},
+  {id:'reference',name:'نمط 2 — مرجع المقاس',hint:'نافذة بيضاء بزوايا حادة وعنوان في المنتصف، شريط «التبديل إلى» رمادي، مقياس قصة بخمس علامات، تبويبات بخط سفلي، جدول بخط 12 وحدود كاملة، و«كيف تقيس جسمك؟» بخطوات مرقّمة وصورة',
+   style:{theme:'reference',color:'#000000',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:false,size_style:'plain',header_style:'tint',border_style:'thin',font_scale:'medium',sticky_size:true,
           header_bg:'#f6f6f6',header_text:'#000000',row_alt:'#f5f5f5',border_color:'#e5e5e5',text_color:'#000000',paper_color:'#ffffff',size_bg:'#f6f6f6',size_text:'#000000'}}
 ].map(p=>({...p,style:{...noCustomColors,sticky_size:true,...p.style}}));
 /* Short notes a store tends to repeat under its tables; the merchant can add their own. */

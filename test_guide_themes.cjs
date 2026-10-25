@@ -8,7 +8,7 @@ const w=dom.window,d=w.document;
 (async()=>{try{
   w.eval(read('size-guide-renderer.js'));w.eval(read('size-guide-catalog.js'));
   const UI=w.SizeGuideUI,Catalog=w.SizeGuideCatalog;
-  assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,13);
+  assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,14);
 
   // every starter template satisfies the server's grid rules and ships no invented measurements
   for(const t of Catalog.templates){
@@ -253,7 +253,7 @@ const w=dom.window,d=w.document;
    for(const bad of ['red','#12345','','javascript:x',null,undefined])assert.equal(UI.brandStyle(bad),null);
    assert.ok(Math.abs(UI.contrast('#000000','#ffffff')-21)<.01);}
   // ready-made looks only touch appearance fields and render with every theme
-  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.map(x=>x.id).join(),'pure','the owner\'s ready-made looks');
+  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.map(x=>x.id).join(),'pure,reference','the owner\'s ready-made looks');
    for(const preset of C.stylePresets){
      assert.ok(Object.keys(preset.style).every(k=>allowed.has(k)),'only appearance fields: '+preset.id);
      for(const key of ['header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'])assert.match(preset.style[key],/^(#[0-9a-f]{6})?$/i,'valid colour: '+preset.id);
@@ -262,5 +262,5 @@ const w=dom.window,d=w.document;
    }
    assert.equal(C.STYLE_FIELDS.filter(k=>['title','columns','rows','notes','instructions','category','language','calculator'].includes(k)).length,0,'content never travels with a look');
    for(const c of UI.categories){const list=C.phrasesFor(c.id);assert.ok(list.length>=4);assert.ok(list.every(x=>x.length<=300&&x.trim()));assert.equal(new Set(list).size,list.length)}}
-  console.log('PASS: 7 categories x 13 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
+  console.log('PASS: 7 categories x 14 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
 }finally{w.close();}})().catch(error=>{console.error(error);process.exit(1)});
