@@ -230,6 +230,13 @@ tbody tr.hit>*{background:color-mix(in srgb,var(--accent) 22%,var(--paper))!impo
 .notes{font-size:.82rem;color:var(--muted);white-space:pre-wrap;margin:16px 0 0;padding:11px 14px;background:var(--alt);border-radius:var(--r);border-inline-start:3px solid var(--accent)}
 .instructions{white-space:pre-wrap;font-size:.95rem;line-height:2;padding:6px 2px}.hint{font-size:.72rem;color:var(--muted);margin:12px 0 0}
 .measure{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:18px;align-items:center;margin:18px 0 6px;padding:14px;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}.measure .figure.photo{background:#fff;border-radius:12px;padding:8px;justify-self:center}.measure .figure.photo img{display:block;max-width:100%;max-height:300px;width:auto;height:auto}.measure .figure svg{display:block;width:100%;height:auto}.measure .instructions.beside{padding:0;font-size:.9rem;line-height:1.9}.measure ol{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:.88rem;line-height:1.8}.measure li{display:flex;gap:10px;align-items:flex-start}.measure li::before{content:counter(item);counter-increment:item;flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);font-size:.72rem;font-weight:700;display:grid;place-items:center;margin-top:3px}.measure ol{counter-reset:item}@media(max-width:520px){.measure{grid-template-columns:1fr}}
+.ed{display:inline-block;min-width:2.2ch;max-width:100%;padding:3px 7px;border-radius:7px;outline:none;cursor:text;white-space:nowrap;overflow-wrap:anywhere;transition:background-color .15s,box-shadow .15s}
+.ed:hover{background:color-mix(in srgb,var(--accent) 9%,transparent)}.ed:focus{background:var(--paper);box-shadow:0 0 0 2px var(--accent)}.ed:empty:before{content:'—';color:var(--muted)}
+.ctl{width:44px;min-width:44px;padding:0!important;text-align:center}.ed-del,.ed-add-col,.ed-del-col{min-width:32px;min-height:32px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);font:inherit;font-size:1.05rem;line-height:1;cursor:pointer;transition:background-color .15s,color .15s,opacity .15s}
+.ed-del{opacity:.4}tr:hover .ed-del,.ed-del:focus-visible{opacity:1}.ed-del:hover,.ed-del-col:hover{background:#fde8e4;color:#9a3a2c}.ed-add-col:hover{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.ed-del-col{margin-inline-start:4px;min-width:26px;min-height:26px;opacity:.4;font-size:.95rem}th:hover .ed-del-col,.ed-del-col:focus-visible{opacity:1}.unit-suffix{color:var(--muted);font-weight:400}
+.ed-add{margin-top:10px;padding:9px 14px;min-height:44px;border:1px dashed var(--line);border-radius:var(--r);background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer}.ed-add:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.unit-note{padding:6px 12px;border-radius:999px;background:var(--alt);color:var(--muted);font-size:.8rem}
 .tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sys{min-height:38px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);padding:3px 10px;font:inherit;font-size:.82rem}
 .fit{display:flex;align-items:center;gap:18px;margin:0 0 16px;padding:12px 4px;border-bottom:1px solid var(--line)}.fit-title{font-weight:700;white-space:nowrap}.fit-track{position:relative;flex:1;display:grid;grid-template-columns:repeat(3,1fr);font-size:.78rem;color:var(--muted);padding-bottom:12px;min-width:0}
 .fit-track span{text-align:center}.fit-track span.on{color:var(--ink);font-weight:700}.fit-track:before{content:'';position:absolute;inset-inline:0;bottom:4px;height:1px;background:var(--line)}
@@ -260,7 +267,7 @@ dialog[open]{animation:pop .3s cubic-bezier(.2,.9,.3,1)}dialog::backdrop{backgro
 const words={
   ar:{size:'المقاس',table:'جدول المقاسات',how:'طريقة القياس',finder:'اعرف مقاسك',close:'إغلاق دليل المقاسات',unit:'وحدة القياس',cm:'سم',inch:'إنش',
     scroll:'مرّر الجدول جانبيًا على الشاشات الصغيرة',tableLabel:'جدول المقاسات، يمكن تمريره أفقيًا',body:'قياسات الجسم',garment:'قياسات القطعة نفسها',
-    fitLabel:'نوع القصة',fits:{slim:'قصة ضيقة',regular:'قصة عادية',loose:'قصة واسعة'},system:'نظام المقاس',
+    fitLabel:'نوع القصة',fits:{slim:'قصة ضيقة',regular:'قصة عادية',loose:'قصة واسعة'},system:'نظام المقاس',addRow:'إضافة صف',addCol:'إضافة عمود',delRow:'حذف الصف',delCol:'حذف العمود',editUnit:'الوحدة',
     noHow:'لم تتم إضافة تعليمات خاصة لهذا المنتج. تواصل مع المتجر إذا احتجت مساعدة في القياس.',
     hint:'التحويل بين سم وإنش يشمل الأرقام والنطاقات الرقمية؛ العبارات النصية تبقى كما أدخلها المتجر.',
     intro:'أدخل قياساتك لنقترح عليك المقاس الأنسب من جدول المتجر.',find:'اعرف مقاسي',clear:'مسح',show:'عرض في الجدول',
@@ -268,7 +275,7 @@ const words={
     note:'النتيجة تقريبية وتعتمد على جدول المتجر.',video:'فيديو طريقة القياس',image:'صورة توضيحية لطريقة القياس',names:{}},
   en:{size:'Size',table:'Size chart',how:'How to measure',finder:'Find my size',close:'Close size guide',unit:'Unit',cm:'cm',inch:'in',
     scroll:'Scroll the table sideways on small screens',tableLabel:'Size chart, scrollable horizontally',body:'Body measurements',garment:'Garment measurements',
-    fitLabel:'Fit',fits:{slim:'Slim fit',regular:'Regular fit',loose:'Loose fit'},system:'Size system',
+    fitLabel:'Fit',fits:{slim:'Slim fit',regular:'Regular fit',loose:'Loose fit'},system:'Size system',addRow:'Add row',addCol:'Add column',delRow:'Delete row',delCol:'Delete column',editUnit:'Unit',
     noHow:'No special instructions were added for this product. Contact the store if you need help measuring.',
     hint:'Converting between cm and in covers numbers and numeric ranges; text values stay as the store entered them.',
     intro:'Enter your measurements and we will suggest the best size from the store\'s chart.',find:'Find my size',clear:'Clear',show:'Show in chart',
@@ -352,11 +359,17 @@ function render(host,guide,productName,close,pick){
     b.onclick=()=>select(id);
     b.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?tabDefs.length-1:(i+(e.key==='ArrowRight'?(lang==='en'?1:-1):(lang==='en'?-1:1))+tabDefs.length)%tabDefs.length;tabButtons[next].click();tabButtons[next].focus()}};
   });
+  /* A value you can type into right where it is: plain text only, one line, committed when you leave it or press Enter. */
+  function editable(part,row,col,text,max){
+    const node=el('span',text,'ed');node.dataset.part=part;node.dataset.row=String(row);node.dataset.col=String(col);node.dataset.max=String(max);
+    node.contentEditable='plaintext-only';if(node.contentEditable!=='plaintext-only')node.contentEditable='true';
+    node.setAttribute('role','textbox');node.setAttribute('aria-label',part==='head'?'اسم العمود':part==='size'||part==='sizeLabel'?'المقاس':'قيمة');node.spellcheck=false;node.dataset.orig=text;return node;
+  }
   let hit=-1,refreshLabels=()=>{},sysIdx=-1;const sideState={view:0};
   const systems=guide.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   const sizeText=r=>sysIdx>=0?(r.values[sysIdx]||r.size||'—'):(r.size||'—');
   function draw(){
-    refreshLabels();grid.replaceChildren();const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
+    refreshLabels();grid.replaceChildren();const ed=pick?.edit,editing=!!ed&&layoutType!=='cards',U=editing?guide.unit:unit;if(editing)sysIdx=-1;const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
     for(const [code,label] of [['cm',w.cm],['in',w.inch]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(unit===code));b.onclick=()=>{unit=code;draw()};units.append(b)}
     if(guide.fit_level&&FITS.includes(guide.fit_level)){
       const fit=el('div',undefined,'fit');fit.setAttribute('role','img');fit.setAttribute('aria-label',w.fitLabel+': '+w.fits[guide.fit_level]);fit.dataset.level=guide.fit_level;
@@ -364,12 +377,12 @@ function render(host,guide,productName,close,pick){
       fit.append(el('span',w.fitLabel,'fit-title'),track);col.append(fit);
     }
     const tools=el('div',undefined,'tools');
-    if(systems.length){
+    if(systems.length&&!editing){
       const pick=el('select',undefined,'sys');pick.setAttribute('aria-label',w.system);
       for(const [idx,label] of [[-1,guide.size_label||w.size],...systems.map(i=>[i,guide.columns[i].label])]){const o=el('option',label);o.value=String(idx);o.selected=idx===sysIdx;pick.append(o)}
       pick.onchange=()=>{sysIdx=Number(pick.value);draw()};tools.append(pick);
     }
-    tools.append(units);
+    tools.append(editing?el('span',w.editUnit+': '+(guide.unit==='in'?w.inch:w.cm),'unit-note'):units);
     bar.append(el('span',w.scroll,'legend'),tools);col.append(bar);
     if(layoutType==='cards'){
       const list=el('div',undefined,'size-cards');
@@ -381,18 +394,35 @@ function render(host,guide,productName,close,pick){
     const scroll=el('div',undefined,'scroll');scroll.tabIndex=0;scroll.setAttribute('aria-label',w.tableLabel);
     const table=el('table'),thead=el('thead'),tr=el('tr'),ps=partStyles(guide),sel=pick?.selected||{};
     const widths=Array.isArray(guide.col_widths)?guide.col_widths:[];
-    if(widths.length===guide.columns.length+1&&widths.every(n=>Number.isInteger(n)&&n>=3&&n<=80)){
+    if(!editing&&widths.length===guide.columns.length+1&&widths.every(n=>Number.isInteger(n)&&n>=3&&n<=80)){
       const total=widths.reduce((a,b)=>a+b,0),group=el('colgroup');for(const n of widths){const col=el('col');col.style.width=(n/total*100).toFixed(2)+'%';group.append(col)}
       table.append(group);table.style.tableLayout='fixed';table.style.minWidth=Math.max(widths.length*86,260)+'px';}
-    const mark=(node,part,row,col)=>{if(!pick)return;node.classList.add('pick');node.tabIndex=0;if(sel.part===part&&(sel.row??-1)===row&&(sel.col??-1)===col)node.classList.add('sel');
+    const mark=(node,part,row,col)=>{if(!pick?.onPick)return;node.classList.add('pick');node.tabIndex=0;if(sel.part===part&&(sel.row??-1)===row&&(sel.col??-1)===col)node.classList.add('sel');
       const go=e=>{e.preventDefault();pick.onPick({part,row,col})};node.addEventListener('click',go);node.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e)})};
-    const sizeHead=el('th',sysIdx>=0?guide.columns[sysIdx].label:(guide.size_label||w.size));paint(sizeHead,ps.head(-2));mark(sizeHead,'head',-1,-2);tr.append(sizeHead);
-    guide.columns.forEach((c,i)=>{const swapped=i===sysIdx,th=el('th',swapped?(guide.size_label||w.size):c.label+(c.kind==='measurement'?' ('+(unit==='cm'?w.cm:w.inch)+')':''));paint(th,ps.head(i));mark(th,'head',-1,i);tr.append(th)});
+    const sizeHead=el('th',editing?undefined:(sysIdx>=0?guide.columns[sysIdx].label:(guide.size_label||w.size)));if(editing)sizeHead.append(editable('sizeLabel',-1,-1,guide.size_label||w.size,30));paint(sizeHead,ps.head(-2));mark(sizeHead,'head',-1,-2);tr.append(sizeHead);
+    guide.columns.forEach((c,i)=>{const swapped=i===sysIdx,unitText=c.kind==='measurement'?' ('+(U==='cm'?w.cm:w.inch)+')':'',th=el('th',editing?undefined:(swapped?(guide.size_label||w.size):c.label+unitText));
+      if(editing){th.append(editable('head',-1,i,c.label,40),el('span',unitText,'unit-suffix'));const x=el('button','×','ed-del-col');x.type='button';x.setAttribute('aria-label',w.delCol+': '+c.label);x.onclick=()=>ed.remove('column',i);th.append(x)}
+      paint(th,ps.head(i));mark(th,'head',-1,i);tr.append(th)});
+    if(editing){const th=el('th',undefined,'ctl'),add=el('button','+','ed-add-col');add.type='button';add.setAttribute('aria-label',w.addCol);add.onclick=()=>ed.add('column');th.append(add);tr.append(th)}
     for(const x of tr.children)x.scope='col';thead.append(tr);table.append(thead);
-    const tb=el('tbody');guide.rows.forEach((r,index)=>{const row=el('tr',undefined,index===hit?'hit':''),label=el('th'),chip=el('span',sizeText(r),'chip');label.scope='row';label.append(chip);row.append(label);
+    const tb=el('tbody');guide.rows.forEach((r,index)=>{const row=el('tr',undefined,index===hit?'hit':''),label=el('th'),chip=el('span',editing?undefined:sizeText(r),'chip');label.scope='row';if(editing)chip.append(editable('size',index,-1,r.size||'',30));label.append(chip);row.append(label);
       const sizePart=ps.size(index);paint(label,{align:sizePart.align});paint(chip,{...sizePart,align:''});mark(chip,'size',index,-1);
-      r.values.forEach((v,i)=>{const td=el('td',i===sysIdx?(r.size||'—'):guide.columns[i]?.kind==='measurement'?convert(v,guide.unit,unit):v);paint(td,ps.cell(index,i));mark(td,'cell',index,i);row.append(td)});tb.append(row)});
+      r.values.forEach((v,i)=>{const td=el('td',editing?undefined:(i===sysIdx?(r.size||'—'):guide.columns[i]?.kind==='measurement'?convert(v,guide.unit,unit):v));if(editing)td.append(editable('cell',index,i,v,40));paint(td,ps.cell(index,i));mark(td,'cell',index,i);row.append(td)});
+      if(editing){const cell=el('td',undefined,'ctl'),x=el('button','×','ed-del');x.type='button';x.setAttribute('aria-label',w.delRow+': '+(r.size||index+1));x.onclick=()=>ed.remove('row',index);cell.append(x);row.append(cell)}tb.append(row)});
     table.append(tb);scroll.append(table);col.append(scroll);
+    if(editing){
+      const add=el('button','+ '+w.addRow,'ed-add');add.type='button';add.onclick=()=>ed.add('row');col.append(add);
+      const commit=node=>{if(node.textContent===node.dataset.orig)return;const ok=ed.set({part:node.dataset.part,row:Number(node.dataset.row),col:Number(node.dataset.col)},node.textContent.replace(/\s+/g,' ').trim());if(ok===false)node.textContent=node.dataset.orig;else node.dataset.orig=node.textContent};
+      const target=n=>n.target?.closest?.('.ed');
+      table.addEventListener('focusin',e=>{const n=target(e);if(n)n.dataset.orig=n.textContent});
+      table.addEventListener('focusout',e=>{const n=target(e);if(n)commit(n)});
+      table.addEventListener('keydown',e=>{const n=target(e);if(!n)return;
+        if(e.key==='Enter'){e.preventDefault();commit(n);const next=table.querySelector(`.ed[data-part="${n.dataset.part==='head'?'cell':n.dataset.part}"][data-row="${Number(n.dataset.row)+1}"][data-col="${n.dataset.col}"]`)||(n.dataset.part==='head'?table.querySelector(`.ed[data-part="cell"][data-row="0"][data-col="${n.dataset.col}"]`):null);if(next)next.focus();else n.blur()}
+        else if(e.key==='Escape'){e.preventDefault();n.textContent=n.dataset.orig||'';n.blur()}});
+      table.addEventListener('paste',e=>{const n=target(e);if(!n)return;e.preventDefault();const text=(e.clipboardData?.getData('text/plain')||'').replace(/[\r\n\t]+/g,' ');document.execCommand?.('insertText',false,text)});
+      table.addEventListener('input',e=>{const n=target(e);if(n&&n.textContent.length>Number(n.dataset.max)){n.textContent=n.textContent.slice(0,Number(n.dataset.max))}});
+      const key=ed.takeFocus?.();if(key){const [part,r,c]=key.split(':');setTimeout(()=>{const n=table.querySelector(`.ed[data-part="${part}"][data-row="${r}"][data-col="${c}"]`);if(n){n.focus();const range=document.createRange?.();if(range){range.selectNodeContents(n);const sel=window.getSelection?.();sel?.removeAllRanges();sel?.addRange(range)}}},0)}
+    }
       let lit=-1;const light=n=>{if(n===lit)return;lit=n;for(const row of table.rows)for(const cell of row.cells)cell.classList.toggle('col-hl',n>=0&&cell.cellIndex===n)};
       table.addEventListener('pointerover',e=>{const cell=e.target.closest?.('td,th');if(cell&&e.pointerType!=='touch')light(cell.cellIndex)});table.addEventListener('pointerleave',()=>light(-1));
     }if(guide.notes)col.append(el('p',guide.notes,'notes'));

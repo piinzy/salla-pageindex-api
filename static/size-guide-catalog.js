@@ -91,5 +91,10 @@ function fresh(templateId,category='general'){
     columns:item.columns.map(c=>({...c})),rows:item.sizes.map(size=>({size,values:item.columns.map(()=> '')})),
     notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true};
 }
-window.SizeGuideCatalog={templates,defaults,styleDefaults,stylePresets,STYLE_FIELDS,phrasesFor,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
+/* Painted parts follow their rows and columns: the removed one's styles go, later ones move up by one. */
+function shiftPaint(styles,kind,index){
+  const field=kind==='row'?'row':'col';
+  return (Array.isArray(styles)?styles:[]).filter(x=>x[field]!==index).map(x=>x[field]>index?{...x,[field]:x[field]-1}:x);
+}
+window.SizeGuideCatalog={shiftPaint,templates,defaults,styleDefaults,stylePresets,STYLE_FIELDS,phrasesFor,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
 })();
