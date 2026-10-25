@@ -423,3 +423,4 @@ aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.act
 @keyframes accIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 #editor .acc-tools{display:flex;gap:8px;margin:0 0 12px}
 @media(prefers-reduced-motion:reduce){#editor .ed-card.acc.open>.acc-body{animation:none}#editor .ed-card.acc>h3::after{transition:none}}
+#editor .sys-checks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0}#editor .sys-checks label{display:inline-flex;align-items:center;gap:4px;font-size:13px}

@@ -303,7 +303,7 @@ const words={
   ar:{size:'المقاس',table:'جدول المقاسات',how:'طريقة القياس',finder:'اعرف مقاسك',close:'إغلاق دليل المقاسات',unit:'وحدة القياس',cm:'سم',inch:'إنش',
     scroll:'مرّر الجدول جانبيًا على الشاشات الصغيرة',tableLabel:'جدول المقاسات، يمكن تمريره أفقيًا',body:'قياسات الجسم',garment:'قياسات القطعة نفسها',
     fitLabel:'نوع القصة',fits:{slim:'قصة ضيقة',regular:'قصة عادية',loose:'قصة واسعة'},system:'نظام المقاس',addRow:'إضافة صف',addCol:'إضافة عمود',delRow:'حذف الصف',delCol:'حذف العمود',editUnit:'الوحدة',
-    switchTo:'التبديل إلى',viewsLabel:'نوع القياسات',productTable:'قياسات المنتج',bodyTable:'قياسات الجسم',
+    sysNote:'*تحويل المقاسات بين الأنظمة تقريبي؛ اعتمد على القياسات الفعلية في الجدول.',switchTo:'التبديل إلى',viewsLabel:'نوع القياسات',productTable:'قياسات المنتج',bodyTable:'قياسات الجسم',
     noHow:'لم تتم إضافة تعليمات خاصة لهذا المنتج. تواصل مع المتجر إذا احتجت مساعدة في القياس.',
     hint:'التحويل بين سم وإنش يشمل الأرقام والنطاقات الرقمية؛ العبارات النصية تبقى كما أدخلها المتجر.',
     intro:'أدخل قياساتك لنقترح عليك المقاس الأنسب من جدول المتجر.',find:'اعرف مقاسي',clear:'مسح',show:'عرض في الجدول',
@@ -312,7 +312,7 @@ const words={
   en:{size:'Size',table:'Size chart',how:'How to measure',finder:'Find my size',close:'Close size guide',unit:'Unit',cm:'cm',inch:'in',
     scroll:'Scroll the table sideways on small screens',tableLabel:'Size chart, scrollable horizontally',body:'Body measurements',garment:'Garment measurements',
     fitLabel:'Fit',fits:{slim:'Slim fit',regular:'Regular fit',loose:'Loose fit'},system:'Size system',addRow:'Add row',addCol:'Add column',delRow:'Delete row',delCol:'Delete column',editUnit:'Unit',
-    switchTo:'Switch to',viewsLabel:'Measurement type',productTable:'Product measurements',bodyTable:'Body measurements',
+    sysNote:'*Conversions between size systems are approximate; rely on the measurements in the table.',switchTo:'Switch to',viewsLabel:'Measurement type',productTable:'Product measurements',bodyTable:'Body measurements',
     noHow:'No special instructions were added for this product. Contact the store if you need help measuring.',
     hint:'Converting between cm and in covers numbers and numeric ranges; text values stay as the store entered them.',
     intro:'Enter your measurements and we will suggest the best size from the store\'s chart.',find:'Find my size',clear:'Clear',show:'Show in chart',
@@ -360,6 +360,15 @@ function loadFont(id){
   if(!document.getElementById(tag)){const l=document.createElement('link');l.id=tag;l.rel='stylesheet';l.referrerPolicy='no-referrer';l.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(f[0]).replace(/%20/g,'+')+':wght@400;500;700&display=swap';document.head.append(l)}
   return "'"+f[0]+"',";
 }
+/* Approximate letter-size conversions for womenswear (US numbers, offset per system). The merchant's own columns always win. */
+const SYSTEM_CODES=['US','UK','EU','FR','IT','DE','AU','JP'],SYS_OFFSET={US:0,UK:4,EU:32,FR:32,IT:36,DE:30,AU:4,JP:3};
+const LETTER_US={XXS:[0],XS:[2],S:[4,6],M:[8,10],L:[12,14],XL:[16],XXL:[18],XXXL:[20],XXXXL:[22]};
+const LETTER_ALIAS={'2XL':'XXL','3XL':'XXXL','4XL':'XXXXL','XXXS':'XXS'};
+function mapSize(code,size){
+  const key=String(size||'').trim().toUpperCase().replace(/\s+/g,''),range=LETTER_US[LETTER_ALIAS[key]||key];
+  if(!range||!(code in SYS_OFFSET))return null;const o=SYS_OFFSET[code],lo=range[0]+o,hi=range[range.length-1]+o;return lo===hi?String(lo):lo+'-'+hi;
+}
+const wantedSystems=g=>Array.isArray(g.size_systems)?g.size_systems.filter(c=>SYSTEM_CODES.includes(c)):(['women','general'].includes(g.category)?SYSTEM_CODES:[]);
 const HOW_ART=['none','auto','women','men','kids'];
 /* tabs: the three tabs; page: one scrolling page with the measuring help folded away; cards: tabs with each size as a card; compact: the table alone */
 const LAYOUTS=['tabs','page','cards','compact'],FITS=['slim','regular','loose'];
@@ -411,12 +420,16 @@ function render(host,full,productName,close,pick){
   }
   let hit=-1,refreshLabels=()=>{},sysIdx=-1;const sideState={view:0};
   let systems=guide.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);if(ref&&systems.length)sysIdx=systems[0];
-  const sizeText=r=>sysIdx>=0?(r.values[sysIdx]||r.size||'—'):(r.size||'—');
+  let vsys='',vcodes=[],vsysTouched=false;
+  const sizeText=r=>vsys?((mapSize(vsys,r.size)||'—')+(r.size?' ('+r.size+')':'')):sysIdx>=0?(r.values[sysIdx]||r.size||'—'):(r.size||'—');
   const bodyTable=full.body_table&&Array.isArray(full.body_table.columns)&&Array.isArray(full.body_table.rows)&&full.body_table.columns.length&&full.body_table.rows.length?full.body_table:null;
   const bodyGuide=bodyTable?{...full,columns:bodyTable.columns,rows:bodyTable.rows,cell_styles:[],col_widths:[],side_image:'',side_image_back:'',calculator:false,measurement_type:'body'}:null;
   const sysOf=g=>g.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   function draw(){
     guide=view==='body'&&bodyGuide?bodyGuide:full;systems=sysOf(guide);if(guide!==full)hit=-1;
+    {const real=new Set(systems.map(i=>String(guide.columns[i].label).trim().toUpperCase().split(/[^A-Z]/)[0]));
+     vcodes=wantedSystems(guide).filter(c=>!real.has(c)&&guide.rows.some(r=>mapSize(c,r.size)));
+     if(!vcodes.includes(vsys))vsys=ref&&!systems.length&&vcodes.length&&!vsysTouched?vcodes[0]:'';}
     refreshLabels();grid.replaceChildren();const ed=pick?.edit,editing=!!ed&&layoutType!=='cards'&&guide===full,U=editing?guide.unit:unit;if(editing)sysIdx=-1;const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
     for(const [code,label] of [['cm',w.cm],['in',w.inch]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(unit===code));b.onclick=()=>{unit=code;draw()};units.append(b)}
     col.append(bar);
@@ -433,10 +446,10 @@ function render(host,full,productName,close,pick){
       col.append(views);
     }
     const tools=el('div',undefined,'tools');
-    if(systems.length&&!editing){
+    if((systems.length||vcodes.length)&&!editing){
       const pick=el('select',undefined,'sys');pick.setAttribute('aria-label',w.system);
-      for(const [idx,label] of [[-1,guide.size_label||w.size],...systems.map(i=>[i,guide.columns[i].label+' '+w.size])]){const o=el('option',label);o.value=String(idx);o.selected=idx===sysIdx;pick.append(o)}
-      pick.onchange=()=>{sysIdx=Number(pick.value);draw()};tools.append(pick);
+      for(const [idx,label] of [[-1,guide.size_label||w.size],...systems.map(i=>[i,guide.columns[i].label+' '+w.size]),...vcodes.map(c=>['v:'+c,c+' '+w.size])]){const o=el('option',label);o.value=String(idx);o.selected=typeof idx==='string'?idx==='v:'+vsys:(!vsys&&idx===sysIdx);pick.append(o)}
+      pick.onchange=()=>{vsysTouched=true;if(pick.value.startsWith('v:')){vsys=pick.value.slice(2);sysIdx=-1}else{vsys='';sysIdx=Number(pick.value)}draw()};tools.append(pick);
     }
     tools.append(editing?el('span',w.editUnit+': '+(guide.unit==='in'?w.inch:w.cm),'unit-note'):units);
     bar.append(el('span',w.switchTo,'legend'),tools);
@@ -455,7 +468,7 @@ function render(host,full,productName,close,pick){
       table.append(group);table.style.tableLayout='fixed';table.style.minWidth=Math.max(widths.length*86,260)+'px';}
     const mark=(node,part,row,col)=>{if(!pick?.onPick)return;node.classList.add('pick');node.tabIndex=0;if(sel.part===part&&(sel.row??-1)===row&&(sel.col??-1)===col)node.classList.add('sel');
       const go=e=>{e.preventDefault();pick.onPick({part,row,col})};node.addEventListener('click',go);node.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e)})};
-    const sizeCol=guide.size_label||w.sizeCol||w.size,sizeHead=el('th',editing?undefined:(sysIdx>=0?guide.columns[sysIdx].label:sizeCol));if(editing)sizeHead.append(editable('sizeLabel',-1,-1,guide.size_label||w.size,30));paint(sizeHead,ps.head(-2));mark(sizeHead,'head',-1,-2);tr.append(sizeHead);
+    const sizeCol=guide.size_label||w.sizeCol||w.size,sizeHead=el('th',editing?undefined:(vsys?vsys:sysIdx>=0?guide.columns[sysIdx].label:sizeCol));if(editing)sizeHead.append(editable('sizeLabel',-1,-1,guide.size_label||w.size,30));paint(sizeHead,ps.head(-2));mark(sizeHead,'head',-1,-2);tr.append(sizeHead);
     guide.columns.forEach((c,i)=>{const swapped=i===sysIdx,unitText=c.kind==='measurement'&&(editing||!ref)?' ('+(U==='cm'?w.cm:w.inch)+')':'',th=el('th',editing?undefined:(swapped?sizeCol:c.label+unitText));
       if(editing){th.append(editable('head',-1,i,c.label,40),el('span',unitText,'unit-suffix'));const x=el('button','×','ed-del-col');x.type='button';x.setAttribute('aria-label',w.delCol+': '+c.label);x.onclick=()=>ed.remove('column',i);th.append(x)}
       paint(th,ps.head(i));mark(th,'head',-1,i);tr.append(th)});
@@ -481,7 +494,7 @@ function render(host,full,productName,close,pick){
     }
       if(!ref){let lit=-1;const light=n=>{if(n===lit)return;lit=n;for(const row of table.rows)for(const cell of row.cells)cell.classList.toggle('col-hl',n>=0&&cell.cellIndex===n)};
       table.addEventListener('pointerover',e=>{const cell=e.target.closest?.('td,th');if(cell&&e.pointerType!=='touch')light(cell.cellIndex)});table.addEventListener('pointerleave',()=>light(-1));}
-    }if(guide.notes)col.append(el('p',guide.notes,'notes'));
+    }if(guide.notes)col.append(el('p',guide.notes,'notes'));if(vsys)col.append(el('p',w.sysNote,'notes'));
     if(ref?(guide!==full||!bodyGuide)&&(showArt||full.instructions||images.length||embed):guide!==full&&(showArt||full.instructions)){const d=el('details',undefined,'fold-section'),inner=el('div');d.open=true;d.append(el('summary',w.how),inner);
       inner.append(ref?how:showArt?measureGuide(full.how_art,cat.id,lang,full.instructions):el('div',full.instructions,'instructions'));col.append(d)}
     col.append(el('p',w.hint,'hint'));grid.append(col);
@@ -512,5 +525,5 @@ function render(host,full,productName,close,pick){
 function shadow(host){const root=host.shadowRoot||host.attachShadow({mode:'open'});root.replaceChildren();root.append(el('style',css));return root}
 function preview(host,guide,name,pick){let root=shadow(host),surface=el('div');root.append(surface);render(surface,guide,name,undefined,pick)}
 function open(guide,name){const previous=document.activeElement;const host=el('div');host.style.cssText='position:relative;z-index:2147483647';document.body.append(host);const root=shadow(host),dialog=el('dialog');dialog.dir=language(guide)==='en'?'ltr':'rtl';dialog.setAttribute('aria-labelledby','size-guide-title');dialog.dataset.theme=tokens(guide).theme.id;const close=()=>dialog.close();root.append(dialog);render(dialog,guide,name,close);dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});dialog.addEventListener('close',()=>{host.remove();previous?.focus()},{once:true});dialog.showModal()}
-window.SizeGuideUI={fonts:FONTS,tipsFor,preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
+window.SizeGuideUI={fonts:FONTS,mapSize,SYSTEM_CODES,tipsFor,preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
 })();
