@@ -100,6 +100,13 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     const wrap=guideWrap();assert.deepEqual([wrap.dataset.sizestyle,wrap.dataset.head,wrap.dataset.border,wrap.dataset.font,wrap.dataset.sticky],['underline','solid','strong','large','0']);
     assert.equal(wrap.dir,'ltr');
     $('[name="guide-language"][value="ar"]').click();assert.equal(guideWrap().dir,'rtl');assert.equal($('#guidePreview').shadowRoot.querySelector('thead th').textContent,'الحجم');
+    // layout type and fit scale: menus with hints, and the live preview follows
+    assert.equal(all('#layoutSeg input').length,4);assert.equal($('[name="guide-layout_type"]:checked').value,'tabs');assert.match($('#layoutHint').textContent,/ثلاثة تبويبات/);
+    $('[name="guide-layout_type"][value="cards"]').click();assert.equal(guideWrap().dataset.layout,'cards');assert.ok($('#guidePreview').shadowRoot.querySelector('.size-card'));assert.match($('#layoutHint').textContent,/بطاقة لكل مقاس/);
+    $('[name="guide-layout_type"][value="page"]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('[role=tab]'),null);$('[name="guide-layout_type"][value="tabs"]').click();assert.ok($('#guidePreview').shadowRoot.querySelector('[role=tab]'));
+    assert.equal(all('#fitSeg input').length,4);assert.equal($('#guidePreview').shadowRoot.querySelector('.fit'),null);$('[name="guide-fit_level"][value="regular"]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('.fit').dataset.level,'regular');
+    $('[name="guide-fit_level"][value=""]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('.fit'),null);
+    assert.match($('#importPanel').textContent,/تملك حقوقه/,'imports say which charts are fair to upload');
     change('#calculator',false);assert.equal($('#guidePreview').shadowRoot.querySelectorAll('[role=tab]').length,2);change('#calculator',true);assert.equal($('#guidePreview').shadowRoot.querySelectorAll('[role=tab]').length,3);
     // colours: automatic until the merchant picks one, and every colour can be reset
     assert.equal(all('#tableColors .color-field').length,8);assert.equal($('#tc-status-header_bg').textContent,'تلقائي');assert.equal($('#tc-header_bg').closest('.color-field').querySelector('button').disabled,true);
@@ -185,6 +192,22 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      $('#paintClearPart').click();assert.equal(root().querySelector('thead th:nth-child(3)').style.background,'');
      // the first two parts stay painted for the save below
      }
+    // ---- editing right in the live preview: type into cells, add and remove rows and columns
+    {const root=()=>$('#guidePreview').shadowRoot,fire=(n,type)=>n.dispatchEvent(new w.Event(type,{bubbles:true}));
+     assert.equal(root().querySelector('.ed'),null,'off by default');change('#inlineEdit',true);assert.ok(root().querySelectorAll('.ed').length>5);assert.match($('#inlineEditHint').textContent,/انقر على أي خلية/);
+     change('#paintMode',true);assert.equal($('#inlineEdit').checked,false,'painting turns editing off');assert.equal(root().querySelector('.ed'),null);
+     change('#inlineEdit',true);assert.equal($('#paintMode').checked,false,'editing turns painting off');assert.ok(root().querySelector('.ed'));
+     const span=root().querySelector('.ed[data-part="cell"][data-row="0"][data-col="0"]'),was=span.textContent;fire(span,'focusin');span.textContent='77';fire(span,'focusout');
+     assert.equal($('#gridEditor [data-row="0"][data-cell="0"]').value,'77','the table editor follows the preview');assert.match($('#editState').textContent,/غير محفوظة/);assert.equal(root().querySelector('.ed[data-part="cell"][data-row="0"][data-col="0"]'),span,'typing does not redraw the preview');
+     span.textContent=was;fire(span,'focusout');assert.equal($('#gridEditor [data-row="0"][data-cell="0"]').value,was);
+     const label=root().querySelector('.ed[data-part="head"][data-col="0"]'),oldLabel=label.textContent;fire(label,'focusin');label.textContent='';fire(label,'focusout');assert.equal(label.textContent,oldLabel,'an empty column name is refused');
+     label.textContent='عرض الصدر';fire(label,'focusout');assert.equal($('#gridEditor thead th input[data-col="0"]').value,'عرض الصدر');label.textContent=oldLabel;fire(label,'focusout');
+     const rowsBefore=all('#gridEditor tbody tr').length,colsBefore=all('#gridEditor thead th input[data-col]').length;
+     root().querySelector('.ed-add').click();assert.equal(all('#gridEditor tbody tr').length,rowsBefore+1);assert.equal(root().querySelectorAll('tbody tr').length,rowsBefore+1);
+     root().querySelectorAll('tbody tr')[rowsBefore].querySelector('.ed-del').click();await settle();assert.equal(all('#gridEditor tbody tr').length,rowsBefore,'an empty row goes without asking');
+     root().querySelector('thead .ed-add-col').click();assert.equal(all('#gridEditor thead th input[data-col]').length,colsBefore+1);assert.equal(root().querySelectorAll('tbody tr:first-child td .ed').length,colsBefore+1);
+     [...root().querySelectorAll('thead .ed-del-col')].pop().click();await settle();assert.equal(all('#gridEditor thead th input[data-col]').length,colsBefore);
+     change('#inlineEdit',false);assert.equal(root().querySelector('.ed'),null);assert.equal($('#inlineEditHint').textContent,'');}
     // ---- saving sends everything
     $('#saveDraft').click();await settle();
     const put=call('PUT','size-guides/42')[0].body;assert.equal(put.action,'draft');
@@ -195,10 +218,13 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // missing server key: the AI button explains itself
     aiAvailable=false;
 
-    // ---- ready-made looks change only the appearance, and can be undone
+    // ---- ready-made looks change only the appearance, and can be undone (none ship by default; the owner adds their own)
+    assert.equal(w.SizeGuideCatalog.stylePresets.length,0);assert.equal(all('#presetChoices .preset-card').length,0);assert.equal(hidden('#presetChoices'),true,'no empty grid');
+    w.SizeGuideCatalog.stylePresets.push({id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large',header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',sticky_size:true}});
+    $('#backCatalog').click();await settle();$('[data-edit="42"]').click();await settle();
     const before={rows:JSON.stringify(guideCopy().rows),columns:JSON.stringify(guideCopy().columns),title:$('#guideTitle').value};
     function guideCopy(){return {rows:all('#gridEditor tbody tr').map(tr=>[...tr.querySelectorAll('input')].map(i=>i.value)),columns:all('#gridEditor thead th input').map(i=>i.value)}}
-    assert.equal(all('#presetChoices .preset-card').length,7);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
+    assert.equal(all('#presetChoices .preset-card').length,1);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
     assert.equal($('#undoStyle').classList.contains('hidden'),true);
     const oldStyle=[$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value];
     all('#presetChoices .preset-pick').find(b=>/جريء/.test(b.textContent)).click();

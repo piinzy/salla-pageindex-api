@@ -410,3 +410,4 @@ aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.act
 #buttonSettings .seg.dd-panel label{justify-content:flex-start;min-height:44px;gap:10px}
 #buttonSettings .seg.dd-panel .icon svg{width:22px;height:22px}
 @media(prefers-reduced-motion:reduce){#buttonSettings .seg.dd-panel,#buttonSettings .seg.dd-panel.open{transition:none}}
+#editor .preview-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px}

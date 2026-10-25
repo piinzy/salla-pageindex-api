@@ -31,8 +31,9 @@ function show(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('hidden',t.id!==tab));
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===(tab==='editor'?(mode==='library'?'library':'catalog'):tab)));
 }
-function changed(){dirty=true;$('#editState').textContent=(published?'يوجد جدول منشور · ':'مسودة · ')+'تعديلات غير محفوظة';syncColors();preview()}
-function preview(){if(guide)window.SizeGuideUI.preview($('#guidePreview'),guide,editing?.title||'',paintOn?{onPick:pickPart,selected:picked}:undefined)}
+function touch(){dirty=true;$('#editState').textContent=(published?'يوجد جدول منشور · ':'مسودة · ')+'تعديلات غير محفوظة';syncColors()}
+function changed(){touch();preview()}
+function preview(){if(guide)window.SizeGuideUI.preview($('#guidePreview'),guide,editing?.title||'',paintOn?{onPick:pickPart,selected:picked}:inlineEdit?{edit:editApi}:undefined)}
 
 /* ---------- store, catalog and bulk actions ---------- */
 async function boot(){
@@ -298,7 +299,7 @@ function renderPresets(){
       box.append(card);
     }
   };
-  draw($('#presetChoices'),Catalog.stylePresets,false);
+  draw($('#presetChoices'),Catalog.stylePresets,false);$('#presetChoices').classList.toggle('hidden',!Catalog.stylePresets.length);
   draw($('#myPresets'),savedStyles.map(p=>({...p,style:p.style})),true);
   $('#myPresetsTitle').classList.toggle('hidden',savedStyles.length===0);$('#myPresets').classList.toggle('hidden',savedStyles.length===0);
 }
@@ -374,6 +375,8 @@ const SEGMENTS=[
   ['headerStyleSeg','header_style',[['auto','حسب الثيم'],['tint','هادئة'],['solid','ممتلئة'],['plain','شفافة'],['line','بخط']]],
   ['borderStyleSeg','border_style',[['auto','حسب الثيم'],['none','بلا'],['thin','رفيعة'],['strong','سميكة']]],
   ['fontScaleSeg','font_scale',[['small','صغير'],['medium','متوسط'],['large','كبير']]],
+  ['layoutSeg','layout_type',[['tabs','تبويبات'],['page','صفحة واحدة'],['cards','بطاقات'],['compact','جدول فقط']]],
+  ['fitSeg','fit_level',[['','بدون'],['slim','ضيقة'],['regular','عادية'],['loose','واسعة']]],
   ['sideLayoutSeg','side_layout',[['auto','تلقائي'],['none','بدون'],['start','قبل الجدول'],['end','بعد الجدول']]],
   ['howArtSeg','how_art',[['auto','حسب الفئة'],['women','نسائي'],['men','رجالي'],['kids','أطفال'],['none','بدون']]],
   ['languageSeg','language',[['ar','العربية'],['en','English'],['auto','حسب المتجر']]],
@@ -410,11 +413,13 @@ function buildChoices(){
     field.append(label,input,status,reset);colors.append(field);
   }
 }
+const LAYOUT_HINTS={tabs:'ثلاثة تبويبات: الجدول وطريقة القياس واعرف مقاسك.',page:'صفحة واحدة: الجدول أولًا، وتحته قسمان قابلان للطي لطريقة القياس واعرف مقاسك.',cards:'بطاقة لكل مقاس، مناسبة للجوال. التلوين بالنقر يعمل مع الجدول لا مع البطاقات.',compact:'الجدول وحده بلا تبويبات ولا طريقة قياس.'};
 function syncChoices(){
   if(!guide)return;
   for(const [name,value] of [['guide-category',groupOf(guide.category)],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
     document.querySelectorAll(`#editor [name="${name}"]`).forEach(r=>{r.checked=r.value===value;r.closest('label').classList.toggle('selected',r.checked)});
   $('#specialRow').classList.toggle('hidden',!SPECIAL.includes(guide.category));$('#specialType').value=guide.category;
+  $('#layoutHint').textContent=LAYOUT_HINTS[guide.layout_type]||LAYOUT_HINTS.tabs;syncInlineEdit();
   $('#side3d').checked=guide.side_3d===true;
   $('#depth3d').checked=guide.depth3d!==false;$('#headerIcon').checked=guide.header_icon!==false;
 }
@@ -440,7 +445,7 @@ function setCategory(id){
   if(!blank)toast('تغيّرت الفئة والثيم فقط. اختر هيكلًا من القائمة ثم «استخدام الهيكل» إن أردت أعمدة جديدة.');
 }
 function drawGrid(){drawWidths();let html='<table><thead><tr><th>المقاس</th>'+guide.columns.map((c,i)=>`<th><input aria-label="اسم العمود ${i+1}" data-col="${i}" maxlength="40" value="${esc(c.label)}"><select aria-label="نوع العمود ${i+1}" data-kind="${i}"><option value="measurement" ${c.kind==='measurement'?'selected':''}>قياس: يتحول سم/إنش</option><option value="text" ${c.kind==='text'?'selected':''}>نص: EU / UK / غيره</option></select><button type="button" class="remove fill" data-fill="${i}" aria-label="إكمال العمود ${i+1} بنفس الفرق">أكمل العمود ⇣</button><button type="button" class="remove" data-remove-col="${i}" aria-label="حذف العمود ${i+1}">حذف العمود ×</button></th>`).join('')+'<th></th></tr></thead><tbody>'+guide.rows.map((r,i)=>`<tr><td><input aria-label="اسم المقاس ${i+1}" maxlength="30" data-size="${i}" value="${esc(r.size)}"></td>`+r.values.map((v,j)=>`<td><input aria-label="${esc(r.size)} ${esc(guide.columns[j].label)}" maxlength="60" data-row="${i}" data-cell="${j}" value="${esc(v)}" placeholder="—"></td>`).join('')+`<td><button type="button" class="remove" data-remove-row="${i}" aria-label="حذف المقاس ${esc(r.size)}">×</button></td></tr>`).join('')+'</tbody></table>';$('#gridEditor').innerHTML=html;
-$('#gridEditor').querySelectorAll('[data-col]').forEach(x=>x.oninput=()=>{guide.columns[+x.dataset.col].label=x.value;changed()});$('#gridEditor').querySelectorAll('[data-kind]').forEach(x=>x.onchange=()=>{guide.columns[+x.dataset.kind].kind=x.value;changed()});$('#gridEditor').querySelectorAll('[data-size]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.size].size=x.value;changed()});$('#gridEditor').querySelectorAll('[data-cell]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.row].values[+x.dataset.cell]=x.value;changed()});$('#gridEditor').querySelectorAll('[data-fill]').forEach(x=>x.onclick=()=>fillColumn(+x.dataset.fill));$('#gridEditor').querySelectorAll('[data-remove-col]').forEach(x=>x.onclick=async()=>{if(guide.columns.length<=1)return toast('يجب إبقاء عمود قياس واحد على الأقل.');if(!(await confirmAction('حذف هذا العمود وقيمه من المسودة؟')))return;const i=+x.dataset.removeCol;guide.columns.splice(i,1);guide.rows.forEach(r=>r.values.splice(i,1));drawGrid();changed()});$('#gridEditor').querySelectorAll('[data-remove-row]').forEach(x=>x.onclick=async()=>{if(guide.rows.length<=1)return toast('يجب إبقاء مقاس واحد على الأقل.');if(!(await confirmAction('حذف صف المقاس من المسودة؟')))return;guide.rows.splice(+x.dataset.removeRow,1);drawGrid();changed()})}
+$('#gridEditor').querySelectorAll('[data-col]').forEach(x=>x.oninput=()=>{guide.columns[+x.dataset.col].label=x.value;changed()});$('#gridEditor').querySelectorAll('[data-kind]').forEach(x=>x.onchange=()=>{guide.columns[+x.dataset.kind].kind=x.value;changed()});$('#gridEditor').querySelectorAll('[data-size]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.size].size=x.value;changed()});$('#gridEditor').querySelectorAll('[data-cell]').forEach(x=>x.oninput=()=>{guide.rows[+x.dataset.row].values[+x.dataset.cell]=x.value;changed()});$('#gridEditor').querySelectorAll('[data-fill]').forEach(x=>x.onclick=()=>fillColumn(+x.dataset.fill));$('#gridEditor').querySelectorAll('[data-remove-col]').forEach(x=>x.onclick=async()=>{if(guide.columns.length<=1)return toast('يجب إبقاء عمود قياس واحد على الأقل.');if(!(await confirmAction('حذف هذا العمود وقيمه من المسودة؟')))return;const i=+x.dataset.removeCol;guide.columns.splice(i,1);guide.rows.forEach(r=>r.values.splice(i,1));adjustPaint('col',i);drawGrid();changed()});$('#gridEditor').querySelectorAll('[data-remove-row]').forEach(x=>x.onclick=async()=>{if(guide.rows.length<=1)return toast('يجب إبقاء مقاس واحد على الأقل.');if(!(await confirmAction('حذف صف المقاس من المسودة؟')))return;guide.rows.splice(+x.dataset.removeRow,1);adjustPaint('row',+x.dataset.removeRow);drawGrid();changed()})}
 async function save(action){
   if(!editing||saving||linkedTo)return;
   if(mode==='library'&&!libraryName.trim())return toast('اكتب اسمًا للجدول المشترك.');
@@ -577,6 +582,49 @@ function drawWidths(){
     input.oninput=()=>{const v=Math.round(Number(input.value));if(v>=3&&v<=80){guide.col_widths[i]=v;changed()}};label.append(input);row.append(label)});
   const reset=mk('button','secondary small','إعادة العرض إلى تلقائي');reset.type='button';reset.onclick=()=>{guide.col_widths=[];drawWidths();changed()};box.append(row,reset);
 }
+/* Rows and columns move: painted parts follow them, and fixed widths no longer line up. */
+function adjustPaint(kind,index){
+  if(kind==='col')guide.col_widths=[];
+  guide.cell_styles=Catalog.shiftPaint(guide.cell_styles,kind,index);
+}
+/* ---- editing right inside the live preview: type in a cell, add or delete rows and columns ---- */
+let inlineEdit=false;
+const editApi={
+  pendingFocus:null,
+  takeFocus(){const key=this.pendingFocus;this.pendingFocus=null;return key},
+  set({part,row,col},text){
+    if(part==='head'){if(!text){toast('اسم العمود مطلوب.');return false}guide.columns[col].label=text}
+    else if(part==='sizeLabel'){guide.size_label=text;$('#sizeLabel').value=text}
+    else if(part==='size')guide.rows[row].size=text;
+    else guide.rows[row].values[col]=text;
+    touch();drawGrid();return true;
+  },
+  add(what){
+    if(what==='row'){if(guide.rows.length>=30)return toast('الحد الأقصى 30 صفًا.');guide.rows.push({size:'',values:guide.columns.map(()=>'')});this.pendingFocus='size:'+(guide.rows.length-1)+':-1'}
+    else{if(guide.columns.length>=10)return toast('الحد الأقصى 10 أعمدة.');guide.columns.push({label:'قياس '+(guide.columns.length+1),kind:'measurement'});guide.rows.forEach(r=>r.values.push(''));guide.col_widths=[];this.pendingFocus='head:-1:'+(guide.columns.length-1)}
+    drawGrid();changed();
+  },
+  async remove(what,index){
+    if(what==='row'){
+      if(guide.rows.length<=1)return toast('يجب إبقاء مقاس واحد على الأقل.');
+      if(guide.rows[index].values.some(v=>String(v).trim())&&!(await confirmAction('حذف هذا الصف وقيمه من المسودة؟')))return;
+      guide.rows.splice(index,1);adjustPaint('row',index);
+    }else{
+      if(guide.columns.length<=1)return toast('يجب إبقاء عمود واحد على الأقل.');
+      if(guide.rows.some(r=>String(r.values[index]||'').trim())&&!(await confirmAction('حذف هذا العمود وقيمه من المسودة؟')))return;
+      guide.columns.splice(index,1);guide.rows.forEach(r=>r.values.splice(index,1));adjustPaint('col',index);
+    }
+    drawGrid();changed();
+  },
+};
+function syncInlineEdit(){
+  const cards=guide?.layout_type==='cards';$('#inlineEditHint').textContent=!inlineEdit?'':cards?'التحرير المباشر يعمل مع عرض الجدول، اختر نوع عرض غير البطاقات.':'انقر على أي خلية واكتب. Enter ينقلك للصف التالي وEsc يلغي. القيم بوحدة الجدول.';
+}
+$('#inlineEdit').onchange=()=>{
+  inlineEdit=$('#inlineEdit').checked;
+  if(inlineEdit&&paintOn){paintOn=false;picked=null;$('#paintMode').checked=false;syncPaint()}
+  syncInlineEdit();preview();
+};
 /* ---- paint mode: click a part of the live table, then colour it on its own */
 let paintOn=false,picked=null,paintScope='this';
 const clean=entry=>!entry.bg&&!entry.fg&&!entry.bold&&!entry.align;
@@ -607,7 +655,7 @@ function syncPaint(){
   $('#paintBold').checked=!!entry.bold;$('#paintAlign').value=entry.align||'';$('#paintBold').disabled=$('#paintAlign').disabled=!picked;
   $('#paintClearPart').disabled=!picked||!entryOf(currentTarget());$('#paintClearAll').disabled=!(guide.cell_styles||[]).length;
 }
-$('#paintMode').onchange=()=>{paintOn=$('#paintMode').checked;if(!paintOn)picked=null;syncPaint();preview()};
+$('#paintMode').onchange=()=>{paintOn=$('#paintMode').checked;if(!paintOn)picked=null;if(paintOn&&inlineEdit){inlineEdit=false;$('#inlineEdit').checked=false;syncInlineEdit()}syncPaint();preview()};
 $('#paintBg').oninput=()=>setPart({bg:$('#paintBg').value});$('#paintFg').oninput=()=>setPart({fg:$('#paintFg').value});
 $('#paintBgReset').onclick=()=>setPart({bg:''});$('#paintFgReset').onclick=()=>setPart({fg:''});
 $('#paintBold').onchange=()=>setPart({bold:$('#paintBold').checked});$('#paintAlign').onchange=()=>setPart({align:$('#paintAlign').value});

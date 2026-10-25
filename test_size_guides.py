@@ -62,6 +62,11 @@ class SizeGuideTests(unittest.TestCase):
         self.assertIn('script.dataset.merchant = "123"',own['javascript']);self.assertFalse(own['generic'])
         self.assertNotIn('merchant',every['javascript']);self.assertNotIn('123',every['javascript']);self.assertTrue(every['generic'])
         self.assertIn('/size-guide-widget.js',every['javascript']);self.assertNotIn('BASE',every['javascript']);self.assertNotIn('STORE',every['javascript'])
+    def test_layout_type_and_fit_level_are_checked(self):
+        ok=sg.Guide(**{**G,'layout_type':'page','fit_level':'slim'});self.assertEqual((ok.layout_type,ok.fit_level),('page','slim'))
+        old=sg.Guide(**G);self.assertEqual((old.layout_type,old.fit_level),('tabs',''),'guides saved before keep their tabs')
+        for bad in [{'layout_type':'carousel'},{'fit_level':'huge'},{'layout_type':''}]:
+            with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,**bad})
     def test_themes_and_categories_match_the_window_script(self):
         import re,pathlib
         script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')
@@ -88,7 +93,7 @@ class SizeGuideTests(unittest.TestCase):
                 "console.log(JSON.stringify({presets:w.SizeGuideCatalog.stylePresets,fields:w.SizeGuideCatalog.STYLE_FIELDS}))")
         data=json.loads(subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout)
         self.assertEqual(set(data['fields']),set(sg.STYLE_FIELDS),'editor and server agree on what a look contains')
-        self.assertEqual(len(data['presets']),7)
+        self.assertEqual(len(data['presets']),0,'the owner adds the ready-made looks; none ship by default')
         accents={'classic':'#177e65','rose':'#b4456a','velvet':'#7b2338','gold':'#a8812c','tailor':'#23375b','slate':'#3d4a56','sport':'#d9480f','leather':'#8a5a35','paws':'#d9701a','mint':'#1b8f7c','night':'#7be0c3','linen':'#2d2630','minimal':'#2b2b2b'}
         for preset in data['presets']:
             with self.subTest(preset=preset['id']):

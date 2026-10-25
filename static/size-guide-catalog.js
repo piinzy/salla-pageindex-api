@@ -59,14 +59,8 @@ const defaults={general:{theme:'classic',color:'#177e65'},women:{theme:'rose',co
 /* Ready-made looks. They change the appearance only, never the table's numbers or texts. */
 const STYLE_FIELDS=['theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style','font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'];
 const noCustomColors={header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''};
+/* The ready-made looks are the store owner's own designs, added here as {id,name,hint,style}; none ship by default. */
 const stylePresets=[
-  {id:'elegant',name:'أنيق',hint:'بطاقات ناعمة وزوايا دائرية',style:{theme:'rose',table_style:'cards',density:'comfortable',corners:'round',depth3d:true,header_icon:true,size_style:'pill',header_style:'tint',border_style:'none',font_scale:'medium'}},
-  {id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large'}},
-  {id:'calm',name:'هادئ',hint:'خطوط رفيعة وألوان منعشة',style:{theme:'mint',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:true,size_style:'underline',header_style:'plain',border_style:'thin',font_scale:'medium'}},
-  {id:'sporty',name:'رياضي',hint:'مدمج وحيوي بشارات مجسمة',style:{theme:'sport',table_style:'zebra',density:'compact',corners:'soft',depth3d:true,header_icon:true,size_style:'chip',header_style:'solid',border_style:'thin',font_scale:'medium'}},
-  {id:'luxury',name:'فاخر',hint:'ذهبي بخط تحت الترويسة',style:{theme:'gold',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
-  {id:'linen',name:'كتان هادئ',hint:'خلفية دافئة وصورة منتجك بجانب الجدول',style:{theme:'linen',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
-  {id:'minimal',name:'بسيط',hint:'أبيض نظيف بلا زخرفة',style:{theme:'minimal',table_style:'plain',density:'compact',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'plain',border_style:'none',font_scale:'medium'}},
 ].map(p=>({...p,style:{...noCustomColors,sticky_size:true,...p.style}}));
 /* Short notes a store tends to repeat under its tables; the merchant can add their own. */
 const phraseSets={
@@ -83,7 +77,7 @@ const forCategory=category=>templates.filter(item=>item.category===category);
 /* Style fields every guide has; guides saved before they existed read as these values (the finder stays off for them). */
 const styleDefaults={category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
   size_style:'chip',header_style:'auto',border_style:'auto',font_scale:'medium',sticky_size:true,size_label:'',header_bg:'',header_text:'',row_alt:'',
-  border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_art:'auto',cell_styles:[],side_layout:'auto',side_3d:true,col_widths:[],side_image:'',side_image_back:'',how_video:'',logo_url:''};
+  border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_art:'auto',layout_type:'tabs',fit_level:'',cell_styles:[],side_layout:'auto',side_3d:true,col_widths:[],side_image:'',side_image_back:'',how_video:'',logo_url:''};
 /* A new guide for a category; blank cells keep the "enter your own numbers" rule. */
 function fresh(templateId,category='general'){
   const item=templates.find(x=>x.id===templateId)||forCategory(category)[0]||templates[templates.length-1],base=defaults[item.category]||defaults.general;
@@ -91,5 +85,10 @@ function fresh(templateId,category='general'){
     columns:item.columns.map(c=>({...c})),rows:item.sizes.map(size=>({size,values:item.columns.map(()=> '')})),
     notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true};
 }
-window.SizeGuideCatalog={templates,defaults,styleDefaults,stylePresets,STYLE_FIELDS,phrasesFor,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
+/* Painted parts follow their rows and columns: the removed one's styles go, later ones move up by one. */
+function shiftPaint(styles,kind,index){
+  const field=kind==='row'?'row':'col';
+  return (Array.isArray(styles)?styles:[]).filter(x=>x[field]!==index).map(x=>x[field]>index?{...x,[field]:x[field]-1}:x);
+}
+window.SizeGuideCatalog={shiftPaint,templates,defaults,styleDefaults,stylePresets,STYLE_FIELDS,phrasesFor,forCategory,fresh,find:id=>templates.find(x=>x.id===id)};
 })();
