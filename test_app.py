@@ -13,6 +13,11 @@ class AppTests(unittest.TestCase):
         self.env.start();self.addCleanup(self.env.stop)
         self.client=TestClient(main.app)
 
+    def test_public_listing_pages_are_wired_into_the_real_app(self):
+        for path in ('/about','/privacy'):
+            r=self.client.get(path);self.assertEqual(r.status_code,200,path);self.assertIn('text/html',r.headers['content-type'])
+        self.assertEqual(self.client.get('/').json()['status'],'ok','the root stays a plain health check')
+
     def test_app_lifecycle_events_reach_billing_and_bad_input_is_refused(self):
         headers={'X-Salla-Token':'test-webhook-only'}
         with patch.object(main,'billing_event',return_value=True) as billing:
