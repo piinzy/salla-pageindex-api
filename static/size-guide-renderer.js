@@ -318,6 +318,13 @@ function videoEmbed(url){
   const youtube=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{5,20})/),vimeo=url.match(/vimeo\.com\/(?:video\/)?([A-Za-z0-9_-]{5,20})/);
   return youtube?'https://www.youtube-nocookie.com/embed/'+youtube[1]:vimeo?'https://player.vimeo.com/video/'+vimeo[1]:'';
 }
+const FONTS={tajawal:['Tajawal','ar'],cairo:['Cairo','ar'],almarai:['Almarai','ar'],ibm_plex_arabic:['IBM Plex Sans Arabic','ar'],noto_kufi:['Noto Kufi Arabic','ar'],noto_naskh:['Noto Naskh Arabic','ar'],readex:['Readex Pro','ar'],changa:['Changa','ar'],el_messiri:['El Messiri','ar'],amiri:['Amiri','ar'],lemonada:['Lemonada','ar'],inter:['Inter','en'],poppins:['Poppins','en'],playfair:['Playfair Display','en']};
+/* Google Fonts, loaded once into the page; the guide falls back to the system font if the stylesheet is blocked. */
+function loadFont(id){
+  const f=FONTS[id];if(!f||typeof document==='undefined'||!document.head)return '';const tag='sg-font-'+id;
+  if(!document.getElementById(tag)){const l=document.createElement('link');l.id=tag;l.rel='stylesheet';l.referrerPolicy='no-referrer';l.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(f[0]).replace(/%20/g,'+')+':wght@400;500;700&display=swap';document.head.append(l)}
+  return "'"+f[0]+"',";
+}
 const HOW_ART=['none','auto','women','men','kids'];
 /* tabs: the three tabs; page: one scrolling page with the measuring help folded away; cards: tabs with each size as a card; compact: the table alone */
 const LAYOUTS=['tabs','page','cards','compact'],FITS=['slim','regular','loose'];
@@ -330,7 +337,7 @@ function render(host,full,productName,close,pick){
   const box=el('div',undefined,'wrap');for(const [key,value] of Object.entries(vars))box.style.setProperty(key,value);box.dir=lang==='en'?'ltr':'rtl';
   box.dataset.table=guide.table_style||'zebra';box.dataset.density=guide.density||'comfortable';box.dataset.corners=guide.corners||'soft';box.dataset.depth=guide.depth3d===false?'0':'1';box.dataset.theme=t.id;const place=sidePlace(guide,t);box.dataset.split=place;
   box.dataset.sizestyle=['chip','pill','square','underline','plain'].includes(guide.size_style)?guide.size_style:'chip';box.dataset.head=p.headStyle;
-  box.dataset.border=['none','thin','strong'].includes(guide.border_style)?guide.border_style:'thin';box.dataset.font=['small','large'].includes(guide.font_scale)?guide.font_scale:'medium';box.dataset.sticky=guide.sticky_size===false?'0':'1';
+  box.dataset.border=['none','thin','strong'].includes(guide.border_style)?guide.border_style:'thin';box.dataset.font=['small','large'].includes(guide.font_scale)?guide.font_scale:'medium';box.dataset.sticky=guide.sticky_size===false?'0':'1';{const f=loadFont(guide.font_family);if(f)box.style.fontFamily=f+'PingARLT,Tahoma,Arial,sans-serif';}
   const cat=category(guide.category),hero=el('div',undefined,'hero'),titles=el('div',undefined,'titles');
   if(typeof guide.logo_url==='string'&&HTTPS.test(guide.logo_url)){const logo=el('img',undefined,'logo');logo.alt='';logo.referrerPolicy='no-referrer';logo.src=guide.logo_url;hero.append(logo);}
   else if(guide.header_icon!==false)hero.append(emblem(cat.id));
@@ -468,5 +475,5 @@ function render(host,full,productName,close,pick){
 function shadow(host){const root=host.shadowRoot||host.attachShadow({mode:'open'});root.replaceChildren();root.append(el('style',css));return root}
 function preview(host,guide,name,pick){let root=shadow(host),surface=el('div');root.append(surface);render(surface,guide,name,undefined,pick)}
 function open(guide,name){const previous=document.activeElement;const host=el('div');host.style.cssText='position:relative;z-index:2147483647';document.body.append(host);const root=shadow(host),dialog=el('dialog');dialog.dir=language(guide)==='en'?'ltr':'rtl';dialog.setAttribute('aria-labelledby','size-guide-title');const close=()=>dialog.close();root.append(dialog);render(dialog,guide,name,close);dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});dialog.addEventListener('close',()=>{host.remove();previous?.focus()},{once:true});dialog.showModal()}
-window.SizeGuideUI={tipsFor,preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
+window.SizeGuideUI={fonts:FONTS,tipsFor,preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
 })();

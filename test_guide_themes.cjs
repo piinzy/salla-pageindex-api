@@ -179,6 +179,13 @@ const w=dom.window,d=w.document;
    UI.preview(host,{...guide,body_table:body,language:'en'},'x');assert.match(R().querySelector('.tvs').textContent,/Product measurements/);
    UI.preview(host,{...guide,body_table:{...body,rows:[]}},'x');assert.equal(R().querySelector('.tvs'),null,'empty second table is ignored');
   }
+  // Google Fonts: loaded once, applied to the guide, unknown ids ignored
+  {const host=d.createElement('div');UI.preview(host,guide,'x');assert.equal(d.head.querySelectorAll('link[id^=sg-font-]').length,0,'no font stylesheet by default');
+   UI.preview(host,{...guide,font_family:'tajawal'},'x');UI.preview(host,{...guide,font_family:'tajawal'},'x');const links=d.head.querySelectorAll('link#sg-font-tajawal');assert.equal(links.length,1,'loaded once');assert.match(links[0].href,/^https:\/\/fonts\.googleapis\.com\/css2\?family=Tajawal:wght@400;500;700&display=swap$/);
+   assert.match(host.shadowRoot.querySelector('.wrap').style.fontFamily,/Tajawal/);
+   UI.preview(host,{...guide,font_family:'ibm_plex_arabic'},'x');assert.match(d.head.querySelector('link#sg-font-ibm_plex_arabic').href,/family=IBM\+Plex\+Sans\+Arabic:/);
+   UI.preview(host,{...guide,font_family:'evil\');}'},'x');assert.equal(host.shadowRoot.querySelector('.wrap').style.fontFamily,'','unknown font ids are ignored');
+   assert.ok(Object.keys(UI.fonts).length>=12);}
   // layout types, the fit scale, a size-system switch and the column highlight
   {const host=d.createElement('div'),base={...guide,instructions:'',calculator:true,columns:[{label:'الصدر',kind:'measurement'},{label:'US',kind:'text'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['90','4','36']},{size:'M',values:['94','6','38']}]},R=()=>shadow(host);
    UI.preview(host,{...base,layout_type:'tabs'},'x');assert.equal(R().querySelector('.wrap').dataset.layout,'tabs');assert.equal(R().querySelectorAll('[role=tab]').length,3);

@@ -303,6 +303,7 @@ function renderPresets(){
   draw($('#myPresets'),savedStyles.map(p=>({...p,style:p.style})),true);
   $('#myPresetsTitle').classList.toggle('hidden',savedStyles.length===0);$('#myPresets').classList.toggle('hidden',savedStyles.length===0);
 }
+$('#guideFont').onchange=()=>{guide.font_family=$('#guideFont').value;changed()};
 function applyStyle(style,label){
   if(!guide)return;styleSnapshot=styleOf(guide);
   const next={...style};if(!/^#[0-9a-fA-F]{6}$/.test(next.color||''))next.color=UIX.themes.find(t=>t.id===next.theme)?.accent||guide.color;
@@ -414,7 +415,7 @@ function buildChoices(){
   }
 }
 const LAYOUT_HINTS={tabs:'ثلاثة تبويبات: الجدول وطريقة القياس واعرف مقاسك.',page:'صفحة واحدة: الجدول أولًا، وتحته قسمان قابلان للطي لطريقة القياس واعرف مقاسك.',cards:'بطاقة لكل مقاس، مناسبة للجوال. التلوين بالنقر يعمل مع الجدول لا مع البطاقات.',compact:'الجدول وحده بلا تبويبات ولا طريقة قياس.'};
-function syncChoices(){
+function syncChoices(){if(guide)$('#guideFont').value=guide.font_family||'';
   if(!guide)return;
   for(const [name,value] of [['guide-category',groupOf(guide.category)],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
     document.querySelectorAll(`#editor [name="${name}"]`).forEach(r=>{r.checked=r.value===value;r.closest('label').classList.toggle('selected',r.checked)});
@@ -449,7 +450,7 @@ $('#bodyRemove').onclick=async()=>{if(!guide.body_table||!(await confirmAction('
 $('#bodyTitle').oninput=()=>{if(guide.body_table){guide.body_table.title=($('#bodyTitle').value.trim()||'قياسات الجسم').slice(0,30);changed()}};
 function syncAdvanced(){
   syncBody();
-  $('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
+  $('#guideFont').value=guide.font_family||'';$('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
   $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');drawUploads();drawSide();syncColors();
 }
 function blankGrid(){return guide.rows.every(r=>r.values.every(v=>!String(v).trim()))}

@@ -57,8 +57,8 @@ const templates=[
 const defaults={general:{theme:'classic',color:'#177e65'},women:{theme:'rose',color:'#b4456a'},men:{theme:'tailor',color:'#23375b'},
   kids:{theme:'mint',color:'#1b8f7c'},shoes:{theme:'sport',color:'#d9480f'},pets:{theme:'paws',color:'#d9701a'},accessories:{theme:'gold',color:'#a8812c'}};
 /* Ready-made looks. They change the appearance only, never the table's numbers or texts. */
-const STYLE_FIELDS=['theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style','font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'];
-const noCustomColors={header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''};
+const STYLE_FIELDS=['theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style','font_scale','font_family','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'];
+const noCustomColors={font_family:'',header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''};
 /* The ready-made looks are the store owner's own designs, added here as {id,name,hint,style}. */
 const stylePresets=[
   {id:'pure',name:'نمط 1 — نقي',hint:'أبيض صافٍ، ترويسة رمادية خفيفة وحدود رفيعة، تبويبات بخط سفلي أسود وزر وحدات أسود',
@@ -78,7 +78,7 @@ const phraseSets={
 const phrasesFor=category=>category==='general'?[...phraseSets.general]:[...phraseSets.general,...(phraseSets[category]||[])];
 const forCategory=category=>templates.filter(item=>item.category===category);
 /* Style fields every guide has; guides saved before they existed read as these values (the finder stays off for them). */
-const styleDefaults={body_table:null,category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
+const styleDefaults={body_table:null,font_family:'',category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
   size_style:'chip',header_style:'auto',border_style:'auto',font_scale:'medium',sticky_size:true,size_label:'',header_bg:'',header_text:'',row_alt:'',
   border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_art:'auto',layout_type:'tabs',fit_level:'',cell_styles:[],side_layout:'auto',side_3d:true,col_widths:[],side_image:'',side_image_back:'',how_video:'',logo_url:''};
 /* A new guide for a category; blank cells keep the "enter your own numbers" rule. */
