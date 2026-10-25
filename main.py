@@ -37,6 +37,8 @@ for extra_router in (sales_router, rules_router, billing_router, library_router,
     app.include_router(extra_router)
 from embedded import router as embedded_router, RedactTokenQuery
 app.include_router(embedded_router)
+from landing import router as landing_router
+app.include_router(landing_router)
 logging.getLogger('uvicorn.access').addFilter(RedactTokenQuery())
 logger = logging.getLogger("salla_backend")
 
