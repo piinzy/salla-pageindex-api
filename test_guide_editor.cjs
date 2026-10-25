@@ -208,9 +208,20 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      root().querySelector('thead .ed-add-col').click();assert.equal(all('#gridEditor thead th input[data-col]').length,colsBefore+1);assert.equal(root().querySelectorAll('tbody tr:first-child td .ed').length,colsBefore+1);
      [...root().querySelectorAll('thead .ed-del-col')].pop().click();await settle();assert.equal(all('#gridEditor thead th input[data-col]').length,colsBefore);
      change('#inlineEdit',false);assert.equal(root().querySelector('.ed'),null);assert.equal($('#inlineEditHint').textContent,'');}
+    // ---- the editor's sections fold like a menu: one open at a time
+    {const cards=[...d.querySelectorAll('#editor .ed-card.acc')],open=()=>cards.filter(c=>c.classList.contains('open')).length;
+     assert.ok(cards.length>=6,'sections fold');assert.equal(open(),1,'only the first section starts open');
+     const target=cards.find(c=>c.querySelector('#themeChoices'));target.querySelector('.acc-btn').click();assert.equal(open(),1);assert.ok(target.classList.contains('open'));assert.equal(target.querySelector('.acc-btn').getAttribute('aria-expanded'),'true');
+     target.querySelector('.acc-btn').click();assert.equal(open(),0,'pressing the open title closes it');
+     $('#accAll').click();assert.equal(open(),cards.length);$('#accAll').click();assert.equal(open(),1);}
+    // ---- a second (body) table pasted in, shown with a switch, removable
+    {const root=()=>$('#guidePreview').shadowRoot;$('#bodyPaste').value='المقاس\tالطول\tالصدر\nS\t160-165\t82-86\nM\t165-170\t86-90';$('#bodyApply').click();
+    assert.equal(root().querySelectorAll('.views button').length,2,'the preview shows the product/body switch');assert.match($('#bodyState').textContent,/2 صفًا/);assert.equal($('#bodyRemove').disabled,false);
+    $('#bodyTitle').value='جسمك';$('#bodyTitle').dispatchEvent(new w.Event('input',{bubbles:true}));}
     // ---- saving sends everything
     $('#saveDraft').click();await settle();
     const put=call('PUT','size-guides/42')[0].body;assert.equal(put.action,'draft');
+    assert.equal(put.guide.body_table.title,'جسمك');assert.equal(put.guide.body_table.rows.length,2);assert.deepEqual(put.guide.body_table.columns.map(c=>c.label),['الطول','الصدر']);
     const g=put.guide;assert.deepEqual(g.cell_styles.map(x=>[x.target,x.row,x.col,x.bg,x.fg,x.bold]),[['cell',0,0,'#ffd0d0','',false],['col',-1,0,'','#202020',true]],'painted parts are saved');assert.deepEqual([g.category,g.theme,g.table_style,g.density,g.corners,g.depth3d,g.header_icon],['pets','paws','cards','compact','round',false,false]);
     assert.deepEqual([g.size_style,g.header_style,g.border_style,g.font_scale,g.sticky_size,g.size_label,g.language,g.calculator],['underline','solid','strong','large',false,'الحجم','ar',true]);
     assert.deepEqual([g.header_bg,g.row_alt,g.border_color,g.size_bg],['','','#ff0000',''],'colours reset to automatic are saved empty; the one picked afterwards is kept');

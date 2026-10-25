@@ -181,7 +181,7 @@ const css=`:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line
 .views{display:flex;gap:8px}.views button{min-height:44px;min-width:44px;padding:3px 18px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font-size:.82rem}.views button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 @media(prefers-reduced-motion:reduce){.side .art,.floor{transition:none!important}.side[data-threed="1"] .art{transform:none!important}}
 .wrap{container-type:inline-size}@container (max-width:680px){.wrap[data-split=start] .tpanel:not([hidden]),.wrap[data-split=end] .tpanel:not([hidden]){grid-template-columns:1fr}.side,.wrap[data-split=start] .side{border:0;padding:18px 0 0;order:2}}
-.wrap[data-theme=linen] h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:.01em}.wrap[data-theme=linen] .units{background:color-mix(in srgb,var(--ink) 9%,var(--paper));border-color:transparent;border-radius:999px}.wrap[data-theme=linen] .units button{border-radius:999px}.wrap[data-theme=linen] .units button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px #0003}
+.wrap[data-theme=linen] h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:.01em}.wrap[data-theme=linen] .units{background:color-mix(in srgb,var(--ink) 9%,var(--paper));border-color:transparent;border-radius:999px}.wrap[data-theme=linen] .units button{border-radius:999px}.wrap[data-theme=linen] .units button[aria-pressed=true],.views button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px #0003}
 .hero{position:relative;display:flex;align-items:center;gap:18px;padding:26px 28px 22px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 17%,var(--paper)),var(--paper) 75%)}
 .hero:before{content:'';position:absolute;inset:0;z-index:-1;background:var(--pattern);opacity:.7;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 60%);mask-image:linear-gradient(90deg,transparent,#000 60%)}
 .emblem{flex:0 0 84px;width:84px;height:84px;color:var(--accent);overflow:visible;filter:drop-shadow(0 12px 10px color-mix(in srgb,var(--accent) 32%,transparent))}
@@ -200,8 +200,8 @@ const css=`:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line
 .tabs button[aria-selected=true]{background:var(--paper);color:var(--accent-ink);font-weight:600;box-shadow:0 1px 3px #0002}
 .wrap[data-depth="1"] .tabs button[aria-selected=true]{box-shadow:inset 0 1px 0 #fff8,0 2px 0 var(--line),0 6px 10px -5px #0004}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 12px;flex-wrap:wrap}.bar .legend{font-size:.8rem;color:var(--muted)}
-.units{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--alt);gap:3px}
-.units button{min-height:38px;min-width:58px;padding:3px 14px;border:0;border-radius:9px;background:none;font-size:.82rem;color:var(--muted)}
+.units,.views{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--alt);gap:3px}
+.views{margin-bottom:10px;max-width:100%}.units button,.views button{min-height:38px;min-width:58px;padding:3px 14px;border:0;border-radius:9px;background:none;font-size:.82rem;color:var(--muted)}
 .units button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);font-weight:600}
 .wrap[data-depth="1"] .units button[aria-pressed=true]{box-shadow:inset 0 1px 0 #fff5,0 2px 0 color-mix(in srgb,var(--accent) 60%,#000)}
 .scroll{overflow:auto;max-width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)}.scroll:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
@@ -268,6 +268,7 @@ const words={
   ar:{size:'المقاس',table:'جدول المقاسات',how:'طريقة القياس',finder:'اعرف مقاسك',close:'إغلاق دليل المقاسات',unit:'وحدة القياس',cm:'سم',inch:'إنش',
     scroll:'مرّر الجدول جانبيًا على الشاشات الصغيرة',tableLabel:'جدول المقاسات، يمكن تمريره أفقيًا',body:'قياسات الجسم',garment:'قياسات القطعة نفسها',
     fitLabel:'نوع القصة',fits:{slim:'قصة ضيقة',regular:'قصة عادية',loose:'قصة واسعة'},system:'نظام المقاس',addRow:'إضافة صف',addCol:'إضافة عمود',delRow:'حذف الصف',delCol:'حذف العمود',editUnit:'الوحدة',
+    viewsLabel:'نوع القياسات',productTable:'قياسات المنتج',bodyTable:'قياسات الجسم',
     noHow:'لم تتم إضافة تعليمات خاصة لهذا المنتج. تواصل مع المتجر إذا احتجت مساعدة في القياس.',
     hint:'التحويل بين سم وإنش يشمل الأرقام والنطاقات الرقمية؛ العبارات النصية تبقى كما أدخلها المتجر.',
     intro:'أدخل قياساتك لنقترح عليك المقاس الأنسب من جدول المتجر.',find:'اعرف مقاسي',clear:'مسح',show:'عرض في الجدول',
@@ -276,6 +277,7 @@ const words={
   en:{size:'Size',table:'Size chart',how:'How to measure',finder:'Find my size',close:'Close size guide',unit:'Unit',cm:'cm',inch:'in',
     scroll:'Scroll the table sideways on small screens',tableLabel:'Size chart, scrollable horizontally',body:'Body measurements',garment:'Garment measurements',
     fitLabel:'Fit',fits:{slim:'Slim fit',regular:'Regular fit',loose:'Loose fit'},system:'Size system',addRow:'Add row',addCol:'Add column',delRow:'Delete row',delCol:'Delete column',editUnit:'Unit',
+    viewsLabel:'Measurement type',productTable:'Product measurements',bodyTable:'Body measurements',
     noHow:'No special instructions were added for this product. Contact the store if you need help measuring.',
     hint:'Converting between cm and in covers numbers and numeric ranges; text values stay as the store entered them.',
     intro:'Enter your measurements and we will suggest the best size from the store\'s chart.',find:'Find my size',clear:'Clear',show:'Show in chart',
@@ -323,8 +325,8 @@ const LAYOUTS=['tabs','page','cards','compact'],FITS=['slim','regular','loose'];
 const SIZE_SYSTEM=/^(eu|uk|us|fr|it|de|jp|cn|au|size|مقاس)(?![\p{L}\d])/iu;
 const DATA_IMAGE=/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+\/=]{20,300000}$/;
 const HTTPS=/^https:\/\/[^\s"'<>\\]{4,480}$/;
-function render(host,guide,productName,close,pick){
-  host.replaceChildren();const {theme:t,vars}=tokens(guide),p=palette(guide),lang=language(guide),w=words[lang];let unit=guide.unit;
+function render(host,full,productName,close,pick){
+  let guide=full,view='product';host.replaceChildren();const {theme:t,vars}=tokens(guide),p=palette(guide),lang=language(guide),w=words[lang];let unit=guide.unit;
   const box=el('div',undefined,'wrap');for(const [key,value] of Object.entries(vars))box.style.setProperty(key,value);box.dir=lang==='en'?'ltr':'rtl';
   box.dataset.table=guide.table_style||'zebra';box.dataset.density=guide.density||'comfortable';box.dataset.corners=guide.corners||'soft';box.dataset.depth=guide.depth3d===false?'0':'1';box.dataset.theme=t.id;const place=sidePlace(guide,t);box.dataset.split=place;
   box.dataset.sizestyle=['chip','pill','square','underline','plain'].includes(guide.size_style)?guide.size_style:'chip';box.dataset.head=p.headStyle;
@@ -366,15 +368,24 @@ function render(host,guide,productName,close,pick){
     node.setAttribute('role','textbox');node.setAttribute('aria-label',part==='head'?'اسم العمود':part==='size'||part==='sizeLabel'?'المقاس':'قيمة');node.spellcheck=false;node.dataset.orig=text;return node;
   }
   let hit=-1,refreshLabels=()=>{},sysIdx=-1;const sideState={view:0};
-  const systems=guide.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
+  let systems=guide.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   const sizeText=r=>sysIdx>=0?(r.values[sysIdx]||r.size||'—'):(r.size||'—');
+  const bodyTable=full.body_table&&Array.isArray(full.body_table.columns)&&Array.isArray(full.body_table.rows)&&full.body_table.columns.length&&full.body_table.rows.length?full.body_table:null;
+  const bodyGuide=bodyTable?{...full,columns:bodyTable.columns,rows:bodyTable.rows,cell_styles:[],col_widths:[],side_image:'',side_image_back:'',fit_level:'',calculator:false,measurement_type:'body'}:null;
+  const sysOf=g=>g.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   function draw(){
-    refreshLabels();grid.replaceChildren();const ed=pick?.edit,editing=!!ed&&layoutType!=='cards',U=editing?guide.unit:unit;if(editing)sysIdx=-1;const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
+    guide=view==='body'&&bodyGuide?bodyGuide:full;systems=sysOf(guide);if(guide!==full)hit=-1;
+    refreshLabels();grid.replaceChildren();const ed=pick?.edit,editing=!!ed&&layoutType!=='cards'&&guide===full,U=editing?guide.unit:unit;if(editing)sysIdx=-1;const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
     for(const [code,label] of [['cm',w.cm],['in',w.inch]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(unit===code));b.onclick=()=>{unit=code;draw()};units.append(b)}
     if(guide.fit_level&&FITS.includes(guide.fit_level)){
       const fit=el('div',undefined,'fit');fit.setAttribute('role','img');fit.setAttribute('aria-label',w.fitLabel+': '+w.fits[guide.fit_level]);fit.dataset.level=guide.fit_level;
       const track=el('div',undefined,'fit-track');for(const f of FITS)track.append(el('span',w.fits[f],f===guide.fit_level?'on':''));track.append(el('i',undefined,'fit-marker'));
       fit.append(el('span',w.fitLabel,'fit-title'),track);col.append(fit);
+    }
+    if(bodyGuide){
+      const views=el('div',undefined,'views');views.setAttribute('role','group');views.setAttribute('aria-label',w.viewsLabel);
+      for(const [id,label] of [['product',w.productTable],['body',bodyTable.title||w.bodyTable]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(view===id));b.onclick=()=>{view=id;draw()};views.append(b)}
+      col.append(views);
     }
     const tools=el('div',undefined,'tools');
     if(systems.length&&!editing){
@@ -431,18 +442,18 @@ function render(host,guide,productName,close,pick){
   }
   if(hasFinder){
     finder.append(el('p',w.intro));const fields=el('div',undefined,'fields'),inputs={},result=el('div',undefined,'result');result.setAttribute('aria-live','polite');
-    const labels={};refreshLabels=()=>{for(const i of measured)labels[i].textContent=guide.columns[i].label+' ('+(unit==='cm'?w.cm:w.inch)+')';};
+    const labels={};refreshLabels=()=>{for(const i of measured)labels[i].textContent=full.columns[i].label+' ('+(unit==='cm'?w.cm:w.inch)+')';};
     for(const i of measured){const f=el('div',undefined,'field'),label=el('label'),input=el('input');
       input.type='text';input.inputMode='decimal';input.autocomplete='off';input.id='sg-find-'+i;label.htmlFor=input.id;labels[i]=label;inputs[i]=input;f.append(label,input);fields.append(f)}
     refreshLabels();
     const actions=el('div',undefined,'actions'),find=el('button',w.find,'primary'),clear=el('button',w.clear,'ghost'),show=el('button',w.show,'ghost');for(const b of [find,clear,show])b.type='button';show.hidden=true;actions.append(find,clear,show);
     find.onclick=()=>{
-      const values={};for(const [i,input] of Object.entries(inputs)){const n=Number(normalizeNumber(input.value));if(input.value.trim()&&Number.isFinite(n)&&n>0)values[i]=unit===guide.unit?n:(unit==='in'?n*2.54:n/2.54);}
+      const values={};for(const [i,input] of Object.entries(inputs)){const n=Number(normalizeNumber(input.value));if(input.value.trim()&&Number.isFinite(n)&&n>0)values[i]=unit===full.unit?n:(unit==='in'?n*2.54:n/2.54);}
       result.replaceChildren();show.hidden=true;hit=-1;
       if(!Object.keys(values).length){result.append(el('span',w.none));return}
       const found=recommend(guide,values);
       if(!found){result.append(el('span',w.nomatch));return}
-      hit=found.index;result.append(el('small',found.exact?w.fit:w.near),el('strong',guide.rows[found.index].size||'—'),el('small',w.note));show.hidden=false;draw();
+      hit=found.index;result.append(el('small',found.exact?w.fit:w.near),el('strong',full.rows[found.index].size||'—'),el('small',w.note));show.hidden=false;draw();
       window.SizeGuideUI?.onEvent?.('recommend');
     };
     clear.onclick=()=>{for(const input of Object.values(inputs))input.value='';result.replaceChildren();show.hidden=true;hit=-1;draw();};

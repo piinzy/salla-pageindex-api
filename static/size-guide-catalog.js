@@ -75,7 +75,7 @@ const phraseSets={
 const phrasesFor=category=>category==='general'?[...phraseSets.general]:[...phraseSets.general,...(phraseSets[category]||[])];
 const forCategory=category=>templates.filter(item=>item.category===category);
 /* Style fields every guide has; guides saved before they existed read as these values (the finder stays off for them). */
-const styleDefaults={category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
+const styleDefaults={body_table:null,category:'general',theme:'classic',table_style:'zebra',density:'comfortable',corners:'soft',depth3d:true,header_icon:true,
   size_style:'chip',header_style:'auto',border_style:'auto',font_scale:'medium',sticky_size:true,size_label:'',header_bg:'',header_text:'',row_alt:'',
   border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',calculator:false,language:'ar',how_images:[],how_art:'auto',layout_type:'tabs',fit_level:'',cell_styles:[],side_layout:'auto',side_3d:true,col_widths:[],side_image:'',side_image_back:'',how_video:'',logo_url:''};
 /* A new guide for a category; blank cells keep the "enter your own numbers" rule. */
