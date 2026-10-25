@@ -208,6 +208,12 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      root().querySelector('thead .ed-add-col').click();assert.equal(all('#gridEditor thead th input[data-col]').length,colsBefore+1);assert.equal(root().querySelectorAll('tbody tr:first-child td .ed').length,colsBefore+1);
      [...root().querySelectorAll('thead .ed-del-col')].pop().click();await settle();assert.equal(all('#gridEditor thead th input[data-col]').length,colsBefore);
      change('#inlineEdit',false);assert.equal(root().querySelector('.ed'),null);assert.equal($('#inlineEditHint').textContent,'');}
+    // ---- the editor's sections fold like a menu: one open at a time
+    {const cards=[...d.querySelectorAll('#editor .ed-card.acc')],open=()=>cards.filter(c=>c.classList.contains('open')).length;
+     assert.ok(cards.length>=6,'sections fold');assert.equal(open(),1,'only the first section starts open');
+     const target=cards.find(c=>c.querySelector('#themeChoices'));target.querySelector('.acc-btn').click();assert.equal(open(),1);assert.ok(target.classList.contains('open'));assert.equal(target.querySelector('.acc-btn').getAttribute('aria-expanded'),'true');
+     target.querySelector('.acc-btn').click();assert.equal(open(),0,'pressing the open title closes it');
+     $('#accAll').click();assert.equal(open(),cards.length);$('#accAll').click();assert.equal(open(),1);}
     // ---- a second (body) table pasted in, shown with a switch, removable
     {const root=()=>$('#guidePreview').shadowRoot;$('#bodyPaste').value='المقاس\tالطول\tالصدر\nS\t160-165\t82-86\nM\t165-170\t86-90';$('#bodyApply').click();
     assert.equal(root().querySelectorAll('.views button').length,2,'the preview shows the product/body switch');assert.match($('#bodyState').textContent,/2 صفًا/);assert.equal($('#bodyRemove').disabled,false);

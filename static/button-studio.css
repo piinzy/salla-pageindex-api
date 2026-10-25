@@ -411,3 +411,15 @@ aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.act
 #buttonSettings .seg.dd-panel .icon svg{width:22px;height:22px}
 @media(prefers-reduced-motion:reduce){#buttonSettings .seg.dd-panel,#buttonSettings .seg.dd-panel.open{transition:none}}
 #editor .preview-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px}
+/* editor sections fold like a numbered menu: press a section's title to open its options */
+#editor .ed-card.acc>h3{cursor:pointer;margin:0;user-select:none;justify-content:flex-start}
+#editor .ed-card.acc>h3 .acc-btn{all:unset;display:flex;align-items:center;gap:9px;flex:1;cursor:pointer;font:inherit;border-radius:10px}
+#editor .ed-card.acc>h3 .acc-btn:focus-visible{outline:2px solid var(--accent,#177e65);outline-offset:3px}
+#editor .ed-card.acc>h3::after{content:"";margin-inline-start:auto;width:8px;height:8px;border-inline-end:2px solid currentColor;border-block-end:2px solid currentColor;transform:rotate(45deg);transition:transform .2s ease;opacity:.6;flex:none}
+#editor .ed-card.acc.open>h3::after{transform:rotate(225deg)}
+#editor .ed-card.acc.open>h3{margin-bottom:12px}
+#editor .ed-card.acc>.acc-body{display:none}
+#editor .ed-card.acc.open>.acc-body{display:block;animation:accIn .18s ease}
+@keyframes accIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+#editor .acc-tools{display:flex;gap:8px;margin:0 0 12px}
+@media(prefers-reduced-motion:reduce){#editor .ed-card.acc.open>.acc-body{animation:none}#editor .ed-card.acc>h3::after{transition:none}}

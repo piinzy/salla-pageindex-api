@@ -737,3 +737,19 @@ $('#getSnippet').onclick=async()=>{try{let d=await api('size-guide-snippet'+qs()
 $('#loginForm').onsubmit=async e=>{e.preventDefault();$('#loginButton').disabled=true;$('#error').textContent='';try{await api('login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await boot()}catch(e){$('#error').textContent=e.message}finally{$('#loginButton').disabled=false}};$('#logout').onclick=async()=>{if(!(await mayLeave()))return;await api('logout',{method:'POST'});dirty=false;location.reload()};
 $('#store').onchange=async()=>{if(!(await mayLeave())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;merchant=$('#store').value;page=1;selected.clear();libraries=[];savedStyles=[];savedPhrases=[];aiChecked=false;window.SizeGuideQuick?.clear();$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
 $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),{method:'POST'});await loadJobs();toast('بدأت مزامنة المنتجات.')}catch(e){toast(e.message);$('#sync').disabled=false}};$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=$('#guideFilter').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));if(window.SizeGuideEmbedded){window.SizeGuideEmbedded.start(boot)}else{boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message})}
+/* The editor's numbered sections become a folding menu: one open at a time, "open all" for the rest. */
+(function foldSections(){
+  const cards=[...document.querySelectorAll('#editor .ed-card')].filter(c=>c.querySelector(':scope>h3'));
+  const setOpen=(card,on)=>{card.classList.toggle('open',on);card.querySelector('.acc-btn').setAttribute('aria-expanded',String(on))};
+  cards.forEach((card,i)=>{
+    const h=card.querySelector(':scope>h3'),body=document.createElement('div'),btn=document.createElement('button');
+    body.className='acc-body';body.id='acc-body-'+i;[...card.childNodes].filter(n=>n!==h).forEach(n=>body.append(n));
+    btn.type='button';btn.className='acc-btn';btn.setAttribute('aria-controls',body.id);while(h.firstChild)btn.append(h.firstChild);h.append(btn);
+    card.classList.add('acc');card.append(body);setOpen(card,false);
+    h.addEventListener('click',e=>{if(e.target.closest('.acc-btn')===null&&e.target!==h)return;const on=!card.classList.contains('open');if(on&&!openAll)cards.forEach(c=>c!==card&&setOpen(c,false));setOpen(card,on)});
+  });
+  let openAll=false;const first=cards.find(c=>!c.classList.contains('only-library'));
+  if(first){setOpen(first,true);const tools=document.createElement('div'),b=document.createElement('button');tools.className='acc-tools';b.type='button';b.className='secondary';b.id='accAll';b.textContent='فتح كل الأقسام';
+    b.onclick=()=>{openAll=!openAll;b.textContent=openAll?'طيّ الأقسام':'فتح كل الأقسام';cards.forEach(c=>setOpen(c,openAll||c===first))};tools.append(b);first.before(tools)}
+  window.openEditorSection=card=>{if(card?.classList?.contains('acc'))setOpen(card,true)};
+})();
