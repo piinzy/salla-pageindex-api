@@ -114,6 +114,15 @@ class SizeGuideTests(unittest.TestCase):
     def test_blank_draft_allowed_but_not_published(self):
         g=sg.Guide(**{**G,'rows':[{'size':'S','values':['','']}]})
         with self.assertRaises(sg.HTTPException):sg.validate_publish(g)
+    def test_body_table_validated_and_published_strictly(self):
+        body={'title':'قياسات الجسم','columns':[{'label':'الصدر','kind':'measurement'}],'rows':[{'size':'S','values':['82-86']}]}
+        g=sg.Guide(**{**G,'body_table':body});sg.validate_publish(g)
+        with self.assertRaises(ValidationError):sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['1','2']}]}})
+        with self.assertRaises(ValidationError):sg.Guide(**{**G,'body_table':{**body,'columns':[{'label':'a'},{'label':'A'}],'rows':[{'size':'S','values':['1','2']}]}})
+        with self.assertRaises(ValidationError):sg.Guide(**{**G,'body_table':{**body,'extra':1}})
+        with self.assertRaises(sg.HTTPException):sg.validate_publish(sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['']}]}}))
+        with self.assertRaises(sg.HTTPException):sg.validate_publish(sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['1']},{'size':'s','values':['2']}]}}))
+        self.assertIsNone(sg.Guide(**G).body_table)
     def test_duplicate_sizes_not_published(self):
         g=sg.Guide(**{**G,'rows':[{'size':'M','values':['90','36']},{'size':'m','values':['94','38']}]})
         with self.assertRaises(sg.HTTPException):sg.validate_publish(g)

@@ -48,6 +48,22 @@ class SizeRow(BaseModel):
     size:str=Field(max_length=30)
     values:list[str]=Field(min_length=1,max_length=10)
 
+class BodyTable(BaseModel):
+    """A second table in the same guide: the shopper's body measurements next to the product's own."""
+    model_config=ConfigDict(extra='forbid')
+    title:str=Field(default='قياسات الجسم',min_length=1,max_length=30)
+    columns:list[Column]=Field(min_length=1,max_length=10)
+    rows:list[SizeRow]=Field(min_length=1,max_length=30)
+    @model_validator(mode='after')
+    def validate_grid(self):
+        if any(not c.label.strip() for c in self.columns):raise ValueError('اسم العمود مطلوب')
+        labels=[c.label.strip().casefold() for c in self.columns]
+        if len(labels)!=len(set(labels)):raise ValueError('أسماء الأعمدة مكررة')
+        for r in self.rows:
+            if len(r.values)!=len(self.columns):raise ValueError('عدد الخلايا لا يطابق الأعمدة')
+            if any(len(v)>60 for v in r.values):raise ValueError('قيمة الخلية طويلة')
+        return self
+
 class PartStyle(BaseModel):
     """Colours a single part of the table: the header, size labels, a column, a row or one cell."""
     model_config=ConfigDict(extra='forbid')
@@ -109,6 +125,7 @@ class Guide(BaseModel):
     layout_type:Literal['tabs','page','cards','compact']='tabs'
     fit_level:Literal['','slim','regular','loose']=''
     how_art:Literal['none','auto','women','men','kids']='none'
+    body_table:BodyTable|None=None
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)
     @field_validator('how_images')
@@ -167,6 +184,13 @@ def validate_publish(guide):
         raise HTTPException(400,'أدخل اسمًا فريدًا لكل مقاس قبل النشر.')
     if any(not v.strip() for r in guide.rows for v in r.values):
         raise HTTPException(400,'أكمل جميع الخلايا قبل النشر؛ استخدم — للخانات غير المنطبقة.')
+    body=guide.body_table
+    if body:
+        names=[r.size.strip().casefold() for r in body.rows]
+        if any(not s for s in names) or len(set(names))!=len(names):
+            raise HTTPException(400,'أدخل اسمًا فريدًا لكل مقاس في جدول قياسات الجسم قبل النشر.')
+        if any(not v.strip() for r in body.rows for v in r.values):
+            raise HTTPException(400,'أكمل خلايا جدول قياسات الجسم قبل النشر؛ استخدم — للخانات غير المنطبقة.')
 
 def ensure_not_linked(merchant,product_id):
     row=query('SELECT library_id FROM product_size_guides WHERE merchant_id=%s AND product_id=%s',(merchant,product_id),True)

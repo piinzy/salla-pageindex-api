@@ -167,6 +167,16 @@ const w=dom.window,d=w.document;
    r.querySelectorAll('tbody tr')[1].children[1].click();r.querySelector('thead th:nth-child(3)').click();r.querySelectorAll('tbody tr')[0].querySelector('.chip').click();r.querySelector('thead th').click();
    assert.deepEqual(picks.map(p=>JSON.stringify(p)),['{"part":"cell","row":1,"col":0}','{"part":"head","row":-1,"col":1}','{"part":"size","row":0,"col":-1}','{"part":"head","row":-1,"col":-2}']);
    assert.equal(r.querySelectorAll('.sel').length,1);}
+  // a second (body measurements) table switched inside the same panel
+  {const host=d.createElement('div'),R=()=>host.shadowRoot,body={title:'قياسات الجسم',columns:[{label:'الطول',kind:'measurement'},{label:'الصدر',kind:'measurement'}],rows:[{size:'S',values:['160-165','82-86']},{size:'M',values:['165-170','86-90']}]};
+   UI.preview(host,{...guide,calculator:true},'x');assert.equal(R().querySelector('.views'),null,'no switch without a second table');
+   UI.preview(host,{...guide,calculator:true,body_table:body},'x');const sw=R().querySelectorAll('.views button');assert.equal(sw.length,2);assert.equal(sw[0].getAttribute('aria-pressed'),'true');
+   assert.match(R().querySelector('table').textContent,/90/);
+   sw[1].click();assert.equal(R().querySelectorAll('.views button')[1].getAttribute('aria-pressed'),'true');const t=R().querySelector('table').textContent;assert.match(t,/160-165/);assert.doesNotMatch(t,/94/);assert.match(R().querySelector('.views').textContent,/قياسات الجسم/);
+   R().querySelectorAll('.views button')[0].click();assert.match(R().querySelector('table').textContent,/94/);
+   UI.preview(host,{...guide,body_table:body,language:'en'},'x');assert.match(R().querySelector('.views').textContent,/Product measurements/);
+   UI.preview(host,{...guide,body_table:{...body,rows:[]}},'x');assert.equal(R().querySelector('.views'),null,'empty second table is ignored');
+  }
   // layout types, the fit scale, a size-system switch and the column highlight
   {const host=d.createElement('div'),base={...guide,instructions:'',calculator:true,columns:[{label:'الصدر',kind:'measurement'},{label:'US',kind:'text'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['90','4','36']},{size:'M',values:['94','6','38']}]},R=()=>shadow(host);
    UI.preview(host,{...base,layout_type:'tabs'},'x');assert.equal(R().querySelector('.wrap').dataset.layout,'tabs');assert.equal(R().querySelectorAll('[role=tab]').length,3);

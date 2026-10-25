@@ -431,7 +431,24 @@ function syncColors(){
     input.value=own?guide[key]:(pal?.[prop]||'#000000');$('#tc-status-'+key).textContent=own?'مخصص':'تلقائي';input.closest('.color-field').classList.toggle('custom',own);input.closest('.color-field').querySelector('button').disabled=!own;
   }
 }
+function syncBody(){
+  const b=guide.body_table;$('#bodyTitle').value=b?.title||'قياسات الجسم';$('#bodyPaste').value='';
+  $('#bodyState').textContent=b?`الجدول الثاني مفعّل: ${b.rows.length} صفًا و${b.columns.length} أعمدة. للتعديل الصق جدولًا جديدًا ثم اضغط تطبيق.`:'لا يوجد جدول ثانٍ؛ يظهر جدول المنتج وحده.';
+  $('#bodyRemove').disabled=!b;
+}
+function setBody(columns,rows){guide.body_table={title:($('#bodyTitle').value.trim()||'قياسات الجسم').slice(0,30),columns,rows};syncBody();changed()}
+$('#bodyApply').onclick=()=>{
+  try{const g=Import.toGrid($('#bodyPaste').value);setBody(g.columns,g.rows);toast('طُبّق جدول قياسات الجسم. راجع الأرقام وأكمل الخانات الفارغة.')}
+  catch(e){toast(e.message||'تعذّرت قراءة الجدول.')}
+};
+$('#bodyStarter').onclick=()=>{
+  const names=['الطول','الصدر','الخصر','الورك'],rows=guide.rows.map(r=>({size:r.size,values:names.map(()=>'')}));
+  setBody(names.map(label=>({label,kind:'measurement'})),rows);toast('أُنشئ قالب بمقاساتك؛ اكتب نطاقات الجسم مباشرة بعد لصقها أو أعد اللصق.');
+};
+$('#bodyRemove').onclick=async()=>{if(!guide.body_table||!(await confirmAction('إزالة جدول قياسات الجسم من المسودة؟')))return;guide.body_table=null;syncBody();changed()};
+$('#bodyTitle').oninput=()=>{if(guide.body_table){guide.body_table.title=($('#bodyTitle').value.trim()||'قياسات الجسم').slice(0,30);changed()}};
 function syncAdvanced(){
+  syncBody();
   $('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
   $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');drawUploads();drawSide();syncColors();
 }
@@ -502,7 +519,7 @@ $('#howUploadFile').onchange=async()=>{
 };
 for(const [id,key] of [['depth3d','depth3d'],['headerIcon','header_icon'],['stickySize','sticky_size'],['calculator','calculator']])$('#'+id).onchange=()=>{if(guide){guide[key]=$('#'+id).checked;changed()}};
 $('#resetTableColors').onclick=()=>{if(!guide)return;for(const [key] of COLOR_FIELDS)guide[key]='';changed()};
-$('#guideUnit').onchange=async()=>{const to=$('#guideUnit').value;if(!(await confirmAction('سيتم تحويل القيم الرقمية والنطاقات إلى الوحدة الجديدة. هل تتابع؟'))){$('#guideUnit').value=guide.unit;return}guide.rows.forEach(r=>r.values=r.values.map((v,i)=>guide.columns[i].kind==='measurement'?window.SizeGuideUI.convert(v,guide.unit,to):v));guide.unit=to;drawGrid();changed()};
+$('#guideUnit').onchange=async()=>{const to=$('#guideUnit').value;if(!(await confirmAction('سيتم تحويل القيم الرقمية والنطاقات إلى الوحدة الجديدة. هل تتابع؟'))){$('#guideUnit').value=guide.unit;return}guide.rows.forEach(r=>r.values=r.values.map((v,i)=>guide.columns[i].kind==='measurement'?window.SizeGuideUI.convert(v,guide.unit,to):v));if(guide.body_table)guide.body_table.rows.forEach(r=>r.values=r.values.map((v,i)=>guide.body_table.columns[i]?.kind==='measurement'?window.SizeGuideUI.convert(v,guide.unit,to):v));guide.unit=to;drawGrid();changed()};
 $('#fillArtTips').onclick=async()=>{if(!guide)return;const art=guide.how_art==='none'?'auto':(guide.how_art||'auto'),{tips}=UIX.tipsFor(art,guide.category,guide.language==='en'?'en':'ar');if(!tips.length)return;if($('#instructions').value.trim()&&!(await confirmAction('استبدال نص الإرشادات الحالي بالنص الجاهز للرسم؟')))return;const text=tips.map((t,i)=>(i+1)+'. '+t).join('\n');guide.instructions=text;$('#instructions').value=text;changed()};
 $('#suggestTips').onclick=async()=>{const t=Catalog?.find($('#template').value);if(!t?.tips)return toast('لا يوجد نص مقترح لهذا الهيكل.');if($('#instructions').value.trim()&&!(await confirmAction('استبدال نص الإرشادات الحالي بالنص المقترح؟')))return;guide.instructions=t.tips;$('#instructions').value=t.tips;changed()};
 buildChoices();
