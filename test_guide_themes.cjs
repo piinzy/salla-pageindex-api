@@ -192,7 +192,7 @@ const w=dom.window,d=w.document;
    UI.preview(host,{...base,fit_level:''},'x');assert.equal(R().querySelector('.fit'),null);UI.preview(host,{...base,fit_level:'huge'},'x');assert.equal(R().querySelector('.fit'),null);
    UI.preview(host,{...base,fit_level:'loose',language:'en'},'x');assert.match(R().querySelector('.fit-title').textContent,/Fit/);
    // size systems: US and EU become choices that replace the size label, the original size moves into a column
-   UI.preview(host,base,'x');let sel=R().querySelector('select.sys');assert.deepEqual([...sel.options].map(o=>o.textContent),['المقاس','US','EU']);
+   UI.preview(host,base,'x');let sel=R().querySelector('select.sys');assert.deepEqual([...sel.options].map(o=>o.textContent),['المقاس','US المقاس','EU المقاس']);
    assert.deepEqual([...R().querySelectorAll('tbody tr:first-child .chip')].map(x=>x.textContent),['S']);
    sel.value='2';sel.dispatchEvent(new w.Event('change'));sel=R().querySelector('select.sys');assert.equal(sel.value,'2','the choice survives the redraw');
    assert.deepEqual([...R().querySelectorAll('thead th')].map(x=>x.textContent.replace(/\s*\(.*\)/,'')),['EU','الصدر','US','المقاس'],'EU leads, the old size label takes the EU column');
