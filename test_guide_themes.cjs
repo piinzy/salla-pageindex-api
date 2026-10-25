@@ -179,6 +179,18 @@ const w=dom.window,d=w.document;
    UI.preview(host,{...guide,body_table:body,language:'en'},'x');assert.match(R().querySelector('.tvs').textContent,/Product measurements/);
    UI.preview(host,{...guide,body_table:{...body,rows:[]}},'x');assert.equal(R().querySelector('.tvs'),null,'empty second table is ignored');
   }
+  // size systems in "switch to": approximate letter conversions, merchant columns win, off for other categories
+  {const host=d.createElement('div'),R=()=>host.shadowRoot,g={...guide,category:'women',columns:[{label:'الصدر',kind:'measurement'}],rows:[{size:'XS',values:['82']},{size:'M',values:['90']},{size:'XXL',values:['108']}]};
+   assert.equal(UI.mapSize('US','XS'),'2');assert.equal(UI.mapSize('EU','M'),'40-42');assert.equal(UI.mapSize('UK','xl'),'20');assert.equal(UI.mapSize('US','2XL'),'18');assert.equal(UI.mapSize('US','42'),null);assert.equal(UI.mapSize('ZZ','S'),null);
+   UI.preview(host,g,'x');let sel=R().querySelector('select.sys');assert.equal([...sel.options].map(o=>o.value).join(),'-1,v:US,v:UK,v:EU,v:FR,v:IT,v:DE,v:AU,v:JP');
+   assert.match(R().querySelector('tbody tr th').textContent,/^XS$/,'plain size until a system is chosen');
+   sel.value='v:EU';sel.dispatchEvent(new w.Event('change'));assert.match(R().querySelector('tbody tr th').textContent,/34 \(XS\)/);assert.match(R().querySelector('thead th').textContent,/EU/);assert.match(R().textContent,/تحويل المقاسات بين الأنظمة تقريبي/);
+   UI.preview(host,{...g,size_systems:['US','JP']},'x');assert.equal([...R().querySelector('select.sys').options].map(o=>o.value).join(),'-1,v:US,v:JP');
+   UI.preview(host,{...g,size_systems:[]},'x');assert.equal(R().querySelector('select.sys'),null,'switched off');
+   UI.preview(host,{...g,category:'shoes'},'x');assert.equal(R().querySelector('select.sys'),null,'not by default for shoes');
+   UI.preview(host,{...g,category:'shoes',size_systems:['UK']},'x');assert.equal([...R().querySelector('select.sys').options].length,2,'explicitly enabled');
+   UI.preview(host,{...g,columns:[{label:'US',kind:'text'},{label:'الصدر',kind:'measurement'}],rows:[{size:'XS',values:['2','82']}]},'x');assert.ok(![...R().querySelector('select.sys').options].some(o=>o.value==='v:US'),'a US column of the merchant replaces the built-in US');
+   UI.preview(host,{...g,theme:'reference'},'x');assert.match(R().querySelector('tbody tr th').textContent,/2 \(XS\)/,'the reference look starts on US');}
   // Google Fonts: loaded once, applied to the guide, unknown ids ignored
   {const host=d.createElement('div');UI.preview(host,guide,'x');assert.equal(d.head.querySelectorAll('link[id^=sg-font-]').length,0,'no font stylesheet by default');
    UI.preview(host,{...guide,font_family:'tajawal'},'x');UI.preview(host,{...guide,font_family:'tajawal'},'x');const links=d.head.querySelectorAll('link#sg-font-tajawal');assert.equal(links.length,1,'loaded once');assert.match(links[0].href,/^https:\/\/fonts\.googleapis\.com\/css2\?family=Tajawal:wght@400;500;700&display=swap$/);

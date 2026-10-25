@@ -127,12 +127,18 @@ class Guide(BaseModel):
     fit_level:Literal['','slim','regular','loose']=''
     how_art:Literal['none','auto','women','men','kids']='none'
     body_table:BodyTable|None=None
+    size_systems:list[Literal['US','UK','EU','FR','IT','DE','AU','JP']]|None=Field(default=None,max_length=8)
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)
     @field_validator('how_images')
     @classmethod
     def check_images(cls,values):
         if any(not (HTTPS_URL.fullmatch(v) or DATA_IMAGE.fullmatch(v)) for v in values):raise ValueError('الصورة يجب أن تكون رابط https أو صورة مرفوعة (JPG أو PNG أو WebP)')
+        return values
+    @field_validator('size_systems')
+    @classmethod
+    def check_systems(cls,values):
+        if values is not None and len(set(values))!=len(values):raise ValueError('أنظمة المقاس مكررة')
         return values
     @field_validator('col_widths')
     @classmethod

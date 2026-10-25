@@ -127,6 +127,10 @@ class SizeGuideTests(unittest.TestCase):
         self.assertEqual(sg.Guide(**G).font_family,'');self.assertEqual(sg.Guide(**{**G,'font_family':'tajawal'}).font_family,'tajawal')
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'font_family':'x;}body{display:none'})
         self.assertIn('font_family',sg.STYLE_FIELDS)
+    def test_size_systems_allowlist(self):
+        self.assertIsNone(sg.Guide(**G).size_systems);self.assertEqual(sg.Guide(**{**G,'size_systems':['US','JP']}).size_systems,['US','JP']);self.assertEqual(sg.Guide(**{**G,'size_systems':[]}).size_systems,[])
+        for bad in (['XX'],['US','US']):
+            with self.assertRaises(ValidationError):sg.Guide(**{**G,'size_systems':bad})
     def test_duplicate_sizes_not_published(self):
         g=sg.Guide(**{**G,'rows':[{'size':'M','values':['90','36']},{'size':'m','values':['94','38']}]})
         with self.assertRaises(sg.HTTPException):sg.validate_publish(g)

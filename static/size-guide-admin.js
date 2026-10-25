@@ -415,7 +415,7 @@ function buildChoices(){
   }
 }
 const LAYOUT_HINTS={tabs:'ثلاثة تبويبات: الجدول وطريقة القياس واعرف مقاسك.',page:'صفحة واحدة: الجدول أولًا، وتحته قسمان قابلان للطي لطريقة القياس واعرف مقاسك.',cards:'بطاقة لكل مقاس، مناسبة للجوال. التلوين بالنقر يعمل مع الجدول لا مع البطاقات.',compact:'الجدول وحده بلا تبويبات ولا طريقة قياس.'};
-function syncChoices(){if(guide)$('#guideFont').value=guide.font_family||'';
+function syncChoices(){if(guide){$('#guideFont').value=guide.font_family||'';if($('#sysChecks'))syncSystems()}
   if(!guide)return;
   for(const [name,value] of [['guide-category',groupOf(guide.category)],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
     document.querySelectorAll(`#editor [name="${name}"]`).forEach(r=>{r.checked=r.value===value;r.closest('label').classList.toggle('selected',r.checked)});
@@ -432,6 +432,15 @@ function syncColors(){
     input.value=own?guide[key]:(pal?.[prop]||'#000000');$('#tc-status-'+key).textContent=own?'مخصص':'تلقائي';input.closest('.color-field').classList.toggle('custom',own);input.closest('.color-field').querySelector('button').disabled=!own;
   }
 }
+function effectiveSystems(){return Array.isArray(guide.size_systems)?guide.size_systems:(['women','general'].includes(guide.category)?UIX.SYSTEM_CODES.slice():[])}
+function syncSystems(){
+  const on=new Set(effectiveSystems());$('#sysChecks').replaceChildren(...UIX.SYSTEM_CODES.map(code=>{
+    const l=document.createElement('label'),c=document.createElement('input');c.type='checkbox';c.checked=on.has(code);c.dataset.sys=code;
+    c.onchange=()=>{const now=new Set(effectiveSystems());c.checked?now.add(code):now.delete(code);guide.size_systems=UIX.SYSTEM_CODES.filter(x=>now.has(x));$('#sysAuto').disabled=false;changed()};
+    l.append(c,document.createTextNode(' '+code));return l}));
+  $('#sysAuto').disabled=!Array.isArray(guide.size_systems);
+}
+$('#sysAuto').onclick=()=>{guide.size_systems=null;syncSystems();changed()};
 function syncBody(){
   const b=guide.body_table;$('#bodyTitle').value=b?.title||'قياسات الجسم';$('#bodyPaste').value='';
   $('#bodyState').textContent=b?`الجدول الثاني مفعّل: ${b.rows.length} صفًا و${b.columns.length} أعمدة. للتعديل الصق جدولًا جديدًا ثم اضغط تطبيق.`:'لا يوجد جدول ثانٍ؛ يظهر جدول المنتج وحده.';
@@ -449,7 +458,7 @@ $('#bodyStarter').onclick=()=>{
 $('#bodyRemove').onclick=async()=>{if(!guide.body_table||!(await confirmAction('إزالة جدول قياسات الجسم من المسودة؟')))return;guide.body_table=null;syncBody();changed()};
 $('#bodyTitle').oninput=()=>{if(guide.body_table){guide.body_table.title=($('#bodyTitle').value.trim()||'قياسات الجسم').slice(0,30);changed()}};
 function syncAdvanced(){
-  syncBody();
+  syncBody();syncSystems();
   $('#guideFont').value=guide.font_family||'';$('#sizeLabel').value=guide.size_label||'';$('#stickySize').checked=guide.sticky_size!==false;$('#calculator').checked=guide.calculator===true;
   $('#howVideo').value=guide.how_video||'';$('#logoUrl').value=guide.logo_url||'';$('#howImages').value=(guide.how_images||[]).filter(x=>!isUpload(x)).join('\n');drawUploads();drawSide();syncColors();
 }
