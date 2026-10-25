@@ -88,7 +88,7 @@ class SizeGuideTests(unittest.TestCase):
                 "console.log(JSON.stringify({presets:w.SizeGuideCatalog.stylePresets,fields:w.SizeGuideCatalog.STYLE_FIELDS}))")
         data=json.loads(subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout)
         self.assertEqual(set(data['fields']),set(sg.STYLE_FIELDS),'editor and server agree on what a look contains')
-        self.assertEqual(len(data['presets']),7)
+        self.assertEqual(len(data['presets']),0,'the owner adds the ready-made looks; none ship by default')
         accents={'classic':'#177e65','rose':'#b4456a','velvet':'#7b2338','gold':'#a8812c','tailor':'#23375b','slate':'#3d4a56','sport':'#d9480f','leather':'#8a5a35','paws':'#d9701a','mint':'#1b8f7c','night':'#7be0c3','linen':'#2d2630','minimal':'#2b2b2b'}
         for preset in data['presets']:
             with self.subTest(preset=preset['id']):

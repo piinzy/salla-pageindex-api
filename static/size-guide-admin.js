@@ -298,7 +298,7 @@ function renderPresets(){
       box.append(card);
     }
   };
-  draw($('#presetChoices'),Catalog.stylePresets,false);
+  draw($('#presetChoices'),Catalog.stylePresets,false);$('#presetChoices').classList.toggle('hidden',!Catalog.stylePresets.length);
   draw($('#myPresets'),savedStyles.map(p=>({...p,style:p.style})),true);
   $('#myPresetsTitle').classList.toggle('hidden',savedStyles.length===0);$('#myPresets').classList.toggle('hidden',savedStyles.length===0);
 }

@@ -59,14 +59,8 @@ const defaults={general:{theme:'classic',color:'#177e65'},women:{theme:'rose',co
 /* Ready-made looks. They change the appearance only, never the table's numbers or texts. */
 const STYLE_FIELDS=['theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style','font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'];
 const noCustomColors={header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''};
+/* The ready-made looks are the store owner's own designs, added here as {id,name,hint,style}; none ship by default. */
 const stylePresets=[
-  {id:'elegant',name:'أنيق',hint:'بطاقات ناعمة وزوايا دائرية',style:{theme:'rose',table_style:'cards',density:'comfortable',corners:'round',depth3d:true,header_icon:true,size_style:'pill',header_style:'tint',border_style:'none',font_scale:'medium'}},
-  {id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large'}},
-  {id:'calm',name:'هادئ',hint:'خطوط رفيعة وألوان منعشة',style:{theme:'mint',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:true,size_style:'underline',header_style:'plain',border_style:'thin',font_scale:'medium'}},
-  {id:'sporty',name:'رياضي',hint:'مدمج وحيوي بشارات مجسمة',style:{theme:'sport',table_style:'zebra',density:'compact',corners:'soft',depth3d:true,header_icon:true,size_style:'chip',header_style:'solid',border_style:'thin',font_scale:'medium'}},
-  {id:'luxury',name:'فاخر',hint:'ذهبي بخط تحت الترويسة',style:{theme:'gold',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
-  {id:'linen',name:'كتان هادئ',hint:'خلفية دافئة وصورة منتجك بجانب الجدول',style:{theme:'linen',table_style:'lines',density:'comfortable',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'line',border_style:'thin',font_scale:'medium'}},
-  {id:'minimal',name:'بسيط',hint:'أبيض نظيف بلا زخرفة',style:{theme:'minimal',table_style:'plain',density:'compact',corners:'soft',depth3d:false,header_icon:false,size_style:'plain',header_style:'plain',border_style:'none',font_scale:'medium'}},
 ].map(p=>({...p,style:{...noCustomColors,sticky_size:true,...p.style}}));
 /* Short notes a store tends to repeat under its tables; the merchant can add their own. */
 const phraseSets={

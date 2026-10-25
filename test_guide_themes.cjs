@@ -174,7 +174,7 @@ const w=dom.window,d=w.document;
    for(const bad of ['red','#12345','','javascript:x',null,undefined])assert.equal(UI.brandStyle(bad),null);
    assert.ok(Math.abs(UI.contrast('#000000','#ffffff')-21)<.01);}
   // ready-made looks only touch appearance fields and render with every theme
-  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.length,7);
+  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.length,0,'no ready-made looks ship by default');
    for(const preset of C.stylePresets){
      assert.ok(Object.keys(preset.style).every(k=>allowed.has(k)),'only appearance fields: '+preset.id);
      for(const key of ['header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'])assert.equal(preset.style[key],'','no leftover custom colours: '+preset.id);
