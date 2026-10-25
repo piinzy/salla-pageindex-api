@@ -151,7 +151,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     $('#importTranspose').click();assert.equal(hidden('#importPreview'),true,'nothing happens without a proposal');
     // import: photo read by Gemini (the server is stubbed; the canvas step is replaced)
     w.SizeGuideImport.imageToDataUrl=async()=> 'data:image/jpeg;base64,/9j/AAAA';
-    $('#importPanel').open=true;$('#importPanel').dispatchEvent(new w.Event('toggle'));await settle();assert.equal($('#aiRun').disabled,false);
+    $('#importPanel .acc-btn').click();await settle();assert.ok($('#importPanel').classList.contains('open'),'import is its own folding section');assert.equal($('#aiRun').disabled,false);
     $('#aiRun').click();await settle();assert.equal(calls.filter(c=>c.path.startsWith('size-guide-ai-import')).length,0,'nothing is sent without an image');
     const paste=new w.Event('paste',{bubbles:true,cancelable:true});paste.clipboardData={items:[{type:'text/plain'},{type:'image/png',getAsFile:()=>new w.File(['x'],'chart.png',{type:'image/png'})}]};$('#importPanel').dispatchEvent(paste);assert.equal(paste.defaultPrevented,true);
     $('#aiRun').click();await settle();

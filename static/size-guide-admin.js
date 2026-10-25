@@ -708,7 +708,7 @@ async function checkAi(){
   if(aiChecked)return;aiChecked=true;
   try{const d=await api('size-guide-ai-status'+qs());if(!d.available){$('#aiRun').disabled=true;$('#aiClone').disabled=true;$('#aiHint').textContent='القراءة بالذكاء الاصطناعي غير مفعّلة بعد: أضف المفتاح GEMINI_API_KEY في إعدادات الخادم (Render) ثم أعد تشغيل الخدمة.'}else if(typeof d.remaining==='number')$('#aiHint').textContent='المتبقي لك: '+d.remaining.toLocaleString('ar')+' صورة.';else if(d.plan==='unlimited')$('#aiHint').textContent='صور الذكاء الاصطناعي غير محدودة لمتجرك.'}catch{aiChecked=false}
 }
-$('#importPanel').addEventListener('toggle',()=>{if($('#importPanel').open)checkAi()});
+new MutationObserver(()=>{if($('#importPanel').classList.contains('open'))checkAi()}).observe($('#importPanel'),{attributes:true,attributeFilter:['class']});
 $('#aiFile').onchange=()=>{aiBlob=null};
 $('#importPanel').addEventListener('paste',event=>{const item=[...(event.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));if(!item)return;event.preventDefault();aiBlob=item.getAsFile();$('#aiStatus').textContent='تم لصق صورة. اضغط «قراءة الجدول من الصورة».'});
 $('#aiClone').onclick=async()=>{
