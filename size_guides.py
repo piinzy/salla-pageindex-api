@@ -93,7 +93,7 @@ class Guide(BaseModel):
     instructions:str=Field(default='',max_length=3000)
     color:str=Field(default='#177e65',pattern=r'^#[0-9a-fA-F]{6}$')
     category:Literal['general','women','men','kids','shoes','pets','accessories']='general'
-    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','linen','minimal']='classic'
+    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','linen','minimal','reference']='classic'
     table_style:Literal['zebra','lines','cards','plain']='zebra'
     density:Literal['compact','comfortable']='comfortable'
     corners:Literal['sharp','soft','round']='soft'
