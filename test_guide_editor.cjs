@@ -216,7 +216,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      $('#accAll').click();assert.equal(open(),cards.length);$('#accAll').click();assert.equal(open(),1);}
     // ---- a second (body) table pasted in, shown with a switch, removable
     {const root=()=>$('#guidePreview').shadowRoot;$('#bodyPaste').value='المقاس\tالطول\tالصدر\nS\t160-165\t82-86\nM\t165-170\t86-90';$('#bodyApply').click();
-    assert.equal(root().querySelectorAll('.views button').length,2,'the preview shows the product/body switch');assert.match($('#bodyState').textContent,/2 صفًا/);assert.equal($('#bodyRemove').disabled,false);
+    assert.equal(root().querySelectorAll('.tvs button').length,2,'the preview shows the product/body switch');assert.match($('#bodyState').textContent,/2 صفًا/);assert.equal($('#bodyRemove').disabled,false);
     $('#bodyTitle').value='جسمك';$('#bodyTitle').dispatchEvent(new w.Event('input',{bubbles:true}));}
     // ---- saving sends everything
     $('#saveDraft').click();await settle();
@@ -230,12 +230,12 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     aiAvailable=false;
 
     // ---- ready-made looks change only the appearance, and can be undone (none ship by default; the owner adds their own)
-    assert.equal(w.SizeGuideCatalog.stylePresets.length,0);assert.equal(all('#presetChoices .preset-card').length,0);assert.equal(hidden('#presetChoices'),true,'no empty grid');
+    assert.equal(w.SizeGuideCatalog.stylePresets.length,1);assert.equal(all('#presetChoices .preset-card').length,1);assert.equal(hidden('#presetChoices'),false);
     w.SizeGuideCatalog.stylePresets.push({id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large',header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',sticky_size:true}});
     $('#backCatalog').click();await settle();$('[data-edit="42"]').click();await settle();
     const before={rows:JSON.stringify(guideCopy().rows),columns:JSON.stringify(guideCopy().columns),title:$('#guideTitle').value};
     function guideCopy(){return {rows:all('#gridEditor tbody tr').map(tr=>[...tr.querySelectorAll('input')].map(i=>i.value)),columns:all('#gridEditor thead th input').map(i=>i.value)}}
-    assert.equal(all('#presetChoices .preset-card').length,1);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
+    assert.equal(all('#presetChoices .preset-card').length,2);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
     assert.equal($('#undoStyle').classList.contains('hidden'),true);
     const oldStyle=[$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value];
     all('#presetChoices .preset-pick').find(b=>/جريء/.test(b.textContent)).click();

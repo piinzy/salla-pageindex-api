@@ -181,7 +181,7 @@ const css=`:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line
 .views{display:flex;gap:8px}.views button{min-height:44px;min-width:44px;padding:3px 18px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font-size:.82rem}.views button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 @media(prefers-reduced-motion:reduce){.side .art,.floor{transition:none!important}.side[data-threed="1"] .art{transform:none!important}}
 .wrap{container-type:inline-size}@container (max-width:680px){.wrap[data-split=start] .tpanel:not([hidden]),.wrap[data-split=end] .tpanel:not([hidden]){grid-template-columns:1fr}.side,.wrap[data-split=start] .side{border:0;padding:18px 0 0;order:2}}
-.wrap[data-theme=linen] h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:.01em}.wrap[data-theme=linen] .units{background:color-mix(in srgb,var(--ink) 9%,var(--paper));border-color:transparent;border-radius:999px}.wrap[data-theme=linen] .units button{border-radius:999px}.wrap[data-theme=linen] .units button[aria-pressed=true],.views button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px #0003}
+.wrap[data-theme=linen] h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:.01em}.wrap[data-theme=linen] .units{background:color-mix(in srgb,var(--ink) 9%,var(--paper));border-color:transparent;border-radius:999px}.wrap[data-theme=linen] .units button{border-radius:999px}.wrap[data-theme=linen] .units button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px #0003}
 .hero{position:relative;display:flex;align-items:center;gap:18px;padding:26px 28px 22px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 17%,var(--paper)),var(--paper) 75%)}
 .hero:before{content:'';position:absolute;inset:0;z-index:-1;background:var(--pattern);opacity:.7;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 60%);mask-image:linear-gradient(90deg,transparent,#000 60%)}
 .emblem{flex:0 0 84px;width:84px;height:84px;color:var(--accent);overflow:visible;filter:drop-shadow(0 12px 10px color-mix(in srgb,var(--accent) 32%,transparent))}
@@ -199,9 +199,9 @@ const css=`:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line
 .tabs button{border:0;background:none;min-height:40px;padding:6px 18px;border-radius:999px;color:var(--muted);transition:background-color .18s,color .18s,box-shadow .18s}
 .tabs button[aria-selected=true]{background:var(--paper);color:var(--accent-ink);font-weight:600;box-shadow:0 1px 3px #0002}
 .wrap[data-depth="1"] .tabs button[aria-selected=true]{box-shadow:inset 0 1px 0 #fff8,0 2px 0 var(--line),0 6px 10px -5px #0004}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 12px;flex-wrap:wrap}.bar .legend{font-size:.8rem;color:var(--muted)}
-.units,.views{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--alt);gap:3px}
-.views{margin-bottom:10px;max-width:100%}.units button,.views button{min-height:38px;min-width:58px;padding:3px 14px;border:0;border-radius:9px;background:none;font-size:.82rem;color:var(--muted)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 18px;padding:6px 12px;min-height:48px;flex-wrap:wrap;background:var(--alt);border-radius:calc(var(--r) * .6)}.bar .legend{font-size:1rem;color:var(--ink)}
+.units{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--alt);gap:3px}
+.tvs{display:flex;gap:28px;margin:4px 0 12px;max-width:100%;border-bottom:1px solid var(--line)}.tvs button{position:relative;min-height:44px;padding:8px 2px;border:0;background:none;font-size:1.02rem;font-weight:700;color:var(--muted);cursor:pointer}.wrap .tvs button,.wrap .tvs button[aria-pressed=true]{background:none;box-shadow:none;border-radius:0}.tvs button[aria-pressed=true]{color:var(--ink)}.tvs button[aria-pressed=true]::after{content:'';position:absolute;inset-inline:0;bottom:-1px;height:3px;background:var(--accent)}.units button{min-height:38px;min-width:58px;padding:3px 14px;border:0;border-radius:9px;background:none;font-size:.82rem;color:var(--muted)}
 .units button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);font-weight:600}
 .wrap[data-depth="1"] .units button[aria-pressed=true]{box-shadow:inset 0 1px 0 #fff5,0 2px 0 color-mix(in srgb,var(--accent) 60%,#000)}
 .scroll{overflow:auto;max-width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)}.scroll:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
@@ -237,7 +237,7 @@ tbody tr.hit>*{background:color-mix(in srgb,var(--accent) 22%,var(--paper))!impo
 .ed-del-col{margin-inline-start:4px;min-width:26px;min-height:26px;opacity:.4;font-size:.95rem}th:hover .ed-del-col,.ed-del-col:focus-visible{opacity:1}.unit-suffix{color:var(--muted);font-weight:400}
 .ed-add{margin-top:10px;padding:9px 14px;min-height:44px;border:1px dashed var(--line);border-radius:var(--r);background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer}.ed-add:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .unit-note{padding:6px 12px;border-radius:999px;background:var(--alt);color:var(--muted);font-size:.8rem}
-.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sys{min-height:38px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);padding:3px 10px;font:inherit;font-size:.82rem}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sys{min-height:38px;border:1px solid var(--line);border-radius:calc(var(--r) * .5);background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23555' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat;appearance:none;-webkit-appearance:none;color:var(--ink);padding:3px 12px;font:inherit;font-size:.82rem;min-width:116px;cursor:pointer}[dir=rtl] .sys{background-position:left 12px center;padding-left:32px}[dir=ltr] .sys{background-position:right 12px center;padding-right:32px}
 .fit{display:flex;align-items:center;gap:18px;margin:0 0 16px;padding:12px 4px;border-bottom:1px solid var(--line)}.fit-title{font-weight:700;white-space:nowrap}.fit-track{position:relative;flex:1;display:grid;grid-template-columns:repeat(3,1fr);font-size:.78rem;color:var(--muted);padding-bottom:12px;min-width:0}
 .fit-track span{text-align:center}.fit-track span.on{color:var(--ink);font-weight:700}.fit-track:before{content:'';position:absolute;inset-inline:0;bottom:4px;height:1px;background:var(--line)}
 .fit-marker{position:absolute;bottom:1px;width:26px;height:7px;border-radius:3px;background:var(--accent);margin-inline-start:-13px}.fit[data-level=slim] .fit-marker{inset-inline-start:16.66%}.fit[data-level=regular] .fit-marker{inset-inline-start:50%}.fit[data-level=loose] .fit-marker{inset-inline-start:83.33%}
@@ -268,7 +268,7 @@ const words={
   ar:{size:'المقاس',table:'جدول المقاسات',how:'طريقة القياس',finder:'اعرف مقاسك',close:'إغلاق دليل المقاسات',unit:'وحدة القياس',cm:'سم',inch:'إنش',
     scroll:'مرّر الجدول جانبيًا على الشاشات الصغيرة',tableLabel:'جدول المقاسات، يمكن تمريره أفقيًا',body:'قياسات الجسم',garment:'قياسات القطعة نفسها',
     fitLabel:'نوع القصة',fits:{slim:'قصة ضيقة',regular:'قصة عادية',loose:'قصة واسعة'},system:'نظام المقاس',addRow:'إضافة صف',addCol:'إضافة عمود',delRow:'حذف الصف',delCol:'حذف العمود',editUnit:'الوحدة',
-    viewsLabel:'نوع القياسات',productTable:'قياسات المنتج',bodyTable:'قياسات الجسم',
+    switchTo:'التبديل إلى',viewsLabel:'نوع القياسات',productTable:'قياسات المنتج',bodyTable:'قياسات الجسم',
     noHow:'لم تتم إضافة تعليمات خاصة لهذا المنتج. تواصل مع المتجر إذا احتجت مساعدة في القياس.',
     hint:'التحويل بين سم وإنش يشمل الأرقام والنطاقات الرقمية؛ العبارات النصية تبقى كما أدخلها المتجر.',
     intro:'أدخل قياساتك لنقترح عليك المقاس الأنسب من جدول المتجر.',find:'اعرف مقاسي',clear:'مسح',show:'عرض في الجدول',
@@ -277,7 +277,7 @@ const words={
   en:{size:'Size',table:'Size chart',how:'How to measure',finder:'Find my size',close:'Close size guide',unit:'Unit',cm:'cm',inch:'in',
     scroll:'Scroll the table sideways on small screens',tableLabel:'Size chart, scrollable horizontally',body:'Body measurements',garment:'Garment measurements',
     fitLabel:'Fit',fits:{slim:'Slim fit',regular:'Regular fit',loose:'Loose fit'},system:'Size system',addRow:'Add row',addCol:'Add column',delRow:'Delete row',delCol:'Delete column',editUnit:'Unit',
-    viewsLabel:'Measurement type',productTable:'Product measurements',bodyTable:'Body measurements',
+    switchTo:'Switch to',viewsLabel:'Measurement type',productTable:'Product measurements',bodyTable:'Body measurements',
     noHow:'No special instructions were added for this product. Contact the store if you need help measuring.',
     hint:'Converting between cm and in covers numbers and numeric ranges; text values stay as the store entered them.',
     intro:'Enter your measurements and we will suggest the best size from the store\'s chart.',find:'Find my size',clear:'Clear',show:'Show in chart',
@@ -371,30 +371,31 @@ function render(host,full,productName,close,pick){
   let systems=guide.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   const sizeText=r=>sysIdx>=0?(r.values[sysIdx]||r.size||'—'):(r.size||'—');
   const bodyTable=full.body_table&&Array.isArray(full.body_table.columns)&&Array.isArray(full.body_table.rows)&&full.body_table.columns.length&&full.body_table.rows.length?full.body_table:null;
-  const bodyGuide=bodyTable?{...full,columns:bodyTable.columns,rows:bodyTable.rows,cell_styles:[],col_widths:[],side_image:'',side_image_back:'',fit_level:'',calculator:false,measurement_type:'body'}:null;
+  const bodyGuide=bodyTable?{...full,columns:bodyTable.columns,rows:bodyTable.rows,cell_styles:[],col_widths:[],side_image:'',side_image_back:'',calculator:false,measurement_type:'body'}:null;
   const sysOf=g=>g.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   function draw(){
     guide=view==='body'&&bodyGuide?bodyGuide:full;systems=sysOf(guide);if(guide!==full)hit=-1;
     refreshLabels();grid.replaceChildren();const ed=pick?.edit,editing=!!ed&&layoutType!=='cards'&&guide===full,U=editing?guide.unit:unit;if(editing)sysIdx=-1;const col=el('div',undefined,'tcol'),bar=el('div',undefined,'bar'),units=el('div',undefined,'units');units.setAttribute('role','group');units.setAttribute('aria-label',w.unit);
     for(const [code,label] of [['cm',w.cm],['in',w.inch]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(unit===code));b.onclick=()=>{unit=code;draw()};units.append(b)}
+    col.append(bar);
     if(guide.fit_level&&FITS.includes(guide.fit_level)){
       const fit=el('div',undefined,'fit');fit.setAttribute('role','img');fit.setAttribute('aria-label',w.fitLabel+': '+w.fits[guide.fit_level]);fit.dataset.level=guide.fit_level;
       const track=el('div',undefined,'fit-track');for(const f of FITS)track.append(el('span',w.fits[f],f===guide.fit_level?'on':''));track.append(el('i',undefined,'fit-marker'));
       fit.append(el('span',w.fitLabel,'fit-title'),track);col.append(fit);
     }
     if(bodyGuide){
-      const views=el('div',undefined,'views');views.setAttribute('role','group');views.setAttribute('aria-label',w.viewsLabel);
+      const views=el('div',undefined,'tvs');views.setAttribute('role','group');views.setAttribute('aria-label',w.viewsLabel);
       for(const [id,label] of [['product',w.productTable],['body',bodyTable.title||w.bodyTable]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(view===id));b.onclick=()=>{view=id;draw()};views.append(b)}
       col.append(views);
     }
     const tools=el('div',undefined,'tools');
     if(systems.length&&!editing){
       const pick=el('select',undefined,'sys');pick.setAttribute('aria-label',w.system);
-      for(const [idx,label] of [[-1,guide.size_label||w.size],...systems.map(i=>[i,guide.columns[i].label])]){const o=el('option',label);o.value=String(idx);o.selected=idx===sysIdx;pick.append(o)}
+      for(const [idx,label] of [[-1,guide.size_label||w.size],...systems.map(i=>[i,guide.columns[i].label+' '+w.size])]){const o=el('option',label);o.value=String(idx);o.selected=idx===sysIdx;pick.append(o)}
       pick.onchange=()=>{sysIdx=Number(pick.value);draw()};tools.append(pick);
     }
     tools.append(editing?el('span',w.editUnit+': '+(guide.unit==='in'?w.inch:w.cm),'unit-note'):units);
-    bar.append(el('span',w.scroll,'legend'),tools);col.append(bar);
+    bar.append(el('span',w.switchTo,'legend'),tools);
     if(layoutType==='cards'){
       const list=el('div',undefined,'size-cards');
       guide.rows.forEach((r,index)=>{const card=el('article',undefined,'size-card'+(index===hit?' hit':'')),dl=el('dl');card.append(el('span',sizeText(r),'chip'));
@@ -437,6 +438,8 @@ function render(host,full,productName,close,pick){
       let lit=-1;const light=n=>{if(n===lit)return;lit=n;for(const row of table.rows)for(const cell of row.cells)cell.classList.toggle('col-hl',n>=0&&cell.cellIndex===n)};
       table.addEventListener('pointerover',e=>{const cell=e.target.closest?.('td,th');if(cell&&e.pointerType!=='touch')light(cell.cellIndex)});table.addEventListener('pointerleave',()=>light(-1));
     }if(guide.notes)col.append(el('p',guide.notes,'notes'));
+    if(guide!==full&&(showArt||full.instructions)){const d=el('details',undefined,'fold-section'),inner=el('div');d.open=true;d.append(el('summary',w.how),inner);
+      inner.append(showArt?measureGuide(full.how_art,cat.id,lang,full.instructions):el('div',full.instructions,'instructions'));col.append(d)}
     col.append(el('p',w.hint,'hint'));grid.append(col);
     if(place!=='none')grid.append(sideFigure(guide,lang,cat.id,sideState));
   }

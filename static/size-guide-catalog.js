@@ -59,8 +59,11 @@ const defaults={general:{theme:'classic',color:'#177e65'},women:{theme:'rose',co
 /* Ready-made looks. They change the appearance only, never the table's numbers or texts. */
 const STYLE_FIELDS=['theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style','font_scale','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'];
 const noCustomColors={header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''};
-/* The ready-made looks are the store owner's own designs, added here as {id,name,hint,style}; none ship by default. */
+/* The ready-made looks are the store owner's own designs, added here as {id,name,hint,style}. */
 const stylePresets=[
+  {id:'pure',name:'نمط 1 — نقي',hint:'أبيض صافٍ، ترويسة رمادية خفيفة وحدود رفيعة، تبويبات بخط سفلي أسود وزر وحدات أسود',
+   style:{theme:'minimal',color:'#2b2b2b',table_style:'lines',density:'comfortable',corners:'sharp',depth3d:false,header_icon:false,size_style:'plain',header_style:'solid',border_style:'thin',font_scale:'medium',sticky_size:true,
+          header_bg:'#f6f6f6',header_text:'#000000',row_alt:'#f5f5f5',border_color:'#e5e5e5',text_color:'#000000',paper_color:'#ffffff',size_bg:'#f6f6f6',size_text:'#000000'}}
 ].map(p=>({...p,style:{...noCustomColors,sticky_size:true,...p.style}}));
 /* Short notes a store tends to repeat under its tables; the merchant can add their own. */
 const phraseSets={
