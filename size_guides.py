@@ -107,6 +107,7 @@ class Guide(BaseModel):
     side_image_back:str=Field(default='',max_length=300100)
     cell_styles:list[PartStyle]=Field(default_factory=list,max_length=150)
     layout_type:Literal['tabs','page','cards','compact']='tabs'
+    fit_level:Literal['','slim','regular','loose']=''
     how_art:Literal['none','auto','women','men','kids']='none'
     how_video:str=Field(default='',max_length=200)
     logo_url:str=Field(default='',max_length=500)

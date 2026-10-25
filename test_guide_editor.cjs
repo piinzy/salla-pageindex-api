@@ -100,6 +100,13 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     const wrap=guideWrap();assert.deepEqual([wrap.dataset.sizestyle,wrap.dataset.head,wrap.dataset.border,wrap.dataset.font,wrap.dataset.sticky],['underline','solid','strong','large','0']);
     assert.equal(wrap.dir,'ltr');
     $('[name="guide-language"][value="ar"]').click();assert.equal(guideWrap().dir,'rtl');assert.equal($('#guidePreview').shadowRoot.querySelector('thead th').textContent,'الحجم');
+    // layout type and fit scale: menus with hints, and the live preview follows
+    assert.equal(all('#layoutSeg input').length,4);assert.equal($('[name="guide-layout_type"]:checked').value,'tabs');assert.match($('#layoutHint').textContent,/ثلاثة تبويبات/);
+    $('[name="guide-layout_type"][value="cards"]').click();assert.equal(guideWrap().dataset.layout,'cards');assert.ok($('#guidePreview').shadowRoot.querySelector('.size-card'));assert.match($('#layoutHint').textContent,/بطاقة لكل مقاس/);
+    $('[name="guide-layout_type"][value="page"]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('[role=tab]'),null);$('[name="guide-layout_type"][value="tabs"]').click();assert.ok($('#guidePreview').shadowRoot.querySelector('[role=tab]'));
+    assert.equal(all('#fitSeg input').length,4);assert.equal($('#guidePreview').shadowRoot.querySelector('.fit'),null);$('[name="guide-fit_level"][value="regular"]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('.fit').dataset.level,'regular');
+    $('[name="guide-fit_level"][value=""]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('.fit'),null);
+    assert.match($('#importPanel').textContent,/تملك حقوقه/,'imports say which charts are fair to upload');
     change('#calculator',false);assert.equal($('#guidePreview').shadowRoot.querySelectorAll('[role=tab]').length,2);change('#calculator',true);assert.equal($('#guidePreview').shadowRoot.querySelectorAll('[role=tab]').length,3);
     // colours: automatic until the merchant picks one, and every colour can be reset
     assert.equal(all('#tableColors .color-field').length,8);assert.equal($('#tc-status-header_bg').textContent,'تلقائي');assert.equal($('#tc-header_bg').closest('.color-field').querySelector('button').disabled,true);

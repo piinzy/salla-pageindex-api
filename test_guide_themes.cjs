@@ -166,6 +166,31 @@ const w=dom.window,d=w.document;
    r.querySelectorAll('tbody tr')[1].children[1].click();r.querySelector('thead th:nth-child(3)').click();r.querySelectorAll('tbody tr')[0].querySelector('.chip').click();r.querySelector('thead th').click();
    assert.deepEqual(picks.map(p=>JSON.stringify(p)),['{"part":"cell","row":1,"col":0}','{"part":"head","row":-1,"col":1}','{"part":"size","row":0,"col":-1}','{"part":"head","row":-1,"col":-2}']);
    assert.equal(r.querySelectorAll('.sel').length,1);}
+  // layout types, the fit scale, a size-system switch and the column highlight
+  {const host=d.createElement('div'),base={...guide,instructions:'',calculator:true,columns:[{label:'الصدر',kind:'measurement'},{label:'US',kind:'text'},{label:'EU',kind:'text'}],rows:[{size:'S',values:['90','4','36']},{size:'M',values:['94','6','38']}]},R=()=>shadow(host);
+   UI.preview(host,{...base,layout_type:'tabs'},'x');assert.equal(R().querySelector('.wrap').dataset.layout,'tabs');assert.equal(R().querySelectorAll('[role=tab]').length,3);
+   UI.preview(host,{...base,layout_type:'page'},'x');assert.equal(R().querySelector('.wrap').dataset.layout,'page');assert.equal(R().querySelector('[role=tab]'),null,'no tab strip');
+   assert.deepEqual([...R().querySelectorAll('details.fold-section>summary')].map(x=>x.textContent),['اعرف مقاسك','طريقة القياس'],'help folds away, the table comes first');assert.ok(R().querySelector('#sg-table,.tcol table'));
+   UI.preview(host,{...base,layout_type:'compact'},'x');assert.equal(R().querySelector('[role=tab]'),null);assert.equal(R().querySelector('details'),null);assert.equal(R().querySelector('.finder'),null);assert.ok(R().querySelector('table'));
+   UI.preview(host,{...base,layout_type:'cards'},'x');assert.equal(R().querySelectorAll('.size-card').length,2);assert.equal(R().querySelector('.tcol table'),null);assert.match(R().querySelector('.size-card').textContent,/90/);assert.equal(R().querySelectorAll('[role=tab]').length,3);
+   UI.preview(host,{...base,layout_type:'bogus'},'x');assert.equal(R().querySelector('.wrap').dataset.layout,'tabs','an unknown layout falls back to tabs');
+   // fit scale
+   UI.preview(host,{...base,fit_level:'slim'},'x');assert.equal(R().querySelector('.fit').dataset.level,'slim');assert.match(R().querySelector('.fit').getAttribute('aria-label'),/قصة ضيقة/);assert.equal(R().querySelectorAll('.fit-track span').length,3);assert.equal(R().querySelector('.fit-track span.on').textContent,'قصة ضيقة');
+   UI.preview(host,{...base,fit_level:''},'x');assert.equal(R().querySelector('.fit'),null);UI.preview(host,{...base,fit_level:'huge'},'x');assert.equal(R().querySelector('.fit'),null);
+   UI.preview(host,{...base,fit_level:'loose',language:'en'},'x');assert.match(R().querySelector('.fit-title').textContent,/Fit/);
+   // size systems: US and EU become choices that replace the size label, the original size moves into a column
+   UI.preview(host,base,'x');let sel=R().querySelector('select.sys');assert.deepEqual([...sel.options].map(o=>o.textContent),['المقاس','US','EU']);
+   assert.deepEqual([...R().querySelectorAll('tbody tr:first-child .chip')].map(x=>x.textContent),['S']);
+   sel.value='2';sel.dispatchEvent(new w.Event('change'));sel=R().querySelector('select.sys');assert.equal(sel.value,'2','the choice survives the redraw');
+   assert.deepEqual([...R().querySelectorAll('thead th')].map(x=>x.textContent.replace(/\s*\(.*\)/,'')),['EU','الصدر','US','المقاس'],'EU leads, the old size label takes the EU column');
+   assert.equal(R().querySelector('tbody tr:first-child .chip').textContent,'36');assert.equal(R().querySelector('tbody tr:first-child td:last-child').textContent,'S');
+   UI.preview(host,{...base,columns:[{label:'الصدر',kind:'measurement'}],rows:[{size:'S',values:['90']}]},'x');assert.equal(R().querySelector('select.sys'),null,'no switch without size-system columns');
+   UI.preview(host,{...base,columns:[{label:'USA مقاس',kind:'text'},{label:'EUR',kind:'measurement'}],rows:[{size:'S',values:['4','5']}]},'x');assert.equal(R().querySelector('select.sys'),null,'only text columns named like a size system count');
+   // the column under the pointer is lit, and cleared when it leaves
+   UI.preview(host,base,'x');{const t=R().querySelector('table'),cell=t.querySelectorAll('tbody tr')[1].children[1];cell.dispatchEvent(new w.Event('pointerover',{bubbles:true}));
+    assert.equal(t.querySelectorAll('.col-hl').length,3,'header and both rows of that column');assert.ok(t.rows[0].cells[1].classList.contains('col-hl'));
+    t.dispatchEvent(new w.Event('pointerleave'));assert.equal(t.querySelectorAll('.col-hl').length,0);}
+  }
   // the store's colour: kept when readable, nudged when not, header suited to its weight
   {const b=UI.brandStyle('#7b2338');assert.equal(b.color,'#7b2338');assert.equal(b.adjusted,false);assert.equal(b.header_style,'solid');
    const pale=UI.brandStyle('#ffe9a8');assert.equal(pale.adjusted,true);assert.ok(UI.contrast(pale.color,'#ffffff')>=3,'a pale brand colour is darkened until it reads');

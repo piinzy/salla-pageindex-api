@@ -374,6 +374,8 @@ const SEGMENTS=[
   ['headerStyleSeg','header_style',[['auto','حسب الثيم'],['tint','هادئة'],['solid','ممتلئة'],['plain','شفافة'],['line','بخط']]],
   ['borderStyleSeg','border_style',[['auto','حسب الثيم'],['none','بلا'],['thin','رفيعة'],['strong','سميكة']]],
   ['fontScaleSeg','font_scale',[['small','صغير'],['medium','متوسط'],['large','كبير']]],
+  ['layoutSeg','layout_type',[['tabs','تبويبات'],['page','صفحة واحدة'],['cards','بطاقات'],['compact','جدول فقط']]],
+  ['fitSeg','fit_level',[['','بدون'],['slim','ضيقة'],['regular','عادية'],['loose','واسعة']]],
   ['sideLayoutSeg','side_layout',[['auto','تلقائي'],['none','بدون'],['start','قبل الجدول'],['end','بعد الجدول']]],
   ['howArtSeg','how_art',[['auto','حسب الفئة'],['women','نسائي'],['men','رجالي'],['kids','أطفال'],['none','بدون']]],
   ['languageSeg','language',[['ar','العربية'],['en','English'],['auto','حسب المتجر']]],
@@ -410,11 +412,13 @@ function buildChoices(){
     field.append(label,input,status,reset);colors.append(field);
   }
 }
+const LAYOUT_HINTS={tabs:'ثلاثة تبويبات: الجدول وطريقة القياس واعرف مقاسك.',page:'صفحة واحدة: الجدول أولًا، وتحته قسمان قابلان للطي لطريقة القياس واعرف مقاسك.',cards:'بطاقة لكل مقاس، مناسبة للجوال. التلوين بالنقر يعمل مع الجدول لا مع البطاقات.',compact:'الجدول وحده بلا تبويبات ولا طريقة قياس.'};
 function syncChoices(){
   if(!guide)return;
   for(const [name,value] of [['guide-category',groupOf(guide.category)],['guide-theme',guide.theme],...SEGMENTS.map(([,key])=>['guide-'+key,guide[key]])])
     document.querySelectorAll(`#editor [name="${name}"]`).forEach(r=>{r.checked=r.value===value;r.closest('label').classList.toggle('selected',r.checked)});
   $('#specialRow').classList.toggle('hidden',!SPECIAL.includes(guide.category));$('#specialType').value=guide.category;
+  $('#layoutHint').textContent=LAYOUT_HINTS[guide.layout_type]||LAYOUT_HINTS.tabs;
   $('#side3d').checked=guide.side_3d===true;
   $('#depth3d').checked=guide.depth3d!==false;$('#headerIcon').checked=guide.header_icon!==false;
 }

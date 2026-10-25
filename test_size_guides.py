@@ -62,6 +62,11 @@ class SizeGuideTests(unittest.TestCase):
         self.assertIn('script.dataset.merchant = "123"',own['javascript']);self.assertFalse(own['generic'])
         self.assertNotIn('merchant',every['javascript']);self.assertNotIn('123',every['javascript']);self.assertTrue(every['generic'])
         self.assertIn('/size-guide-widget.js',every['javascript']);self.assertNotIn('BASE',every['javascript']);self.assertNotIn('STORE',every['javascript'])
+    def test_layout_type_and_fit_level_are_checked(self):
+        ok=sg.Guide(**{**G,'layout_type':'page','fit_level':'slim'});self.assertEqual((ok.layout_type,ok.fit_level),('page','slim'))
+        old=sg.Guide(**G);self.assertEqual((old.layout_type,old.fit_level),('tabs',''),'guides saved before keep their tabs')
+        for bad in [{'layout_type':'carousel'},{'fit_level':'huge'},{'layout_type':''}]:
+            with self.subTest(bad=bad),self.assertRaises(ValidationError):sg.Guide(**{**G,**bad})
     def test_themes_and_categories_match_the_window_script(self):
         import re,pathlib
         script=pathlib.Path('static/size-guide-renderer.js').read_text(encoding='utf-8')
