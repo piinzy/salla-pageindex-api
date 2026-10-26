@@ -316,6 +316,7 @@ async def salla_webhook(request: Request):
         if isinstance(merchant, bool) or not str(merchant).isascii() or not str(merchant).isdigit() or len(str(merchant)) > 30:
             raise HTTPException(status_code=400, detail="Invalid merchant ID")
         handled = await run_in_threadpool(billing_event, event, str(merchant), payload.get("data"))
+        logger.info("App event %s for merchant %s: %s", event, merchant, "handled" if handled else "ignored")
         return {"status": "success" if handled else "ignored", "event_received": event}
     if event != "app.store.authorize":
         return {"status": "ignored", "event_received": event}
