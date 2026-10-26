@@ -1,0 +1,76 @@
+================ دليلك بلس | Dalilak Plus — نصوص صفحة التطبيق ================
+
+---------- الاسم ----------
+AR: دليلك بلس
+EN: Dalilak Plus – Size Guide
+
+---------- الوصف المختصر (حد أقصى 150 حرفًا) ----------
+AR:
+يضيف زر «دليل المقاسات» في صفحة كل منتج، مع جدول واضح بالعربية والإنجليزية، وتبديل سم/إنش وأنظمة المقاس، وقياسات المنتج والجسم. تجربة مجانية 7 أيام.
+
+EN:
+Adds a "Size Guide" button to product pages: Arabic/English charts, cm/inch and size systems, product and body measurements. 7-day free trial.
+
+---------- الوصف التفصيلي ----------
+AR:
+
+دليل مقاسات احترافي في صفحة كل منتج
+
+يضيف دليلك بلس زر «دليل المقاسات» في صفحة المنتج، فيرى عميلك جدولًا واضحًا باللغة العربية أو الإنجليزية ويختار مقاسه بثقة، فتقل الأسئلة قبل الشراء والمرتجعات بسبب المقاس.
+
+ماذا يقدّم لعميلك
+- جدول قياسات المنتج وجدول قياسات الجسم في نافذة واحدة بتبويبين.
+- تبديل فوري بين السنتيمتر والإنش، وأنظمة المقاس (US وUK وEU وFR وIT وDE وAU وJP) بتحويل تقريبي.
+- طريقة قياس مصوّرة ومقياس لنوع القصة (ضيقة/عادية/واسعة).
+- حاسبة تقترح المقاس الأقرب لقياسات العميل.
+
+ماذا يقدّم لك كتاجر
+- تصميم يشبه علامتك: أنماط جاهزة، ألوان، خطوط جوجل، وتلوين أي خلية.
+- تحرير مباشر للجدول بالنقر داخل المعاينة.
+- استيراد الجدول من Excel أو من صورة تملك حقوقها بالذكاء الاصطناعي، مع مراجعتك قبل النشر.
+- جدول واحد لعدة منتجات أو لفئة كاملة، تعدّله مرة فتتحدّث كل المنتجات.
+- زر بـ16 تصميمًا وأماكن ظهور متعددة، وإظهاره على الجوال أو الحاسوب فقط.
+- إحصاءات: عدد مرات فتح الجدول، وأكثر المنتجات استخدامًا له، والمقاسات الأكثر بيعًا وإرجاعًا من طلباتك.
+
+الخصوصية والأمان
+لا يعدّل منتجاتك ولا يخزّن بيانات عملائك الشخصية، ويقرأ المنتجات والطلبات فقط.
+
+الأسعار
+تجربة مجانية 7 أيام، ثم اشتراك شهري 389 ريالًا يشمل 50 قراءة شهريًا بالذكاء الاصطناعي من الصور.
+
+
+EN:
+
+A professional size guide on every product page
+
+Dalilak Plus adds a "Size Guide" button to your product pages, so your customers see a clear chart in Arabic or English and choose their size with confidence. Fewer pre-purchase questions, fewer size-related returns.
+
+What your customers get
+- Product measurements and body measurements in one window, with two tabs.
+- Instant switching between centimeters and inches, and between size systems (US, UK, EU, FR, IT, DE, AU, JP) with approximate conversion.
+- An illustrated "how to measure" guide and a fit scale (slim, regular, oversized).
+- A calculator that suggests the closest size to the customer's own measurements.
+
+What you get as a merchant
+- A design that matches your brand: ready-made looks, colors, Google fonts, and color any cell with a click.
+- Edit the chart directly by clicking inside the live preview.
+- Import your chart from Excel, or from an image you own the rights to using AI, and review it before publishing.
+- One chart for many products or a whole category: edit it once and every linked product updates.
+- 16 button designs, many placements, and show it on mobile or desktop only.
+- Insights: how often the chart is opened, which products use it most, and which sizes sell and get returned the most from your orders.
+
+Privacy and security
+It never edits your products and never stores your customers' personal data. It only reads products and orders.
+
+Pricing
+7-day free trial, then a monthly subscription of 389 SAR that includes 50 AI image reads per month.
+
+---------- روابط ----------
+الموقع الإلكتروني: https://salla-pageindex-api.onrender.com/about
+سياسة الخصوصية:   https://salla-pageindex-api.onrender.com/privacy
+رابط الصفحة المضمنة (Iframe): https://salla-pageindex-api.onrender.com/salla/embedded   (مسار الصفحة: size-guide)
+رابط الـ Webhook: https://salla-pageindex-api.onrender.com/webhook
+
+---------- التسعير ----------
+اشتراك شهري متكرر: 389 ريالًا سعوديًا
+فترة تجريبية: 7 أيام
