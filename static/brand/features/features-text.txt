@@ -1,0 +1,22 @@
+مزايا التطبيق (3 مزايا). لكل ميزة: صورة + عنوان + وصف، بالعربية والإنجليزية
+
+--- الميزة 1 ---
+الصورة: feature-1-ai-import.png
+عنوان AR: استيراد الجدول بالذكاء الاصطناعي
+وصف AR: ارفع صورة جدول تملك حقوقه أو الصق جدولك من Excel، فيحوّله التطبيق إلى جدول قابل للتعديل، وتراجعه قبل النشر.
+Title EN: AI table import
+Description EN: Upload an image of a chart you own the rights to, or paste your table from Excel. The app turns it into an editable table that you review before publishing.
+
+--- الميزة 2 ---
+الصورة: feature-2-shared-table.png
+عنوان AR: جدول واحد لعدة منتجات
+وصف AR: اربط جدولًا مشتركًا بعدة منتجات أو بفئة كاملة، وعدّله مرة واحدة فتتحدّث كل المنتجات المرتبطة.
+Title EN: One chart for many products
+Description EN: Link a shared chart to many products or a whole category. Edit it once and every linked product updates.
+
+--- الميزة 3 ---
+الصورة: feature-3-body-systems.png
+عنوان AR: قياسات المنتج والجسم
+وصف AR: جدولان في نافذة واحدة، مع تبديل سم/إنش وأنظمة المقاس ومقياس نوع القصة وطريقة القياس المصوّرة.
+Title EN: Product and body measurements
+Description EN: Two charts in one window, with cm/inch and size-system switching, a fit scale and an illustrated how-to-measure guide.
