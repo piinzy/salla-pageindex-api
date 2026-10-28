@@ -319,6 +319,7 @@ async def salla_webhook(request: Request):
         logger.info("App event %s for merchant %s: %s", event, merchant, "handled" if handled else "ignored")
         return {"status": "success" if handled else "ignored", "event_received": event}
     if event != "app.store.authorize":
+        logger.info("Webhook event %s ignored (merchant %s)", event[:60], str(payload.get("merchant"))[:30])
         return {"status": "ignored", "event_received": event}
     merchant_id = payload.get("merchant")
     if (isinstance(merchant_id, bool) or not isinstance(merchant_id, (str, int))
