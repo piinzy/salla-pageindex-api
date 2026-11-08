@@ -2,7 +2,8 @@
 import html,os
 from pathlib import Path
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
+from fastapi import HTTPException
+from fastapi.responses import FileResponse, HTMLResponse
 
 router=APIRouter()
 STATIC=Path(__file__).parent/'static'
@@ -25,3 +26,13 @@ def about():return page('landing.html')
 
 @router.api_route('/privacy',methods=['GET','HEAD'],include_in_schema=False)
 def privacy():return page('privacy.html')
+
+
+BRAND={'bear.webp':'image/webp','cairo-arabic-400-normal.woff2':'font/woff2','cairo-arabic-700-normal.woff2':'font/woff2','cairo-arabic-900-normal.woff2':'font/woff2',
+       'cairo-latin-700-normal.woff2':'font/woff2','cairo-latin-900-normal.woff2':'font/woff2'}
+
+@router.get('/brand-assets/{name}',include_in_schema=False)
+def brand_asset(name:str):
+    # The character and the Cairo font files the public pages use: served by the app itself, no third-party CDN.
+    if name not in BRAND:raise HTTPException(404)
+    return FileResponse(STATIC/'brand'/name,media_type=BRAND[name],headers={'Cache-Control':'public, max-age=86400','X-Content-Type-Options':'nosniff'})
