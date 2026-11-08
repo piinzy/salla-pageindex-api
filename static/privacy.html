@@ -3,24 +3,68 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>سياسة الخصوصية — دليلك بلس</title>
 <meta name="robots" content="index,follow">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="preconnect" href="https://cdn.salla.network" crossorigin>
 <style>
-:root{--bg:#f6f8f7;--paper:#fff;--ink:#14231f;--muted:#5d6f69;--line:#e0e8e5;--brand:#177e65}
-@media(prefers-color-scheme:dark){:root{--bg:#0b1715;--paper:#112320;--ink:#e8f3f0;--muted:#9bb2ab;--line:#21403a;--brand:#38b595}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.9 Tajawal,Tahoma,Arial,sans-serif}
-main{width:min(820px,100% - 32px);margin:32px auto 56px;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:clamp(22px,4vw,44px)}
-h1{margin:0 0 6px;font-size:2rem}h2{margin:30px 0 6px;font-size:1.2rem;color:var(--brand)}p,li{color:var(--muted)}li{margin:4px 0}a{color:var(--brand)}
-.top{display:inline-block;margin-bottom:14px;text-decoration:none;font-weight:700}
+@font-face{font-family:'DM Sans';src:url('/brand-assets/DMSans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:Epilogue;src:url('/brand-assets/Epilogue-Black.woff2') format('woff2');font-weight:900;font-style:normal;font-display:swap}
+@font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Bold.woff2') format('woff2');font-weight:700 900;font-display:swap}
+:root{--ink:#0b0b0d;--mint:#d7e6d9;--mint2:#e8f1e8;--green:#1f6f54;--green2:#14503c;--silver:#c3cac6;--muted:#4f5a52;--line:rgba(11,11,13,.1)}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',PingARLT,Arial,sans-serif;font-weight:400;font-synthesis:none;color:var(--ink);background:var(--mint2);line-height:1.9;-webkit-font-smoothing:antialiased}
+a{color:inherit}:focus-visible{outline:3px solid var(--green);outline-offset:3px;border-radius:8px}
+.wrap{width:min(940px,calc(100% - 40px));margin-inline:auto}
+header.nav{position:sticky;top:0;z-index:30;background:rgba(232,241,232,.84);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:20px;height:72px}
+.logo{display:flex;align-items:center;gap:11px;font:900 22px Epilogue,PingARLT,Arial,sans-serif;text-decoration:none;white-space:nowrap}
+.logo i{width:40px;height:40px;border-radius:13px;background:var(--ink);display:grid;place-items:center}.logo svg{width:24px;height:24px;color:#fff}
+.grow{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:14px;font-weight:700;font-size:15px;background:var(--ink);color:#fff;text-decoration:none;transition:transform .18s,box-shadow .18s;white-space:nowrap}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(11,11,13,.22)}
+.top{position:relative;overflow:hidden;background:radial-gradient(70% 120% at 85% 0,#fff 0,transparent 60%),radial-gradient(60% 100% at 5% 100%,#cfe2d3 0,transparent 65%),linear-gradient(180deg,var(--mint2),var(--mint))}
+.top .wrap{position:relative;padding-block:56px 64px}
+.eyebrow{display:inline-block;background:var(--ink);color:#fff;border-radius:999px;padding:4px 16px;font-size:13px;font-weight:700}
+h1{font:900 clamp(34px,5vw,54px)/1.25 Epilogue,PingARLT,Arial,sans-serif;margin:14px 0 10px}
+.lead{color:var(--muted);max-width:30em;font-size:17px}
+.peek{position:absolute;inset-inline-end:24px;bottom:-70px;width:150px;pointer-events:none}
+.scene{perspective:900px;position:relative;width:150px}.bear{position:relative;transform-style:preserve-3d;will-change:transform}.bear img{display:block;width:100%;height:auto}
+.feat{position:absolute;background:var(--ink);border-radius:50%;transform:translateZ(20px);will-change:transform}
+.feat.eye{width:5.4%;height:4.1%;margin:-2.05% 0 0 -2.7%;transition:height .12s}
+.feat.eye::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:#fff;top:16%;inset-inline-end:18%;opacity:.9}
+.feat.nose{width:9.4%;height:3.1%;margin:-1.55% 0 0 -4.7%;border-radius:55% 55% 70% 70%;transform:translateZ(26px)}
+.bear.blink .eye{height:.5%}
+main{position:relative;z-index:2;margin-top:-28px;padding-bottom:64px}
+.doc{background:#fff;border-radius:28px;padding:clamp(22px,4vw,46px);box-shadow:0 26px 60px rgba(20,80,60,.12)}
+.doc h2{font:900 21px/1.4 Epilogue,PingARLT,Arial,sans-serif;margin:34px 0 8px;display:flex;align-items:center;gap:10px}
+.doc h2:first-child{margin-top:0}
+.doc h2::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--green)}
+.doc p,.doc li{color:var(--muted)}.doc li{margin:6px 0}.doc ul{padding-inline-start:22px}.doc li::marker{color:var(--green)}
+.doc strong{color:var(--ink);font-weight:700}.doc a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+footer{padding:30px 0 44px;color:var(--muted);font-size:15px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;border-top:1px solid var(--line);padding-top:22px}
+@media(max-width:700px){.peek{width:100px;bottom:-40px}.scene{width:100px}.nav .btn{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-<a class="top" href="/about">→ دليلك بلس</a>
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="tape" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8h18v8H3zM7 8v4M11 8v3M15 8v4M19 8v3"/></symbol></defs></svg>
+<header class="nav"><div class="wrap">
+<a class="logo" href="/about"><i aria-hidden="true"><svg><use href="#tape"/></svg></i>دليلك بلس</a>
+<span class="grow"></span>
+<a class="btn" href="/about">العودة إلى الصفحة الرئيسية</a>
+</div></header>
+<div class="top"><div class="wrap">
+<span class="eyebrow">عائلة متكامل</span>
 <h1>سياسة الخصوصية</h1>
-<p>آخر تحديث: {{DATE}}. تشرح هذه السياسة ما يجمعه تطبيق «دليلك بلس» (التطبيق) من متجرك في سلة، وكيف يُستخدم.</p>
-
+<p class="lead">آخر تحديث: <bdi>{{DATE}}</bdi>. تشرح هذه السياسة ما يجمعه تطبيق «دليلك بلس» (التطبيق) من متجرك في سلة، وكيف يُستخدم.</p>
+<div class="peek" aria-hidden="true"><div class="scene"><div class="bear" data-bear><img src="/brand-assets/bear.webp" width="645" height="1155" alt="" loading="lazy">
+<div class="feat eye" data-eye style="left:31.5%;top:20.35%"></div><div class="feat eye" data-eye style="left:68.2%;top:20.5%"></div><div class="feat nose" data-nose style="left:49.8%;top:22.7%"></div></div></div></div>
+</div></div>
+<main><div class="wrap"><div class="doc">
 <h2>ما الذي نحصل عليه من متجرك</h2>
 <ul>
 <li>معرّف المتجر ومفاتيح الوصول التي تمنحها سلة عند تثبيت التطبيق، وتُستخدم لقراءة بيانات المتجر التي تأذن بها فقط.</li>
@@ -52,6 +96,19 @@ h1{margin:0 0 6px;font-size:2rem}h2{margin:30px 0 6px;font-size:1.2rem;color:var
 
 <h2>التواصل</h2>
 <p>{{CONTACT}}</p>
-</main>
+</div></div></main>
+<footer><div class="wrap"><span>© دليلك بلس · من عائلة متكامل</span><span><a href="/about">الصفحة الرئيسية</a> · {{CONTACT_SHORT}}</span></div></footer>
+<script>
+(()=>{const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+let px=innerWidth*.5,py=innerHeight*.4,last=performance.now();addEventListener('pointermove',e=>{px=e.clientX;py=e.clientY;last=performance.now()},{passive:true});
+const bears=[...document.querySelectorAll('[data-bear]')].map(el=>({el,eyes:[...el.querySelectorAll('[data-eye]')],nose:el.querySelector('[data-nose]'),ex:0,ey:0,rx:0,ry:0,blinkAt:performance.now()+2500}));
+function frame(t){const idle=t-last>3500,mx=idle?innerWidth*(.5+Math.sin(t/1700)*.3):px,my=idle?innerHeight*(.4+Math.cos(t/2300)*.2):py;
+for(const b of bears){const r=b.el.getBoundingClientRect(),w=r.width,cx=r.left+w/2,cy=r.top+r.height*.22,dx=mx-cx,dy=my-cy,dist=Math.hypot(dx,dy)||1,k=clamp(dist/260,0,1);
+b.ex+=(dx/dist*k*w*.016-b.ex)*.16;b.ey+=(dy/dist*k*w*.012-b.ey)*.16;
+if(!reduce){const rotY=clamp(dx/innerWidth*2,-1,1)*7,rotX=-clamp(dy/innerHeight*2,-1,1)*4;b.rx+=(rotX-b.rx)*.1;b.ry+=(rotY-b.ry)*.1;b.el.style.transform=`rotateX(${b.rx.toFixed(2)}deg) rotateY(${b.ry.toFixed(2)}deg)`}
+for(const e of b.eyes)e.style.translate=`${b.ex.toFixed(2)}px ${b.ey.toFixed(2)}px`;if(b.nose)b.nose.style.translate=`${(b.ex*.6).toFixed(2)}px ${(b.ey*.6).toFixed(2)}px`;
+if(t>b.blinkAt){b.el.classList.add('blink');setTimeout(()=>b.el.classList.remove('blink'),140);b.blinkAt=t+2600+Math.random()*2600}}
+requestAnimationFrame(frame)}requestAnimationFrame(frame)})();
+</script>
 </body>
 </html>
