@@ -189,15 +189,11 @@ def validate_publish(guide):
     sizes=[r.size.strip().casefold() for r in guide.rows]
     if any(not s for s in sizes) or len(set(sizes))!=len(sizes):
         raise HTTPException(400,'أدخل اسمًا فريدًا لكل مقاس قبل النشر.')
-    if any(not v.strip() for r in guide.rows for v in r.values):
-        raise HTTPException(400,'أكمل جميع الخلايا قبل النشر؛ استخدم — للخانات غير المنطبقة.')
     body=guide.body_table
     if body:
         names=[r.size.strip().casefold() for r in body.rows]
         if any(not s for s in names) or len(set(names))!=len(names):
             raise HTTPException(400,'أدخل اسمًا فريدًا لكل مقاس في جدول قياسات الجسم قبل النشر.')
-        if any(not v.strip() for r in body.rows for v in r.values):
-            raise HTTPException(400,'أكمل خلايا جدول قياسات الجسم قبل النشر؛ استخدم — للخانات غير المنطبقة.')
 
 def ensure_not_linked(merchant,product_id):
     row=query('SELECT library_id FROM product_size_guides WHERE merchant_id=%s AND product_id=%s',(merchant,product_id),True)

@@ -111,16 +111,16 @@ class SizeGuideTests(unittest.TestCase):
         self.assertEqual(r.status_code,200);self.assertIn('SizeGuideCatalog',r.text)
     def test_reject_invalid_color(self):
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'color':'red;url(evil)'})
-    def test_blank_draft_allowed_but_not_published(self):
+    def test_empty_cells_never_block_publishing(self):
         g=sg.Guide(**{**G,'rows':[{'size':'S','values':['','']}]})
-        with self.assertRaises(sg.HTTPException):sg.validate_publish(g)
+        sg.validate_publish(g)   # the editor only asks the merchant to confirm
     def test_body_table_validated_and_published_strictly(self):
         body={'title':'قياسات الجسم','columns':[{'label':'الصدر','kind':'measurement'}],'rows':[{'size':'S','values':['82-86']}]}
         g=sg.Guide(**{**G,'body_table':body});sg.validate_publish(g)
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['1','2']}]}})
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'body_table':{**body,'columns':[{'label':'a'},{'label':'A'}],'rows':[{'size':'S','values':['1','2']}]}})
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'body_table':{**body,'extra':1}})
-        with self.assertRaises(sg.HTTPException):sg.validate_publish(sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['']}]}}))
+        sg.validate_publish(sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['']}]}}))
         with self.assertRaises(sg.HTTPException):sg.validate_publish(sg.Guide(**{**G,'body_table':{**body,'rows':[{'size':'S','values':['1']},{'size':'s','values':['2']}]}}))
         self.assertIsNone(sg.Guide(**G).body_table)
     def test_font_family_is_an_allowlist_and_part_of_a_look(self):

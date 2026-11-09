@@ -11,7 +11,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
   const errors=[],console_=new VirtualConsole();console_.on('jsdomError',e=>errors.push(e));
   const dom=new JSDOM(file('dashboard.html'),{url:'https://app.test/dashboard',runScripts:'dangerously',virtualConsole:console_}),w=dom.window,d=w.document;
   try{
-    w.structuredClone=structuredClone;let confirmed=true;w.confirm=()=>confirmed;
+    w.structuredClone=structuredClone;let confirmed=true,lastConfirm='';w.confirm=m=>{lastConfirm=m;return confirmed};
     const calls=[];let aiAvailable=true;const rules={rules:[],categories:[{id:'100',name:'فساتين',products:3,without_guide:2}],missing:2,latest:[]};let billing={enforced:true,plan:'trial',trial_days_left:5,price:389,paid_until:null,ai:{limit:3,used:0,plan_remaining:3,extra:0,remaining:3}};const presets={styles:[{preset_id:'s00000000001',name:'تصميم قديم',style:{theme:'velvet',color:'#7b2338',table_style:'cards',density:'compact',corners:'round',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'none',font_scale:'small',sticky_size:true,header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:''}}],phrases:[{preset_id:'f00000000001',name:'جملتي',text:'جملة محفوظة من التاجر'}],n:1};
     const call=(method,part)=>calls.filter(c=>c.method===method&&c.path.includes(part));
     const guideIndex=()=>[{product_id:'43',title:'منتج قديم',sku:'S2',version:3,is_published:true,has_changes:false,library_id:null},
@@ -361,6 +361,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     $('#linkResults input[value="43"]').checked=true;$('#linkSelected').click();await settle();
     assert.deepEqual(call('POST','size-library/'+NEWLIB+'/link')[0].body.product_ids,['43']);assert.ok(all('#libraryProducts .link-row').length>=1);
     input('#guideTitle','عنوان مشترك جديد');confirmed=true;$('#publish').click();await settle();
+    assert.match(lastConfirm,/خلية فارغة/,'publishing with empty cells warns first instead of blocking');
     const published=calls.filter(c=>c.method==='PUT'&&c.path.startsWith('size-library/'+NEWLIB)).pop().body;assert.deepEqual([published.version,published.action],[1,'publish']);
     $('#libraryProducts .link-row button').click();await settle();assert.equal(call('POST','size-guides/unlink').length,3);
     $('#deleteLibrary').click();await settle();assert.equal(call('DELETE','size-library/').length,1);assert.equal(hidden('#library'),false);
