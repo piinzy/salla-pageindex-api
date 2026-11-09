@@ -1,53 +1,12 @@
-/* دليلك بلس: the family look (periwinkle, DM Sans / Epilogue / PingARLT) for the admin and the embedded app. Loaded last. */
-@font-face{font-family:'DM Sans';src:url('/brand-assets/DMSans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:Epilogue;src:url('/brand-assets/Epilogue-Black.woff2') format('woff2');font-weight:900;font-style:normal;font-display:swap}
-@font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Bold.woff2') format('woff2');font-weight:700 900;font-display:swap}
-:root{color-scheme:light;--bg:#f3f5ff;--surface:#fff;--surface-soft:#eef1ff;--ink:#10143f;--muted:#5b6190;--green:#4d5fcf;--button-ink:#fff;--line:#dfe4fa;--accent:#98aaf3;--tag-bg:#e6eaff;--tag-ink:#3a47a8;--focus:#4d5fcf;--sh-ok:#2f7d6b}
-:root[data-theme=dark]{color-scheme:dark;--bg:#14173a;--surface:#1c2050;--surface-soft:#232859;--ink:#eef0ff;--muted:#aab2e6;--green:#b3c0ff;--button-ink:#10143f;--line:#363c7a;--accent:#98aaf3;--tag-bg:#2b327a;--tag-ink:#c9d2ff;--focus:#b3c0ff}
-body,button,input,select,textarea{font-family:'DM Sans',PingARLT,Tahoma,Arial,sans-serif}
-body{background:var(--bg);color:var(--ink)}
-h1,h2{font-weight:700}
-button{border-radius:12px}
-.secondary{background:var(--surface-soft);color:var(--ink)}
-.tag{background:var(--tag-bg);color:var(--tag-ink)}
-.note{background:var(--surface-soft);color:var(--muted)}
-.dot{background:#7f92ee}
-.card,.panel{border-color:var(--line);border-radius:18px;background:var(--surface)}
-th{background:var(--surface-soft)}td{border-bottom-color:var(--line)}
-#toast{background:#10143f}
-button:focus-visible,a:focus-visible{outline-color:#4d5fcf}
-/* side rail (standalone admin) */
-aside{background:linear-gradient(180deg,#10143f,#2a3290);color:#d6dcff}
-.brand{font-family:'DM Sans',PingARLT,Arial,sans-serif;font-weight:700;direction:rtl;text-align:right;letter-spacing:0;display:flex;align-items:center;gap:10px;font-size:22px;color:#fff}
-.brand i{width:38px;height:38px;border-radius:12px;background:#fff;color:#10143f;display:grid;place-items:center;flex:none}.brand i svg{width:23px;height:23px}
-.brand small{display:none!important}
-.subbrand{color:#aeb9f5}
-nav button{color:#c3ccff}nav button.active{background:#ffffff1f;color:#fff}
-aside footer{color:#aeb9f5}aside footer .secondary{background:#ffffff1c;color:#fff}
-/* sign-in */
-#login{background:radial-gradient(70% 60% at 20% 0,#cfd8ff 0,transparent 65%),linear-gradient(180deg,#b6c3fa,#98aaf3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;overflow:hidden}
-#login .login-fz{width:min(300px,70vw);margin-bottom:-58px;position:relative;z-index:0;pointer-events:auto}
-#login .login-fz .fz{--w:100%;width:100%}
-#login .panel{position:relative;z-index:1;border-radius:24px;box-shadow:0 30px 60px -30px #10143f88}
-#login .brand{justify-content:center;font-size:26px;color:var(--ink)}
-#login small{color:var(--muted)!important}
+/* the blue home header with the character, shared by the standalone admin and the Salla-embedded app */
 /* home hero */
 .home .hero{position:relative;overflow:hidden;isolation:isolate;border-radius:24px;padding:30px 32px;min-height:170px;background:radial-gradient(70% 120% at 85% 0,#d3dbff 0,transparent 60%),linear-gradient(135deg,#b3c0fa,#98aaf3);color:#10143f}
 .home .hero h1,.home .hero p,.home .hero .eyebrow{color:#10143f;position:relative;z-index:1}
 .home .hero p{color:#232a63}
-.home .hero>div:first-child{max-width:520px}
+.home .hero>div:not(.hero-fz){max-width:380px}
 .home .hero>button{position:relative;z-index:1;background:#0b0b0d;color:#fff}
-.hero-fz{position:absolute;inset-inline-end:210px;bottom:-84px;width:250px;z-index:0}
+.hero-fz{position:absolute;left:50%;translate:-50% 0;bottom:-64px;width:290px;z-index:0}
 .hero-fz .fz{--w:100%;width:100%}
 @media(max-width:900px){.hero-fz{display:none}.home .hero{padding:22px}}
-.embedded .home .hero{min-height:150px}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
-nav button.active{background:#ffffff24!important;color:#fff}
-nav button.active::before,nav button[aria-current]::before{background:#98aaf3!important}
-.home .hero{min-height:200px}.hero-fz{bottom:-70px;inset-inline-end:230px;width:270px}
-/* one calm notice tone (no amber/brown) and periwinkle "done" marks, in light and dark */
-:root{--warn-bg:#eef1ff;--warn-ink:#3a47a8;--sh-ok:#4d5fcf}
-:root[data-theme=dark]{--warn-bg:#2b327a;--warn-ink:#dfe4ff;--sh-ok:#98aaf3}
-.attention li.warn,.embedded-session-notice,#catalog .missing-bar{border-color:var(--line)}
-:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea{background:var(--surface-soft);color:var(--ink);border-color:var(--line)}
+.home .hero{min-height:230px}
+.hero-fz .fz{pointer-events:auto}

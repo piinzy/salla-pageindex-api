@@ -42,9 +42,10 @@ class RedactTokenQuery(logging.Filter):
 def embedded_page():
     content = (STATIC / 'dashboard.html').read_text(encoding='utf-8')
     content = content.replace('<body>', '<body class="embedded">', 1)
+    # Inside Salla the official Salla look stays; only the home header (app.css) keeps the family blue.
+    content = content.replace('<link rel="stylesheet" href="/brand-assets/admin.css">', '', 1)
     content = content.replace('</head>', '<meta name="referrer" content="no-referrer">'
                               '<link rel="stylesheet" href="/embedded-assets/salla-dashboard.css">'
-                              '<link rel="stylesheet" href="/brand-assets/app.css">'
                               '<script src="/embedded-assets/salla-embedded-sdk-0.2.6.js"></script>'
                               '<script defer src="/embedded-assets/salla-embedded.js"></script></head>', 1)
     # Bootstrap script must run before the existing admin script at the bottom.
