@@ -1,0 +1,14 @@
+/* The family's second character: a fuzzy periwinkle mound with sleepy eyes that follow the pointer. */
+.fz{position:relative;width:var(--w,900px);max-width:100%;aspect-ratio:1500/1020;perspective:1400px;--tilt:0deg}
+.fz-body{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform;transition:transform .12s linear}
+.fz-body img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
+.fz-eyes{position:absolute;inset:0;will-change:transform}
+.fz-eye{position:absolute;width:11%;height:12.4%;top:29.5%;transform:translateZ(18px) rotate(var(--tilt))}
+.fz-eye.l{left:38.4%}.fz-eye.r{left:50.6%}
+.fz-white{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 38% 28%,#fff 0,#f3f5ff 55%,#d6dcf8 100%);box-shadow:inset 0 -.5em .8em rgba(62,74,176,.3),0 .15em .4em rgba(36,46,140,.3)}
+.fz-pupil{position:absolute;width:46%;height:52%;left:27%;top:24%;border-radius:50%;background:#0b0b0d;transform:translate(var(--px,0px),var(--py,0px))}
+.fz-pupil::after{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:#fff;top:16%;left:22%;opacity:.9}
+.fz-lid{position:absolute;left:-7%;right:-7%;top:-10%;height:58%;transform-origin:50% 0;transform:scaleY(var(--lid,1));border-radius:50% 50% 42% 42%/80% 80% 26% 26%;background:linear-gradient(#b3bff6 0,#97a6ee 55%,#8697e6 100%);box-shadow:0 .12em .35em rgba(40,52,150,.34),inset 0 .15em .3em rgba(255,255,255,.35)}
+.fz-eye.r .fz-lid{transform-origin:50% 0}
+.fz.is-down .fz-body{transform:scale(.985,.975)!important}
+@media (prefers-reduced-motion:reduce){.fz-body{transition:none}}

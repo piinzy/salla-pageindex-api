@@ -44,6 +44,7 @@ def embedded_page():
     content = content.replace('<body>', '<body class="embedded">', 1)
     content = content.replace('</head>', '<meta name="referrer" content="no-referrer">'
                               '<link rel="stylesheet" href="/embedded-assets/salla-dashboard.css">'
+                              '<link rel="stylesheet" href="/brand-assets/app.css">'
                               '<script src="/embedded-assets/salla-embedded-sdk-0.2.6.js"></script>'
                               '<script defer src="/embedded-assets/salla-embedded.js"></script></head>', 1)
     # Bootstrap script must run before the existing admin script at the bottom.
