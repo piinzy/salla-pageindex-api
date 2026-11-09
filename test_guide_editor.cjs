@@ -69,14 +69,14 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // products without a guide are offered up front
     assert.equal(hidden('#missingBar'),false);assert.match($('#missingBar').textContent,/2|٢/);assert.match($('#missingBar').textContent,/أنشئ قاعدة/);
     $('#guideFilter').value='none';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();assert.match(calls.filter(c=>c.path.startsWith('products?')).pop().path,/guide=none/);$('#guideFilter').value='';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();
-    // ---- a brand-new guide starts as the plain standard table: general category, minimal theme, no drawing
+    // ---- a brand-new guide starts as the plain standard table: general category, Salla-like reference theme, no drawing
     $('[data-edit="42"]').click();await settle();
-    assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'minimal');
+    assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'reference');
     assert.equal(all('#themeChoices [name="guide-theme"]').length,14);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'classic','recommended themes come first');
     assert.ok($('#themeChoices .theme-card small'),'recommended badge');
     assert.deepEqual(all('#template option').map(o=>o.value),['general-basic']);
-    assert.equal(all('#gridEditor thead th input').length,3);assert.equal(guideWrap().dataset.theme,'minimal');assert.equal($('#guidePreview').shadowRoot.querySelector('svg.emblem'),null,'plain start has no drawing');
-    assert.equal($('#calculator').checked,true,'new guides get the size finder');assert.equal(hidden('.only-library'),true);assert.equal(hidden('.only-product'),false);
+    assert.equal(all('#gridEditor thead th input').length,3);assert.equal(guideWrap().dataset.theme,'reference');assert.equal($('#guidePreview').shadowRoot.querySelector('svg.emblem'),null,'plain start has no drawing');
+    assert.equal($('#calculator').checked,false,'plain start has no size finder');assert.equal(hidden('.only-library'),true);assert.equal(hidden('.only-product'),false);
 
     // ---- category follows an untouched guide
     pickCat('shoes');await settle();
@@ -101,7 +101,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     assert.equal(wrap.dir,'ltr');
     $('[name="guide-language"][value="ar"]').click();assert.equal(guideWrap().dir,'rtl');assert.equal($('#guidePreview').shadowRoot.querySelector('thead th').textContent,'الحجم');
     // layout type and fit scale: menus with hints, and the live preview follows
-    assert.equal(all('#layoutSeg input').length,4);assert.equal($('[name="guide-layout_type"]:checked').value,'tabs');assert.match($('#layoutHint').textContent,/ثلاثة تبويبات/);
+    assert.equal(all('#layoutSeg input').length,4);assert.equal($('[name="guide-layout_type"]:checked').value,'compact');
     $('[name="guide-layout_type"][value="cards"]').click();assert.equal(guideWrap().dataset.layout,'cards');assert.ok($('#guidePreview').shadowRoot.querySelector('.size-card'));assert.match($('#layoutHint').textContent,/بطاقة لكل مقاس/);
     $('[name="guide-layout_type"][value="page"]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('[role=tab]'),null);$('[name="guide-layout_type"][value="tabs"]').click();assert.ok($('#guidePreview').shadowRoot.querySelector('[role=tab]'));
     assert.equal(all('#fitSeg input').length,4);assert.equal($('#guidePreview').shadowRoot.querySelector('.fit'),null);$('[name="guide-fit_level"][value="regular"]').click();assert.equal($('#guidePreview').shadowRoot.querySelector('.fit').dataset.level,'regular');

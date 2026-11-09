@@ -92,8 +92,8 @@ function fresh(templateId,category='general'){
     notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true,
     ...(item.category==='general'?plainStyle():{})};
 }
-/* A brand-new general guide starts as the plain standard table: white, thin lines, no drawing, no 3D. */
-function plainStyle(){const p=stylePresets.find(x=>x.id==='pure');return p?{...JSON.parse(JSON.stringify(p.style)),...noCustomColors}:{}}
+/* A brand-new general guide starts like Salla's own size table: white, centred title, one thin-lined table, no drawing, no extra tabs. */
+function plainStyle(){const p=stylePresets.find(x=>x.id==='reference');return p?{...JSON.parse(JSON.stringify(p.style)),...noCustomColors,layout_type:'compact',size_systems:[],calculator:false,how_art:'none'}:{}}
 /* Painted parts follow their rows and columns: the removed one's styles go, later ones move up by one. */
 function shiftPaint(styles,kind,index){
   const field=kind==='row'?'row':'col';
