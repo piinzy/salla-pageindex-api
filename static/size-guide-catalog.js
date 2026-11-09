@@ -89,8 +89,11 @@ function fresh(templateId,category='general'){
   const item=templates.find(x=>x.id===templateId)||forCategory(category)[0]||templates[templates.length-1],base=defaults[item.category]||defaults.general;
   return {...JSON.parse(JSON.stringify(styleDefaults)),title:'دليل المقاسات',button_label:'دليل المقاسات',unit:'cm',measurement_type:'garment',
     columns:item.columns.map(c=>({...c})),rows:item.sizes.map(size=>({size,values:item.columns.map(()=> '')})),
-    notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true};
+    notes:'',instructions:'',color:base.color,category:item.category,theme:base.theme,calculator:true,
+    ...(item.category==='general'?plainStyle():{})};
 }
+/* A brand-new general guide starts as the plain standard table: white, thin lines, no drawing, no 3D. */
+function plainStyle(){const p=stylePresets.find(x=>x.id==='pure');return p?{...JSON.parse(JSON.stringify(p.style)),...noCustomColors}:{}}
 /* Painted parts follow their rows and columns: the removed one's styles go, later ones move up by one. */
 function shiftPaint(styles,kind,index){
   const field=kind==='row'?'row':'col';

@@ -15,7 +15,7 @@ const withDefaults=g=>({...JSON.parse(JSON.stringify(styleDefaults)),...g});
 const legacyTemplates={dresses:['محيط الصدر','محيط الخصر','محيط الأرداف','طول القطعة']};
 const qs=()=>'?'+new URLSearchParams({merchant});
 const mk=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
-function fresh(templateId,category='women'){
+function fresh(templateId,category='general'){
   if(Catalog)return Catalog.fresh(templateId,category);
   const cols=legacyTemplates.dresses;
   return {...withDefaults({}),title:'دليل المقاسات',button_label:'دليل المقاسات',unit:'cm',measurement_type:'garment',columns:cols.map(label=>({label,kind:'measurement'})),rows:['S','M','L','XL'].map(size=>({size,values:cols.map(()=> '')})),notes:'',instructions:'',color:'#177e65'};
