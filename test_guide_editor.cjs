@@ -74,7 +74,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'reference');
     assert.equal(all('#themeChoices [name="guide-theme"]').length,14);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'classic','recommended themes come first');
     assert.ok($('#themeChoices .theme-card small'),'recommended badge');
-    assert.deepEqual(all('#template option').map(o=>o.value),['general-basic']);
+    assert.equal(all('#template option').length,w.SizeGuideCatalog.templates.length,'every ready-made structure is offered, grouped by type');assert.equal($('#template').value,'general-basic');assert.ok(all('#template optgroup').length>=7);
     assert.equal(all('#gridEditor thead th input').length,3);assert.equal(guideWrap().dataset.theme,'reference');assert.equal($('#guidePreview').shadowRoot.querySelector('svg.emblem'),null,'plain start has no drawing');
     assert.equal($('#calculator').checked,false,'plain start has no size finder');assert.equal(hidden('.only-library'),true);assert.equal(hidden('.only-product'),false);
 
@@ -83,7 +83,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['UK','US','طول القدم','عرض القدم']);
     assert.equal($('[name="guide-theme"]:checked').value,'sport');assert.equal($('#guideColor').value,'#d9480f');assert.equal(all('#gridEditor tbody tr').length,6);
     pickCat('accessories');await settle();
-    assert.deepEqual(all('#template option').map(o=>o.value),['acc-rings','acc-bracelets','acc-belts','acc-hats']);assert.equal($('[name="guide-theme"]:checked').value,'gold');
+    assert.equal($('#template').value,'acc-rings');assert.equal($('[name="guide-theme"]:checked').value,'gold');
 
     // ---- theme, colour and style options reach the preview
     pickCat('shoes');await settle();
@@ -310,7 +310,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // ---- a guide saved before these options existed opens with defaults
     $('#backCatalog').click();await settle();$('[data-edit="43"]').click();await settle();
     assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'classic');assert.equal($('#guideColor').value,'#123456');
-    assert.equal($('#depth3d').checked,true);assert.equal($('[name="guide-size_style"]:checked').value,'chip');assert.equal($('#calculator').checked,false,'older guides keep the finder off');assert.equal(all('#template option').length,1);
+    assert.equal($('#depth3d').checked,true);assert.equal($('[name="guide-size_style"]:checked').value,'chip');assert.equal($('#calculator').checked,false,'older guides keep the finder off');assert.equal($('#template').value,'general-basic');
     assert.equal($('#tc-status-header_bg').textContent,'تلقائي');
     w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new w.Event('close'));};
     $('#previewModal').click();
