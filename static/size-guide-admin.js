@@ -483,7 +483,10 @@ async function save(action){
   if(mode==='library'&&!libraryName.trim())return toast('اكتب اسمًا للجدول المشترك.');
   if(action==='publish'){
     const message=mode==='library'?`نشر هذا الجدول ليتحدث لدى ${libraryProducts.length} منتج مرتبط؟`:'نشر هذا الجدول ليظهر لعملاء المنتج المحدد؟';
-    if(!(await confirmAction(message)))return;
+    /* Empty cells never block publishing; the merchant is only warned and decides. */
+    const blanks=g=>g?g.rows.reduce((n,r)=>n+r.values.filter(v=>!String(v).trim()).length,0):0,empty=blanks(guide)+blanks(guide.body_table);
+    const warning=empty?`تنبيه: يوجد ${empty} خلية فارغة في الجدول وستظهر فارغة للعميل.\n\n`:'';
+    if(!(await confirmAction(warning+message)))return;
   }
   saving=true;const savedSnapshot=JSON.stringify(guide);$('#saveDraft').disabled=true;$('#publish').disabled=true;
   try{
