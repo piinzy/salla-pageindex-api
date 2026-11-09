@@ -1,47 +1,162 @@
-/* Eyes follow the pointer, lids droop and blink, the body tilts a little, a press squints. Mount: <div class="fz" data-fuzz></div> */
+/* The same illustrated character appears throughout the app. Only its stage and resting gaze change. */
 (() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-  const SRC = (document.currentScript && document.currentScript.dataset.src) || '/brand-assets/fuzz.webp';
-  const eye = side => `<div class="fz-eye ${side}"><div class="fz-white"><i class="fz-pupil"></i></div><div class="fz-lid"></div></div>`;
-  const chars = [];
-  let px = innerWidth * .5, py = innerHeight * .4, last = performance.now();
-  addEventListener('pointermove', e => { px = e.clientX; py = e.clientY; last = performance.now(); }, {passive: true});
-  function mount(root) {
-    if (root.dataset.fuzzReady) return; root.dataset.fuzzReady = '1';
-    root.classList.add('fz');
-    root.innerHTML = `<div class="fz-body"><img src="${SRC}" alt="" draggable="false"><div class="fz-eyes">${eye('l')}${eye('r')}</div></div>`;
-    const c = {root, body: root.querySelector('.fz-body'), eyes: root.querySelector('.fz-eyes'), els: [...root.querySelectorAll('.fz-eye')],
-      gx: 0, gy: 0, rx: 0, ry: 0, lid: 1, blink: 0, blinkAt: performance.now() + 1800 + Math.random() * 2500, down: 0};
-    root.addEventListener('pointerdown', () => { root.classList.add('is-down'); c.down = 1; });
-    addEventListener('pointerup', () => { root.classList.remove('is-down'); c.down = 0; });
-    chars.push(c);
+  const source = document.currentScript?.dataset.src || '/brand-assets/fuzz.webp';
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  const characters = new Map();
+  const visible = new Set();
+  let attention = null;
+  let frame = 0;
+  let restTimer = 0;
+
+  function schedule() {
+    if (frame || document.hidden || reduced?.matches || !visible.size) return;
+    frame = requestAnimationFrame(draw);
   }
-  function frame(t) {
-    const idle = t - last > 3500;
-    const mx = idle ? innerWidth * (.5 + Math.sin(t / 1900) * .32) : px, my = idle ? innerHeight * (.42 + Math.cos(t / 2500) * .22) : py;
-    for (const c of chars) {
-      const r = c.root.getBoundingClientRect(); if (r.bottom < -50 || r.top > innerHeight + 50) continue;
-      const cx = r.left + r.width * .5, cy = r.top + r.height * .4, dx = mx - cx, dy = my - cy, d = Math.hypot(dx, dy) || 1, k = clamp(d / (r.width * .55), 0, 1);
-      const tx = dx / d * k, ty = dy / d * k;                       // -1..1 direction of attention
-      c.gx += (tx - c.gx) * .14; c.gy += (ty - c.gy) * .14;
-      const eyeW = r.width * .11;
-      for (const el of c.els) { el.style.setProperty('--px', (c.gx * eyeW * .2).toFixed(2) + 'px'); el.style.setProperty('--py', (c.gy * eyeW * .16).toFixed(2) + 'px'); }
-      c.eyes.style.transform = `translate(${(c.gx * r.width * .012).toFixed(2)}px,${(c.gy * r.width * .008).toFixed(2)}px)`;
-      // sleepy lids: a little lower when looking down, almost shut while pressed, a blink now and then
-      if (t > c.blinkAt) { c.blink = 1; c.blinkAt = t + 2400 + Math.random() * 3200; }
-      c.blink = Math.max(0, c.blink - 0.085);
-      const target = 1 + (c.gy > 0 ? c.gy * .1 : c.gy * .18) + (c.down ? .55 : 0) + Math.sin(c.blink * Math.PI) * .7 - (c.gy < -.3 ? .08 : 0);
-      c.lid += (target - c.lid) * .35;
-      for (const el of c.els) el.style.setProperty('--lid', c.lid.toFixed(3));
-      if (!reduce) {
-        c.ry += (clamp(dx / innerWidth * 2, -1, 1) * 4.5 - c.ry) * .08; c.rx += (-clamp(dy / innerHeight * 2, -1, 1) * 2.6 - c.rx) * .08;
-        c.body.style.transform = `rotateX(${c.rx.toFixed(2)}deg) rotateY(${c.ry.toFixed(2)}deg)`;
+
+  const observer = 'IntersectionObserver' in window && new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      const root = entry.target;
+      if (entry.isIntersecting) {
+        visible.add(root);
+        root.dataset.fuzzVisible = '';
+      } else {
+        visible.delete(root);
+        delete root.dataset.fuzzVisible;
       }
     }
-    requestAnimationFrame(frame);
+    schedule();
+  });
+
+  function draw() {
+    frame = 0;
+    if (document.hidden || reduced?.matches) return;
+    for (const root of visible) {
+      const rect = root.getBoundingClientRect();
+      if (!rect.width || rect.bottom <= 0 || rect.top >= innerHeight) continue;
+      const rest = characters.get(root);
+      let x = rest.x, y = rest.y;
+      if (attention) {
+        const dx = attention.x - (rect.left + rect.width * .5);
+        const dy = attention.y - (rect.top + rect.height * .38);
+        const distance = Math.max(rect.width * .65, Math.hypot(dx, dy));
+        x = dx / distance;
+        y = dy / distance;
+      }
+      root.style.setProperty('--px', (x * rect.width * .023).toFixed(2) + 'px');
+      root.style.setProperty('--py', (y * rect.width * .018).toFixed(2) + 'px');
+      root.style.setProperty('--lid', (1 + y * .13).toFixed(3));
+      root.style.setProperty('--fz-turn', (x * 3.5).toFixed(2) + 'deg');
+      root.style.setProperty('--fz-nod', (-y * 2).toFixed(2) + 'deg');
+    }
   }
-  const init = () => { document.querySelectorAll('[data-fuzz]').forEach(mount); requestAnimationFrame(frame); };
+
+  function rest() {
+    clearTimeout(restTimer);
+    attention = null;
+    schedule();
+  }
+
+  function lookAt(x, y) {
+    if (document.hidden || reduced?.matches || !visible.size) return;
+    clearTimeout(restTimer);
+    attention = {x, y};
+    schedule();
+    restTimer = setTimeout(rest, 3200);
+  }
+
+  function mount(root) {
+    if (!root || root.dataset.fuzzReady) return;
+    root.dataset.fuzzReady = '1';
+    root.setAttribute('aria-hidden', 'true');
+    root.classList.add('fz');
+    const eye = side => '<div class="fz-eye ' + side + '"><div class="fz-white"><i class="fz-pupil"></i></div><div class="fz-lid"></div></div>';
+    root.innerHTML = '<div class="fz-body"><img alt="" draggable="false"><div class="fz-eyes">' + eye('l') + eye('r') + '</div></div>';
+    root.querySelector('img').src = source;
+    characters.set(root, {x: Number(root.dataset.lookX) || 0, y: Number(root.dataset.lookY) || 0});
+    root.style.setProperty('--fz-blink-cycle', (4.5 + Math.random() * 1.8).toFixed(2) + 's');
+    if (observer) observer.observe(root);
+    else {
+      visible.add(root);
+      root.dataset.fuzzVisible = '';
+    }
+  }
+
+  function dressSections() {
+    const scenes = [
+      ['#catalog > .panelhead > div', 'ruler', -.3, .5],
+      ['#editor .studio-heading > div', 'draft', -.5, .35],
+      ['#library > .panelhead > div', 'books', -.35, .65],
+      ['#buttonSettings > .studio-header > div', 'switch', -.65, .4],
+      ['#stats > .panelhead > div', 'chart', -.75, -.15],
+    ];
+    for (const [selector, name, x, y] of scenes) {
+      const title = document.querySelector(selector);
+      if (!title || title.classList.contains('fz-section-title')) continue;
+      title.classList.add('fz-section-title');
+      const scene = document.createElement('span');
+      scene.className = 'fz-scene fz-scene-' + name;
+      scene.setAttribute('aria-hidden', 'true');
+      const character = document.createElement('span');
+      character.dataset.fuzz = '';
+      character.dataset.lookX = x;
+      character.dataset.lookY = y;
+      scene.append(character);
+      if (['ruler', 'books', 'switch'].includes(name)) {
+        scene.classList.add('fz-scene-pair');
+        const prop = document.createElement('span');
+        prop.className = 'fz-prop fz-prop-' + name;
+        if (name === 'books') {
+          for (let i = 0; i < 3; i++) prop.append(document.createElement('i'));
+        }
+        scene.append(prop);
+      }
+      title.prepend(scene);
+    }
+  }
+
+  function dressEditor() {
+    const fields = document.getElementById('editFields');
+    const scene = document.querySelector('#editor .fz-scene-draft');
+    if (!fields || !scene) return;
+    const toolFor = {
+      dataCard: 'tape', categoryCard: 'tape', customerCard: 'sizes',
+      presetCard: 'swatches', importPanel: 'sheet',
+    };
+    function changeTool(card) {
+      scene.dataset.tool = toolFor[card?.id] || 'pencil';
+    }
+    changeTool(fields.querySelector('.ed-card.open'));
+    fields.addEventListener('focusin', e => {
+      const card = e.target.closest('.ed-card');
+      if (card) changeTool(card);
+    });
+    fields.addEventListener('click', e => {
+      const card = e.target.closest('.ed-card');
+      if (card) changeTool(card.classList.contains('open') ? card : fields.querySelector('.ed-card.open'));
+    });
+  }
+
+  function init() {
+    dressSections();
+    dressEditor();
+    document.querySelectorAll('[data-fuzz]').forEach(mount);
+    window.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'touch') lookAt(e.clientX, e.clientY);
+    }, {passive: true});
+    window.addEventListener('pointerdown', e => lookAt(e.clientX, e.clientY), {passive: true});
+    document.addEventListener('focusin', e => {
+      const rect = e.target.getBoundingClientRect();
+      lookAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+    document.documentElement.addEventListener('pointerleave', rest);
+    document.addEventListener('visibilitychange', rest);
+    window.addEventListener('scroll', schedule, {passive: true, capture: true});
+    window.addEventListener('resize', schedule, {passive: true});
+    reduced?.addEventListener?.('change', rest);
+    schedule();
+  }
+
   window.Fuzz = {mount};
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once: true});
+  else init();
 })();

@@ -147,3 +147,9 @@ def quick_script():
     return FileResponse(Path(__file__).parent / 'static/size-guide-quick.js',
                         media_type='application/javascript',
                         headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})
+
+@router.get('/size-guide-batch.js', include_in_schema=False)
+def batch_script():
+    return FileResponse(Path(__file__).parent / 'static/size-guide-batch.js',
+                        media_type='application/javascript',
+                        headers={'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff'})

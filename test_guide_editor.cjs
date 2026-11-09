@@ -71,24 +71,24 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     $('#guideFilter').value='none';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();assert.match(calls.filter(c=>c.path.startsWith('products?')).pop().path,/guide=none/);$('#guideFilter').value='';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();
     // ---- a brand-new guide starts as the plain standard table: general category, Salla-like reference theme, no drawing
     $('[data-edit="42"]').click();await settle();
-    assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'reference');
-    assert.equal(all('#themeChoices [name="guide-theme"]').length,14);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'classic','recommended themes come first');
-    assert.ok($('#themeChoices .theme-card small'),'recommended badge');
+    assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'atlas');
+    assert.equal(all('#themeChoices [name="guide-theme"]').length,20);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'atlas','gallery order');
+    assert.ok($('#themeChoices .theme-card .preset-mini'));
     assert.equal(all('#template option').length,w.SizeGuideCatalog.templates.length,'every ready-made structure is offered, grouped by type');assert.equal($('#template').value,'general-basic');assert.ok(all('#template optgroup').length>=7);
-    assert.equal(all('#gridEditor thead th input').length,3);assert.equal(guideWrap().dataset.theme,'reference');assert.equal($('#guidePreview').shadowRoot.querySelector('svg.emblem'),null,'plain start has no drawing');
+    assert.equal(all('#gridEditor thead th input').length,3);assert.equal(guideWrap().dataset.theme,'atlas');assert.equal($('#guidePreview').shadowRoot.querySelector('svg.emblem'),null,'plain start has no drawing');
     assert.equal($('#calculator').checked,false,'plain start has no size finder');assert.equal(hidden('.only-library'),true);assert.equal(hidden('.only-product'),false);
 
     // ---- category follows an untouched guide
     pickCat('shoes');await settle();
     assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['UK','US','طول القدم','عرض القدم']);
-    assert.equal($('[name="guide-theme"]:checked').value,'sport');assert.equal($('#guideColor').value,'#d9480f');assert.equal(all('#gridEditor tbody tr').length,6);
+    assert.equal($('[name="guide-theme"]:checked').value,'continental');assert.equal($('#guideColor').value,'#272821');assert.equal(all('#gridEditor tbody tr').length,6);
     pickCat('accessories');await settle();
-    assert.equal($('#template').value,'acc-rings');assert.equal($('[name="guide-theme"]:checked').value,'gold');
+    assert.equal($('#template').value,'acc-rings');assert.equal($('[name="guide-theme"]:checked').value,'numeric');
 
     // ---- theme, colour and style options reach the preview
     pickCat('shoes');await settle();
-    $('[name="guide-theme"][value="leather"]').click();await settle();
-    assert.equal(guideWrap().dataset.theme,'leather');assert.equal($('#guideColor').value,'#8a5a35');
+    $('[name="guide-theme"][value="precision"]').click();await settle();
+    assert.equal(guideWrap().dataset.theme,'precision');assert.equal($('#guideColor').value,'#39383b');
     input('#guideColor','#336699');assert.equal(guideWrap().style.getPropertyValue('--accent'),'#336699');
     $('[name="guide-table_style"][value="cards"]').click();$('[name="guide-density"][value="compact"]').click();$('[name="guide-corners"][value="round"]').click();
     assert.deepEqual([guideWrap().dataset.table,guideWrap().dataset.density,guideWrap().dataset.corners],['cards','compact','round']);
@@ -109,6 +109,24 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     assert.match($('#importPanel').textContent,/تملك حقوقه/,'imports say which charts are fair to upload');
     change('#calculator',false);assert.equal($('#guidePreview').shadowRoot.querySelectorAll('[role=tab]').length,2);change('#calculator',true);assert.equal($('#guidePreview').shadowRoot.querySelectorAll('[role=tab]').length,3);
     // colours: automatic until the merchant picks one, and every colour can be reset
+    // Applying a whole-chart palette leaves the structure untouched and can restore a previous custom color.
+    {
+      const buttons=all('#guidePalettes button');
+      assert.equal(buttons.length,9);
+      const original=guideWrap().dataset.theme,layout=guideWrap().dataset.layout;
+      const before=all('#gridEditor tbody input').map(x=>x.value);
+      input('#tc-paper_color','#f0ebeb');
+      buttons[0].click();assert.equal(buttons[0].getAttribute('aria-pressed'),'true');
+      assert.equal($('#tc-paper_color').value,'#fffaf1');assert.equal(guideWrap().dataset.theme,original);
+      assert.equal(guideWrap().dataset.layout,layout);
+      assert.deepEqual(all('#gridEditor tbody input').map(x=>x.value),before);
+      $('#undoPalette').click();assert.equal($('#tc-paper_color').value,'#f0ebeb');
+      const formal=$('#guidePalettes [data-palette="formal"]');
+      formal.click();assert.equal(formal.getAttribute('aria-pressed'),'true');
+      assert.equal($('#tc-paper_color').value,'#ffffff');assert.equal($('#tc-text_color').value,'#242424');
+      input('#tc-row_alt','#404556');assert.equal(formal.getAttribute('aria-pressed'),'false');
+      $('#resetTableColors').click();
+    }
     assert.equal(all('#tableColors .color-field').length,8);assert.equal($('#tc-status-header_bg').textContent,'تلقائي');assert.equal($('#tc-header_bg').closest('.color-field').querySelector('button').disabled,true);
     const auto=$('#tc-row_alt').value;assert.match(auto,/^#[0-9a-f]{6}$/);
     input('#tc-header_bg','#101010');input('#tc-size_bg','#ffeeaa');
@@ -123,7 +141,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // ---- once numbers are entered, the category keeps them
     input('#gridEditor [data-row="0"][data-cell="2"]','24.5');input('#guideTitle','دليل الأحذية');
     pickCat('pets');await settle();
-    assert.equal($('#gridEditor [data-row="0"][data-cell="2"]').value,'24.5','entered data is never discarded');assert.equal($('[name="guide-theme"]:checked').value,'paws');assert.ok(all('#template option').some(o=>o.value==='pets-dog'));
+    assert.equal($('#gridEditor [data-row="0"][data-cell="2"]').value,'24.5','entered data is never discarded');assert.equal($('[name="guide-theme"]:checked').value,'ranges');assert.ok(all('#template option').some(o=>o.value==='pets-dog'));
     $('#template').value='pets-dog';confirmed=false;$('#applyTemplate').click();await settle();assert.equal($('#gridEditor thead th input').value,'UK','declined replacement keeps the table');
     confirmed=true;$('#applyTemplate').click();await settle();
     assert.deepEqual(all('#gridEditor thead th input').map(i=>i.value),['محيط الرقبة','محيط الصدر','طول الظهر','الوزن (كجم)']);
@@ -190,6 +208,16 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      root().querySelector('thead th:nth-child(2)').click();assert.equal(all('#paintScope input').length,2);$('[name="paint-scope"][value="all"]').click();input('#paintBg','#102030');
      assert.equal(root().querySelector('thead th:nth-child(3)').style.background,'rgb(16, 32, 48)');assert.equal($('#paintClearAll').disabled,false);
      $('#paintClearPart').click();assert.equal(root().querySelector('thead th:nth-child(3)').style.background,'');
+     // Whole-chart color changes can keep cell overrides, or replace and undo them without losing bold.
+     const palette=$('#guidePalettes [data-palette="garnet"]');
+     $('#paletteIncludePaint').checked=false;palette.click();
+     assert.equal(root().querySelector('tbody tr').children[1].style.background,'rgb(255, 208, 208)');
+     $('#undoPalette').click();
+     $('#paletteIncludePaint').checked=true;palette.click();
+     assert.equal(root().querySelector('tbody tr').children[1].style.background,'');
+     assert.equal(root().querySelectorAll('tbody tr')[1].children[1].style.fontWeight,'700');
+     $('#undoPalette').click();
+     assert.equal(root().querySelector('tbody tr').children[1].style.background,'rgb(255, 208, 208)');
      // the first two parts stay painted for the save below
      }
     // ---- editing right in the live preview: type into cells, add and remove rows and columns
@@ -214,6 +242,24 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      const target=cards.find(c=>c.querySelector('#themeChoices'));target.querySelector('.acc-btn').click();assert.equal(open(),1);assert.ok(target.classList.contains('open'));assert.equal(target.querySelector('.acc-btn').getAttribute('aria-expanded'),'true');
      target.querySelector('.acc-btn').click();assert.equal(open(),0,'pressing the open title closes it');
      $('#accAll').click();assert.equal(open(),cards.length);$('#accAll').click();assert.equal(open(),1);}
+    {
+      const appearance = $('#presetCard'), advanced = $('#customCard');
+      assert.ok(appearance.contains($('#themeChoices')) && appearance.contains($('#guidePalettes')));
+      for (const id of ['guideFont', 'tableColors', 'paintMode', 'myStyles']) {
+        assert.ok(advanced.contains($('#'+id)), id+' is grouped under advanced customization');
+      }
+      assert.equal(advanced.querySelectorAll('details[open]').length, 0);
+      const shortcut = [...d.querySelectorAll('.editor-jumps button')].find(b => b.textContent === 'تخصيص متقدم');
+      shortcut.click();
+      assert.equal(shortcut.getAttribute('aria-expanded'), 'true');
+      assert.equal(appearance.querySelector('.acc-btn').getAttribute('aria-expanded'), 'false');
+      $('#paintCard').querySelector('summary').click();
+      assert.ok($('#paintCard').open);
+      const footer = d.querySelector('main > .workspace-footer');
+      assert.ok(footer.querySelector('[aria-hidden="true"] [data-fuzz]'));
+      assert.equal(footer.querySelector('a').hash, '#workspaceTop');
+      assert.equal($('#workspaceTop').tagName, 'MAIN');
+    }
     // ---- a second (body) table pasted in, shown with a switch, removable
     {const root=()=>$('#guidePreview').shadowRoot;$('#bodyPaste').value='المقاس\tالطول\tالصدر\nS\t160-165\t82-86\nM\t165-170\t86-90';$('#bodyApply').click();
     assert.equal(root().querySelectorAll('.tvs button').length,2,'the preview shows the product/body switch');assert.match($('#bodyState').textContent,/2 صفًا/);assert.equal($('#bodyRemove').disabled,false);
@@ -224,7 +270,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     $('#saveDraft').click();await settle();
     const put=call('PUT','size-guides/42')[0].body;assert.equal(put.action,'draft');
     assert.equal(put.guide.size_systems.join(),'US','the ticked system is saved');assert.equal(put.guide.font_family,'cairo','the chosen font is saved');assert.equal(put.guide.body_table.title,'جسمك');assert.equal(put.guide.body_table.rows.length,2);assert.deepEqual(put.guide.body_table.columns.map(c=>c.label),['الطول','الصدر']);
-    const g=put.guide;assert.deepEqual(g.cell_styles.map(x=>[x.target,x.row,x.col,x.bg,x.fg,x.bold]),[['cell',0,0,'#ffd0d0','',false],['col',-1,0,'','#202020',true]],'painted parts are saved');assert.deepEqual([g.category,g.theme,g.table_style,g.density,g.corners,g.depth3d,g.header_icon],['pets','paws','cards','compact','round',false,false]);
+    const g=put.guide;assert.deepEqual(g.cell_styles.map(x=>[x.target,x.row,x.col,x.bg,x.fg,x.bold]),[['cell',0,0,'#ffd0d0','',false],['col',-1,0,'','#202020',true]],'painted parts are saved');assert.deepEqual([g.category,g.theme,g.table_style,g.density,g.corners,g.depth3d,g.header_icon],['pets','ranges','cards','compact','round',false,false]);
     assert.deepEqual([g.size_style,g.header_style,g.border_style,g.font_scale,g.sticky_size,g.size_label,g.language,g.calculator],['underline','solid','strong','large',false,'الحجم','ar',true]);
     assert.deepEqual([g.header_bg,g.row_alt,g.border_color,g.size_bg],['','','#ff0000',''],'colours reset to automatic are saved empty; the one picked afterwards is kept');
     assert.deepEqual([g.how_video,g.logo_url],['https://youtu.be/dQw4w9WgXcQ','https://cdn.example.com/logo.png']);assert.deepEqual(g.how_images,['https://cdn.example.com/a.jpg','https://cdn.example.com/b.jpg','1','2']);
@@ -232,23 +278,23 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     aiAvailable=false;
 
     // ---- ready-made looks change only the appearance, and can be undone (none ship by default; the owner adds their own)
-    assert.equal(w.SizeGuideCatalog.stylePresets.length,2);assert.equal(all('#presetChoices .preset-card').length,2);assert.equal(hidden('#presetChoices'),false);
+    assert.equal(w.SizeGuideCatalog.stylePresets.length,0);assert.equal(all('#presetChoices .preset-card').length,0);assert.equal(hidden('#presetChoices'),true);
     w.SizeGuideCatalog.stylePresets.push({id:'bold',name:'جريء',hint:'ترويسة ممتلئة وحدود واضحة',style:{theme:'slate',table_style:'zebra',density:'comfortable',corners:'sharp',depth3d:false,header_icon:true,size_style:'square',header_style:'solid',border_style:'strong',font_scale:'large',header_bg:'',header_text:'',row_alt:'',border_color:'',text_color:'',paper_color:'',size_bg:'',size_text:'',sticky_size:true}});
     $('#backCatalog').click();await settle();$('[data-edit="42"]').click();await settle();
     const before={rows:JSON.stringify(guideCopy().rows),columns:JSON.stringify(guideCopy().columns),title:$('#guideTitle').value};
     function guideCopy(){return {rows:all('#gridEditor tbody tr').map(tr=>[...tr.querySelectorAll('input')].map(i=>i.value)),columns:all('#gridEditor thead th input').map(i=>i.value)}}
-    assert.equal(all('#presetChoices .preset-card').length,3);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
+    assert.equal(all('#presetChoices .preset-card').length,1);assert.equal(all('#myPresets .preset-card').length,1);assert.ok($('#presetChoices .preset-mini'));
     assert.equal($('#undoStyle').classList.contains('hidden'),true);
     const oldStyle=[$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value];
     all('#presetChoices .preset-pick').find(b=>/جريء/.test(b.textContent)).click();
     assert.deepEqual([$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('[name="guide-header_style"]:checked').value,$('[name="guide-corners"]:checked').value,$('[name="guide-font_scale"]:checked').value],['zebra','square','solid','sharp','large']);
-    assert.equal($('[name="guide-theme"]:checked').value,'slate');assert.equal($('#guideColor').value,'#3d4a56');assert.equal(guideWrap().dataset.theme,'slate');assert.equal(guideWrap().dataset.corners,'sharp');
+    assert.equal(guideWrap().dataset.theme,'slate');assert.equal($('[name="guide-theme"]:checked'),null);assert.equal($('#guideColor').value,'#3d4a56');assert.equal(guideWrap().dataset.theme,'slate');assert.equal(guideWrap().dataset.corners,'sharp');
     assert.ok(all('#tableColors .color-field').every(f=>!f.classList.contains('custom')),'a look clears custom colours');
     assert.deepEqual([JSON.stringify(guideCopy().rows),JSON.stringify(guideCopy().columns),$('#guideTitle').value],[before.rows,before.columns,before.title],'the table itself is untouched');
     assert.equal($('#undoStyle').classList.contains('hidden'),false);$('#undoStyle').click();
     assert.deepEqual([$('[name="guide-table_style"]:checked').value,$('[name="guide-size_style"]:checked').value,$('#guideColor').value],oldStyle,'undo restores the previous look');assert.equal($('#undoStyle').classList.contains('hidden'),true);
     // a saved look applies like a built-in one
-    all('#myPresets .preset-pick').find(b=>/تصميم قديم/.test(b.textContent)).click();assert.equal($('[name="guide-theme"]:checked').value,'velvet');assert.equal($('[name="guide-density"]:checked').value,'compact');$('#undoStyle').click();
+    all('#myPresets .preset-pick').find(b=>/تصميم قديم/.test(b.textContent)).click();assert.equal(guideWrap().dataset.theme,'velvet');assert.equal($('[name="guide-theme"]:checked'),null);assert.equal($('[name="guide-density"]:checked').value,'compact');$('#undoStyle').click();
     // the store's colour
     $('#brandColor').value='#ffe9a8';$('#applyBrand').click();
     assert.notEqual($('#guideColor').value,'#ffe9a8','a pale brand colour is darkened to stay readable');assert.match($('[name="guide-header_style"]:checked').value,/solid|tint/);
@@ -256,8 +302,8 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     $('#undoStyle').click();assert.notEqual($('#guideColor').value,'#7b2338');
     // saving the current look as a named design
     $('#savePreset').click();await settle();assert.equal(call('POST','size-presets').length,0,'a name is required');
-    $('[name="guide-theme"][value="gold"]').click();$('[name="guide-table_style"][value="lines"]').click();input('#presetName','تصميم متجري');$('#savePreset').click();await settle();
-    const savedLook=call('POST','size-presets')[0].body;assert.equal(savedLook.kind,'style');assert.equal(savedLook.name,'تصميم متجري');assert.equal(savedLook.style.theme,'gold');assert.equal(savedLook.style.table_style,'lines');
+    $('[name="guide-theme"][value="numeric"]').click();$('[name="guide-table_style"][value="lines"]').click();input('#presetName','تصميم متجري');$('#savePreset').click();await settle();
+    const savedLook=call('POST','size-presets')[0].body;assert.equal(savedLook.kind,'style');assert.equal(savedLook.name,'تصميم متجري');assert.equal(savedLook.style.theme,'numeric');assert.equal(savedLook.style.table_style,'lines');
     assert.equal('title' in savedLook.style||'columns' in savedLook.style||'rows' in savedLook.style||'language' in savedLook.style,false,'only appearance is saved');
     assert.equal(all('#myPresets .preset-card').length,2);assert.equal($('#presetName').value,'');
     confirmed=false;$('#myPresets .preset-x').click();await settle();assert.equal(call('DELETE','size-presets/').length,0);confirmed=true;$('#myPresets .preset-x').click();await settle();assert.equal(call('DELETE','size-presets/').length,1);assert.equal(all('#myPresets .preset-card').length,1);
@@ -309,7 +355,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
      const colorBefore=$('#guideColor').value;$('#importApply').click();await settle();assert.equal($('#guideColor').value,colorBefore);assert.equal(all('#widthEditor input').length,0);}
     // ---- a guide saved before these options existed opens with defaults
     $('#backCatalog').click();await settle();$('[data-edit="43"]').click();await settle();
-    assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'classic');assert.equal($('#guideColor').value,'#123456');
+    assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal(guideWrap().dataset.theme,'classic');assert.equal($('[name="guide-theme"]:checked'),null);assert.equal($('#guideColor').value,'#123456');
     assert.equal($('#depth3d').checked,true);assert.equal($('[name="guide-size_style"]:checked').value,'chip');assert.equal($('#calculator').checked,false,'older guides keep the finder off');assert.equal($('#template').value,'general-basic');
     assert.equal($('#tc-status-header_bg').textContent,'تلقائي');
     w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new w.Event('close'));};

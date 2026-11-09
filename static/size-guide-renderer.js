@@ -6,7 +6,7 @@ const categories=[
   {id:'kids',name:'أطفال',emblem:'kids'},{id:'shoes',name:'أحذية',emblem:'shoe'},{id:'pets',name:'حيوانات أليفة',emblem:'paw'},{id:'accessories',name:'إكسسوارات',emblem:'ring'}];
 const categoryNames={general:'General',women:'Women',men:'Men',kids:'Kids',shoes:'Shoes',pets:'Pets',accessories:'Accessories'};
 /* head: 'tint' = soft header, 'solid' = header filled with the accent. pattern decorates the hero band only. */
-const themes=[
+const legacyThemes=[
   {id:'classic',name:'كلاسيكي',accent:'#177e65',paper:'#ffffff',ink:'#20372b',muted:'#667a6e',line:'#e2eae4',head:'tint',pattern:'none',cats:['general','women','men']},
   {id:'rose',name:'وردي ناعم',accent:'#b4456a',paper:'#fffafb',ink:'#4a2332',muted:'#8a6270',line:'#f1dde4',head:'tint',pattern:'dots',cats:['women','kids']},
   {id:'velvet',name:'مخمل عنابي',accent:'#7b2338',paper:'#fffbfa',ink:'#3d1a22',muted:'#86606a',line:'#f0dde0',head:'solid',pattern:'none',cats:['women']},
@@ -22,6 +22,29 @@ const themes=[
   {id:'minimal',name:'بسيط',accent:'#2b2b2b',paper:'#ffffff',ink:'#1c1c1c',muted:'#6b6b6b',line:'#ebebeb',head:'tint',pattern:'none',cats:['general','accessories']},
   {id:'reference',name:'مرجع المقاس',accent:'#000000',paper:'#ffffff',ink:'#000000',muted:'#666666',line:'#e5e5e5',head:'tint',pattern:'none',cats:['general','women','men']},
 ];
+// Selectable themes. Historical identifiers remain readable in published guides.
+const themes=[
+  {id:'atlas',name:'تحويل المقاسات',accent:'#373631',mode:'fold',head:'line',cats:["general", "accessories"]},
+  {id:'maison',name:'مقاسات الفساتين والبلوزات',accent:'#483c38',mode:'dual',head:'plain',cats:["women"]},
+  {id:'folio',name:'التحويل وقياسات الجسم',accent:'#766652',mode:'sections',head:'tint',cats:["general", "men"]},
+  {id:'correspondence',name:'تطابق المقاسات',accent:'#373335',mode:'dualmatrix',head:'plain',cats:["general"]},
+  {id:'atelier',name:'قياسات القطعة حسب المقاس',accent:'#363732',mode:'single',head:'line',cats:["women", "men"]},
+  {id:'fitting',name:'جدول المقاسات ودليل القصّة',accent:'#403d38',mode:'fit',head:'plain',cats:["women", "men"]},
+  {id:'garment',name:'قياسات الموديل',accent:'#514a42',mode:'stacked',head:'tint',cats:["women", "kids"]},
+  {id:'runway',name:'جدول الملابس النسائية',accent:'#282b2c',mode:'regular',head:'tint',cats:["women"]},
+  {id:'coordinates',name:'القياسات حسب نظام الدولة',accent:'#393d3c',mode:'systems',head:'tint',cats:["shoes", "men"]},
+  {id:'measure',name:'كيفية قياس الجسم',accent:'#242425',mode:'howfirst',head:'plain',cats:["kids", "pets"]},
+  {id:'wrap',name:'قياسات الفستان الملفوف',accent:'#603c47',mode:'dualstack',head:'line',cats:["women"]},
+  {id:'ranges',name:'نطاقات قياسات الجسم',accent:'#765657',mode:'range',head:'tint',cats:["women", "kids"]},
+  {id:'stature',name:'المقاس العادي وPetite',accent:'#434b3d',mode:'stature',head:'line',cats:["women"]},
+  {id:'paris',name:'مقاسات الفساتين الفرنسية',accent:'#715e52',mode:'combined',head:'plain',cats:["women"]},
+  {id:'silhouette',name:'التحويل ودليل قياس الورك',accent:'#464047',mode:'howlast',head:'plain',cats:["women"]},
+  {id:'numeric',name:'المقاس الرقمي والحرفي',accent:'#584d40',mode:'dualcols',head:'tint',cats:["accessories", "men"]},
+  {id:'continental',name:'جدول التحويل الأوروبي',accent:'#272821',mode:'euro',head:'tint',cats:["shoes"]},
+  {id:'precision',name:'تحويل الفساتين وقياس الذراع',accent:'#39383b',mode:'detailed',head:'line',cats:["men", "accessories"]},
+  {id:'matrix',name:'التحويل والقياس في مصفوفة واحدة',accent:'#282826',mode:'matrix',head:'solid',cats:["general"]},
+  {id:'paired',name:'مقاسان رقميان تحت كل حرف',accent:'#736457',mode:'paired',head:'tint',cats:["kids"]}
+].map(theme=>({paper:'#ffffff',ink:'#242422',muted:'#696762',line:'#dad8d3',pattern:'none',...theme}));
 const emblems={
   dress:'<path class="body" d="M23 6 18 14l4 7 4-3-1 15-11 21q18 6 36 0L39 33l-1-15 4 3 4-7-5-8q-9 10-18 0Z"/>',
   shirt:'<path class="body" d="M22 6 8 14l5 11 7-3v32h24V22l7 3 5-11-14-8q-10 8-20 0Z"/>',
@@ -130,7 +153,7 @@ function svgEl(markup,className){
   const svg=document.importNode(doc.documentElement,true);svg.setAttribute('class',className);return svg;
 }
 const category=id=>categories.find(c=>c.id===id)||categories[0];
-const theme=id=>themes.find(t=>t.id===id)||themes[0];
+const theme=id=>themes.find(t=>t.id===id)||legacyThemes.find(t=>t.id===id)||legacyThemes[0];
 function emblem(categoryId,className='emblem'){return svgEl(emblems[category(categoryId).emblem],className);}
 function luminance(hex){const rgb=hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;}
 const readable=hex=>luminance(hex)>.42?'#1b1b1b':'#ffffff';
@@ -156,7 +179,7 @@ function palette(guide){
   const headInk=custom(guide.header_text)||(headStyle==='solid'||custom(guide.header_bg)?readable(headBg):headStyle==='tint'?mix(ink,accent,.62):ink);
   const alt=custom(guide.row_alt)||mix(paper,accent,.08),chipBg=custom(guide.size_bg)||mix(paper,accent,.08);
   const line=custom(guide.border_color)||(guide.border_style==='strong'?mix(t.line,ink,.3):t.line);
-  return {theme:t,headStyle,accent,paper,ink,muted:guide.text_color?mix(ink,paper,.42):t.muted,line,headBg,headInk,alt,chipBg,
+  return {theme:t,headStyle,accent,paper,ink,muted:guide.text_color?mix(ink,paper,guide.paper_color && guide.row_alt ? .25 : .42):t.muted,line,headBg,headInk,alt,chipBg,
     chipInk:custom(guide.size_text)||(custom(guide.size_bg)?readable(chipBg):mix(ink,accent,.72)),accentInk:mix(ink,accent,.72)};
 }
 /* A store's own colour as the accent: nudged until it reads on the table's paper, with a header that suits its weight. */
@@ -172,7 +195,51 @@ function tokens(guide){
   return {theme:p.theme,vars:{'--accent':p.accent,'--on-accent':readable(p.accent),'--paper':p.paper,'--ink':p.ink,'--muted':p.muted,'--line':p.line,
     '--head-bg':p.headBg,'--head-ink':p.headInk,'--alt':p.alt,'--chip-bg':p.chipBg,'--chip-ink':p.chipInk,'--accent-ink':p.accentInk,'--pattern':pattern(p.theme.pattern,p.accent)}};
 }
-const css=`:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line-height:1.7;color-scheme:light dark}*{box-sizing:border-box}button,input{font:inherit}button{cursor:pointer;color:inherit}
+const css=`
+.wrap .fit-advice,.wrap .size-comparison{margin-block:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);color:var(--ink)}
+.wrap .fit-advice p{margin:.35em 0;white-space:pre-line}.wrap .fit-advice small{color:var(--muted)}
+.wrap .size-comparison summary{cursor:pointer;font-weight:650}.compare-controls{display:flex;flex-wrap:wrap;gap:12px;margin-block:12px}.compare-controls label{flex:1;min-width:85px;color:var(--muted);font-size:.85em}
+.wrap .compare-controls select{display:block;width:100%;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);min-height:38px;margin-block-start:4px}
+.wrap .compare-scroll{max-width:100%;overflow-x:auto}.wrap .compare-scroll table{min-width:0;width:100%;font-size:.9em}.wrap .compare-scroll th,.wrap .compare-scroll td{padding:7px 5px;white-space:normal;overflow-wrap:anywhere}
+
+@container (max-width:440px){
+  .wrap[data-presentation] .hero,.wrap[data-presentation] .body{padding:14px}
+  .wrap[data-presentation] .tabs button{padding:6px 9px;font-size:.84rem}
+  .wrap[data-presentation] .tools{max-width:100%;flex-wrap:wrap}
+  .wrap[data-presentation] .scroll{max-width:100%}
+}
+.wrap[data-presentation] .hero{background:var(--paper);padding-block:24px;border-bottom:1px solid var(--line)}
+.wrap[data-presentation] .emblem{width:42px;height:42px;flex-basis:42px}
+.wrap[data-presentation] .hero h2{font-size:clamp(20px,4cqw,30px);letter-spacing:0}
+.wrap[data-presentation] .product{margin:6px 0}
+.wrap[data-presentation] .tabs{background:none;border:0;border-bottom:1px solid var(--line);padding:0;border-radius:0;display:flex}
+.wrap[data-presentation] .tabs button{background:none;border-radius:0;border-bottom:2px solid transparent;box-shadow:none}
+.wrap[data-presentation] .tabs button[aria-selected=true]{border-color:var(--accent);color:var(--accent-ink)}
+.wrap[data-presentation] .bar{background:transparent;padding-inline:0}
+.wrap[data-presentation] .scroll{margin-block:12px;scrollbar-width:thin}
+.wrap[data-presentation] .section-title{font-size:1em;margin:20px 0 3px}
+.wrap .look-options{display:flex;flex-wrap:wrap;gap:6px;margin-block:12px}
+.wrap .look-options button{border-radius:var(--r);border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:6px 12px;min-height:36px}
+.wrap .look-options [aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+.wrap .secondary-value{display:block;color:inherit;opacity:.83;font-weight:400;font-size:.84em}
+.wrap .look-hit{box-shadow:inset 0 -2px var(--accent)}
+.wrap[data-presentation=single] .tcol,.wrap[data-presentation=range] .tcol{max-width:640px;margin-inline:auto}
+.wrap:is([data-presentation=dual],[data-presentation=dualstack],[data-presentation=combined],[data-presentation=howlast],[data-presentation=regular]) .titles{text-align:center}
+.wrap:is([data-presentation=dual],[data-presentation=dualstack],[data-presentation=combined],[data-presentation=howlast],[data-presentation=regular]) .chips{justify-content:center}
+.wrap[data-presentation=dual] .secondary-value,.wrap[data-presentation=dualmatrix] .secondary-value{display:inline}
+.wrap[data-presentation=dual] .secondary-value::before,.wrap[data-presentation=dualmatrix] .secondary-value::before{content:' / '}
+.wrap[data-presentation=fit] .tabs{gap:20px;border:0}
+.wrap[data-presentation=fit] .tabs button{text-decoration:underline;text-underline-offset:5px}
+.wrap[data-presentation=stature] .look-options button{border-radius:0;border-width:0 0 1px}
+.wrap[data-presentation=paired] th[scope=colgroup]{text-align:center;border-bottom:1px solid var(--line)}
+.wrap:is([data-presentation=dualmatrix],[data-presentation=detailed],[data-presentation=euro],[data-presentation=paired]):not([data-border=none]) :is(td,th){border-inline-end:1px solid var(--line)}
+.wrap[data-presentation=dualstack] td{line-height:1.7}
+.wrap[data-presentation=range] td,.wrap[data-presentation=combined] td{font-variant-numeric:tabular-nums}
+.wrap[data-presentation=fold] .fold-section{border-inline:0;border-radius:0}
+.wrap[data-presentation=single] .look-options [aria-pressed=true]{font-weight:bold}
+.wrap[data-presentation] .scroll table tbody tr[hidden]{display:none}
+
+:host{font-family:PingARLT,Tahoma,Arial,sans-serif;direction:rtl;line-height:1.7;color-scheme:light dark}*{box-sizing:border-box}button,input{font:inherit}button{cursor:pointer;color:inherit}
 .wrap{--r:14px;--pad-y:13px;--pad-x:16px;--fs:.92rem;position:relative;overflow:hidden;isolation:isolate;background:var(--paper);color:var(--ink);border-radius:calc(var(--r) * 1.3)}
 .wrap[data-corners=sharp]{--r:3px}.wrap[data-corners=round]{--r:22px}.wrap[data-density=compact]{--pad-y:8px;--pad-x:11px}
 .wrap[data-font=small]{--fs:.8rem}.wrap[data-font=large]{--fs:1.05rem}
@@ -235,7 +302,7 @@ tbody tr.hit>*{background:color-mix(in srgb,var(--accent) 22%,var(--paper))!impo
 .instructions{white-space:pre-wrap;font-size:.95rem;line-height:2;padding:6px 2px}.hint{font-size:.72rem;color:var(--muted);margin:12px 0 0}
 .measure{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:18px;align-items:center;margin:18px 0 6px;padding:14px;background:var(--alt);border:1px solid var(--line);border-radius:var(--r)}.measure .figure.photo{background:#fff;border-radius:12px;padding:8px;justify-self:center}.measure .figure.photo img{display:block;max-width:100%;max-height:300px;width:auto;height:auto}.measure .figure svg{display:block;width:100%;height:auto}.measure .instructions.beside{padding:0;font-size:.9rem;line-height:1.9}.measure ol{margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:.88rem;line-height:1.8}.measure li{display:flex;gap:10px;align-items:flex-start}.measure li::before{content:counter(item);counter-increment:item;flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent,#fff);font-size:.72rem;font-weight:700;display:grid;place-items:center;margin-top:3px}.measure ol{counter-reset:item}@media(max-width:520px){.measure{grid-template-columns:1fr}}
 .ed{display:inline-block;min-width:2.2ch;max-width:100%;padding:3px 7px;border-radius:7px;outline:none;cursor:text;white-space:nowrap;overflow-wrap:anywhere;transition:background-color .15s,box-shadow .15s}
-.ed:hover{background:color-mix(in srgb,var(--accent) 9%,transparent)}.ed:focus{background:var(--paper);box-shadow:0 0 0 2px var(--accent)}.ed:empty:before{content:'—';color:var(--muted)}
+.ed:hover{background:color-mix(in srgb,var(--accent) 9%,transparent)}.ed:focus{background:var(--paper);color:var(--ink);box-shadow:0 0 0 2px var(--accent)}.ed:empty:before{content:'—';color:var(--muted)}
 .ctl{width:44px;min-width:44px;padding:0!important;text-align:center}.ed-del,.ed-add-col,.ed-del-col{min-width:32px;min-height:32px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);font:inherit;font-size:1.05rem;line-height:1;cursor:pointer;transition:background-color .15s,color .15s,opacity .15s}
 .ed-del{opacity:.4}tr:hover .ed-del,.ed-del:focus-visible{opacity:1}.ed-del:hover,.ed-del-col:hover{background:#fde8e4;color:#9a3a2c}.ed-add-col:hover{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
 .ed-del-col{margin-inline-start:4px;min-width:26px;min-height:26px;opacity:.4;font-size:.95rem}th:hover .ed-del-col,.ed-del-col:focus-visible{opacity:1}.unit-suffix{color:var(--muted);font-weight:400}
@@ -245,7 +312,7 @@ tbody tr.hit>*{background:color-mix(in srgb,var(--accent) 22%,var(--paper))!impo
 .fit{display:flex;align-items:center;gap:18px;margin:0 0 16px;padding:12px 4px;border-bottom:1px solid var(--line)}.fit-title{font-weight:700;white-space:nowrap}.fit-track{position:relative;flex:1;display:grid;grid-template-columns:repeat(3,1fr);font-size:.78rem;color:var(--muted);padding-bottom:12px;min-width:0}
 .fit-track span{text-align:center}.fit-track span.on{color:var(--ink);font-weight:700}.fit-track:before{content:'';position:absolute;inset-inline:0;bottom:4px;height:1px;background:var(--line)}
 .fit-marker{position:absolute;bottom:1px;width:26px;height:7px;border-radius:3px;background:var(--accent);margin-inline-start:-13px}.fit[data-level=slim] .fit-marker{inset-inline-start:16.66%}.fit[data-level=regular] .fit-marker{inset-inline-start:50%}.fit[data-level=loose] .fit-marker{inset-inline-start:83.33%}
-.col-hl{background:color-mix(in srgb,var(--accent) 11%,var(--paper))!important}
+.col-hl{box-shadow:inset 0 -2px var(--accent)}
 .fold-section{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)}.fold-section>summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .fold-section>summary::-webkit-details-marker{display:none}.fold-section>summary::after{content:'';width:8px;height:8px;border-inline-end:2px solid var(--muted);border-block-end:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}.fold-section[open]>summary::after{transform:rotate(-135deg)}
 .fold-section>:not(summary){padding:0 16px 16px}
@@ -296,6 +363,18 @@ dialog[data-theme=reference]>.wrap{height:100%;display:grid;grid-template-rows:a
 .wrap[data-theme=reference] .measure ol{display:block;counter-reset:item;font-size:12px;line-height:1.17}.wrap[data-theme=reference] .measure li{display:block;margin-bottom:23px;counter-increment:item}.wrap[data-theme=reference] .measure li::before{display:none}
 .wrap[data-theme=reference] .tip b{display:flex;align-items:center;gap:4px;margin:0 0 7px;padding-top:10px;font-size:14px}.wrap[data-theme=reference] .tip b::before{content:counter(item);display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#000;color:#fff;font-size:12px;font-weight:400}.wrap[data-theme=reference] .tip .sep{display:none}.wrap[data-theme=reference] .tip .desc{display:block}
 @media(max-width:600px){dialog[data-theme=reference]{width:calc(100vw - 24px);height:88dvh;max-height:88dvh}.wrap[data-theme=reference] .hero{padding:28px 20px}.wrap[data-theme=reference] .body{padding-inline:20px}.wrap[data-theme=reference] .tvs{gap:24px}.wrap[data-theme=reference] .tvs button{font-size:16px}.wrap[data-theme=reference] .bar{gap:6px;padding-inline:8px}.wrap[data-theme=reference] .tools{gap:6px}.wrap[data-theme=reference] .sys{min-width:90px}.wrap[data-theme=reference] .fit{column-gap:12px}.wrap[data-theme=reference] .fit-title{font-size:14px}.wrap[data-theme=reference] .fit-track small{font-size:10px}.wrap[data-theme=reference] table{min-width:520px}.wrap[data-theme=reference] .measure{gap:10px}}
+/* Explicit table colors also follow the rotated grids, stacked cards and plain size labels. */
+.wrap[data-custom-rows] .size-card:nth-child(even),
+.wrap[data-custom-rows] tbody tr:nth-child(even)>:is(td,th){background:var(--alt)}
+.wrap[data-custom-rows][data-table=cards] tbody tr:nth-child(odd)>:is(td,th){background:var(--paper)}
+.wrap[data-custom-size][data-sizestyle] .chip{background:var(--chip-bg)}
+.wrap[data-custom-size]:is([data-sizestyle=plain],[data-sizestyle=underline]) th:has(>.chip){background:var(--chip-bg);color:var(--chip-ink)}
+.wrap[data-custom-paper] .sys{appearance:auto;background:var(--paper);color:var(--ink);padding-inline:8px}
+.wrap[data-theme=reference][data-custom-paper] :is(.bar,.units){background:var(--alt)}
+.wrap[data-theme=reference][data-custom-paper] .bar .legend,.wrap[data-theme=reference][data-custom-paper] .tvs button{color:var(--muted)}
+.wrap[data-theme=reference][data-custom-paper] .tvs button[aria-pressed=true]{color:var(--ink)}
+.wrap[data-theme=reference][data-custom-paper] .units button[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+
 [hidden]{display:none!important}
 @media(max-width:560px){.hero{padding:20px 18px 16px;gap:12px}.emblem{flex-basis:58px;width:58px;height:58px}h2{font-size:1.25rem}.body{padding:16px 14px 22px}.tabs button{padding:6px 12px}}
 @media(prefers-reduced-motion:reduce){dialog[open],.wrap .emblem{animation:none!important}.tabs button,.wrap tbody tr{transition:none!important}}`;
@@ -344,7 +423,7 @@ function recommend(guide,inputs){
       const tol=range[0]===range[1]?info[i].tolerance:0,x=inputs[i],low=range[0]-tol,high=range[1]+tol;
       primary+=(x<low?low-x:x>high?x-high:0)/info[i].spread;secondary+=Math.abs(x-(range[0]+range[1])/2)/info[i].spread;
     }
-    if(!used)return;
+    if(used!==cols.length)return;
     if(!best||primary<best.primary-1e-9||(Math.abs(primary-best.primary)<1e-9&&secondary<best.secondary))best={index,primary,secondary};
   });
   return best&&{index:best.index,exact:best.primary<1e-9};
@@ -376,9 +455,192 @@ const LAYOUTS=['tabs','page','cards','compact'],FITS=['slim','regular','loose'];
 const SIZE_SYSTEM=/^(eu|uk|us|fr|it|de|jp|cn|au|size|مقاس)(?![\p{L}\d])/iu;
 const DATA_IMAGE=/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+\/=]{20,300000}$/;
 const HTTPS=/^https:\/\/[^\s"'<>\\]{4,480}$/;
-function render(host,full,productName,close,pick){
+/* Adapt the merchant's grid in-place. The source rows never change. Direct editing and
+   cell painting use the canonical grid so their persisted row/column addresses stay stable. */
+function presentChart({mode,table,scroll,col,guide,unit,lang,state,hit,sysIdx}){
+  const en=lang==='en', rows=Array.from(table.tBodies[0].rows);
+  const text=(ar,english)=>en?english:ar;
+  const fields=guide.columns;
+  function note(node,value){
+    node.append(el('small',value,'secondary-value'));
+  }
+  function selector(labels,current,onSelect,aria){
+    const group=el('div',undefined,'look-options');
+    group.setAttribute('role','group');group.setAttribute('aria-label',aria);
+    const buttons=labels.map((label,index)=>{
+      const button=el('button',label);button.type='button';
+      button.onclick=()=>activate(index);group.append(button);return button;
+    });
+    function activate(index){
+      buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));
+      onSelect(index);
+    }
+    activate(current);scroll.before(group);
+  }
+  const otherUnit=unit==='cm'?'in':'cm';
+  const unitLabel=otherUnit==='cm'?text('سم','cm'):text('إنش','in');
+  const dual=['dual','dualmatrix','dualstack','dualcols'].includes(mode);
+  if(dual){
+    for(let i=fields.length-1;i>=0;i--){
+      if(fields[i].kind!=='measurement')continue;
+      const heading=table.tHead.rows[0].cells[i+1];
+      if(mode==='dualcols'){
+        const second=heading.cloneNode(false);second.textContent=fields[i].label+' ('+unitLabel+')';heading.after(second);
+      }
+      for(let r=0;r<rows.length;r++){
+        const cell=rows[r].cells[i+1],raw=guide.rows[r].values[i];
+        const numeric=/^\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?$/.test(normalizeNumber(raw));
+        const converted=numeric?convert(raw,guide.unit,otherUnit):'';
+        if(mode==='dualcols'){
+          const second=cell.cloneNode(false);second.textContent=converted||'—';cell.after(second);
+        }else if(numeric)note(cell,converted+' '+unitLabel);
+      }
+    }
+  }
+  if(mode==='single' && rows.length){
+    const labels=rows.map(row=>row.cells[0].textContent);
+    selector(labels,Math.min(state.row,rows.length-1),index=>{
+      state.row=index;rows.forEach((row,i)=>row.hidden=i!==index);
+    },text('اختيار المقاس','Select size'));
+  }
+  if(mode==='stature' || mode==='regular'){
+    const groupCol=fields.findIndex(c=>c.kind==='text'&&/^(القامة|فئة القامة|طول القامة|stature|height group|fit group)$/i.test(c.label.trim()));
+    if(groupCol>=0){
+      const labels=guide.rows.map(r=>r.values[groupCol]||text('غير محدد','Unspecified'));
+      const groups=[...new Set(labels)];
+      selector(groups,Math.max(0,groups.indexOf(state.group||labels[hit])),index=>{
+        state.group=groups[index];rows.forEach((row,i)=>row.hidden=labels[i]!==state.group);
+      },text('فئة القامة','Stature'));
+    }
+  }
+  if(['euro','combined','stacked'].includes(mode)){
+    const system=mode==='euro'?'EU':mode==='combined'?'FR':'UK';
+    const key=fields.findIndex(c=>c.kind==='text'&&c.label.trim().toUpperCase()===system);
+    if(key>=0 && sysIdx<0)rows.forEach((r,i)=>{
+      const value=guide.rows[i].values[key];if(value)note(r.cells[0],system+' '+value);
+      if(mode==='stacked'){
+        const us=fields.findIndex(c=>c.kind==='text'&&c.label.trim().toUpperCase()==='US');
+        if(us>=0 && guide.rows[i].values[us])note(r.cells[0],'US '+guide.rows[i].values[us]);
+      }
+    });
+  }
+  if(mode==='fold'){
+    const details=el('details',undefined,'fold-section');
+    details.open=state.sections.get(mode)??true;
+    details.addEventListener('toggle',()=>{if(details.isConnected)state.sections.set(mode,details.open)});
+    scroll.before(details);details.append(el('summary',guide.title),scroll);
+  }
+  const transpose=['fold','sections','dualmatrix','stacked','howfirst','howlast','matrix','paired'].includes(mode);
+  if(!transpose || guide.col_widths?.length)return;
+  const heading=[...table.tHead.rows[0].cells],cells=rows.map(row=>[...row.cells]);
+  // Matrix tables keep style overrides from the original logical cells.
+  function matrix(indices,grouped){
+    const result=el('table'),thead=result.createTHead(),top=thead.insertRow(),tbody=result.createTBody();
+    function header(row,value,scope){
+      const h=el('th',value);h.scope=scope;row.append(h);return h;
+    }
+    if(grouped){
+      header(top,guide.size_label||text('المقاس','Size'),'col');
+      for(let i=0;i<guide.rows.length;){
+        const groupKey=fields.findIndex(c=>c.kind==='text' && /^(المقاس المزدوج|المقاس الحرفي|alpha|dual size)$/i.test(c.label.trim()));
+        const groupAt=index=>(groupKey>=0 && guide.rows[index].values[groupKey])||guide.rows[index].size;
+        const size=groupAt(i);
+        let end=i+1;while(end<guide.rows.length && groupAt(end)===size)end++;
+        header(top,size,'colgroup').colSpan=end-i;i=end;
+      }
+    }
+    const labels=grouped?thead.insertRow():top;
+    labels.append(heading[0].cloneNode(true));
+    cells.forEach((r,index)=>{
+      const h=r[0].cloneNode(true);h.scope='col';if(index===hit)h.classList.add('look-hit');labels.append(h);
+    });
+    for(const i of indices){
+      const row=tbody.insertRow(),label=heading[i+1].cloneNode(true);
+      label.scope='row';row.append(label);
+      cells.forEach((r,index)=>{const c=r[i+1].cloneNode(true);if(index===hit)c.classList.add('look-hit');row.append(c)});
+    }
+    return result;
+  }
+  const indices=fields.map((_,i)=>i);
+  const byKind=mode==='sections'||mode==='dualmatrix'||mode==='paired';
+  const groups=byKind?[indices.filter(i=>fields[i].kind==='text'),indices.filter(i=>fields[i].kind==='measurement')]:[indices];
+  const filled=groups.filter(g=>g.length);
+  scroll.replaceChildren();
+  filled.forEach((indices,i)=>{
+    // Independent scroll areas keep the second table reachable on small screens.
+    const frame=i?el('div',undefined,'scroll'):scroll;
+    if(i){frame.tabIndex=0;col.append(frame)}
+    if(filled.length>1)frame.before(el('h3',fields[indices[0]].kind==='text'?text('المقاسات المتكافئة','Size conversions'):text('القياسات','Measurements'),'section-title'));
+    frame.append(matrix(indices,mode==='paired'&&i===0));
+  });
+}
+
+const fitCopy={
+  ar:{compare:'مقارنة مقاسين',first:'المقاس الأول',second:'المقاس الثاني',measure:'القياس',difference:'الفرق',fit:'ملاحظة الملاءمة',lining:'البطانة',none:'غير مطاطية',slight:'تمدد خفيف',stretch:'مطاطية',unlined:'القطعة بدون بطانة',
+      garment:'خذي قياسات قطعة تناسبك بالطريقة الموضّحة في الجدول، ثم أدخليها للمقارنة.',unavailable:'القياسات المدخلة لا تكفي لترشيح مقاس متطابق من هذا الجدول.',garmentResult:'أقرب تطابق لقياسات قطعتك'},
+  en:{compare:'Compare two sizes',first:'First size',second:'Second size',measure:'Measurement',difference:'Difference',fit:'Fit notes',lining:'Lining',none:'Non-stretch',slight:'Slight stretch',stretch:'Stretch',unlined:'Unlined',
+      garment:'Measure a garment that fits you using this chart’s method, then enter its measurements.',unavailable:'These measurements do not identify a matching size in this chart.',garmentResult:'Closest match to your garment'}
+};
+function comparePanel(chart,unit,unitLabel,copy,state) {
+  const measurements=chart.columns.map((c,i)=>c.kind==='measurement'?i:-1).filter(i=>i>=0);
+  const choices=chart.rows.map((row,i)=>row.size.trim()?i:-1).filter(i=>i>=0);
+  if(choices.length<2||!measurements.length)return null;
+  const panel=el('details',undefined,'size-comparison'),summary=el('summary',copy.compare);
+  const controls=el('div',undefined,'compare-controls'),scroll=el('div',undefined,'compare-scroll');
+  scroll.setAttribute('aria-live','polite');
+  panel.open=state.open===true;panel.ontoggle=()=>{state.open=panel.open};
+  const selected=state.selected||(state.selected=choices.slice(0,2));
+  const selects=[];
+  function update(){
+    const table=el('table'),head=table.createTHead().insertRow(),body=table.createTBody();
+    const [a,b]=selected.map(index=>chart.rows[index]);
+    for(const name of [copy.measure,a.size,b.size,copy.difference]){
+      const cell=el('th',name);cell.scope='col';head.append(cell);
+    }
+    for(const i of measurements){
+      const row=body.insertRow(),label=el('th',chart.columns[i].label+' ('+unitLabel+')');
+      label.scope='row';row.append(label);
+      for(const source of [a,b]){
+        const raw=source.values[i],parsed=cellRange(raw);
+        row.insertCell().textContent=parsed?convert(raw,chart.unit,unit):'—';
+      }
+      const first=cellRange(a.values[i]),second=cellRange(b.values[i]);
+      let delta='—';
+      if(first&&second && Math.abs((second[0]-first[0])-(second[1]-first[1]))<1e-8){
+        const factor=unit===chart.unit?1:(unit==='cm'?2.54:1/2.54);
+        const diff=Number(((second[0]-first[0])*factor).toFixed(1));
+        delta=(diff>0?'+':'')+diff;
+      }
+      const change=row.insertCell();change.dir='ltr';change.textContent=delta;
+    }
+    scroll.replaceChildren(table);
+    selects.forEach((select,slot)=>{
+      select.value=String(selected[slot]);
+
+    });
+  }
+  for(const [index,name] of [copy.first,copy.second].entries()){
+    const label=el('label',name),select=el('select');
+    for(const idx of choices){const opt=el('option',chart.rows[idx].size);opt.value=String(idx);select.append(opt)}
+    select.onchange=()=>{
+      const choice=Number(select.value);
+      if(choice===selected[1-index])selected[1-index]=selected[index];
+      selected[index]=choice;update();
+    };
+    selects.push(select);label.append(select);controls.append(label);
+  }
+  panel.append(summary,controls,scroll);update();return panel;
+}
+function render(host,full,productName,close,pick,initialPanel){
   let guide=full,view='product';host.replaceChildren();const {theme:t,vars}=tokens(guide),p=palette(guide),lang=language(guide),ref=t.id==='reference',w=ref?{...words[lang],...REF_WORDS[lang]}:words[lang];let unit=guide.unit;
   const box=el('div',undefined,'wrap');for(const [key,value] of Object.entries(vars))box.style.setProperty(key,value);box.dir=lang==='en'?'ltr':'rtl';
+  if(t.mode)box.dataset.presentation=t.mode;
+  if(custom(guide.row_alt))box.dataset.customRows='';
+  if(custom(guide.size_bg))box.dataset.customSize='';
+  if(custom(guide.paper_color)){
+    box.dataset.customPaper='';
+    box.style.colorScheme=luminance(p.paper)<.18?'dark':'light';
+  }
   box.dataset.table=guide.table_style||'zebra';box.dataset.density=guide.density||'comfortable';box.dataset.corners=guide.corners||'soft';box.dataset.depth=guide.depth3d===false?'0':'1';box.dataset.theme=t.id;const place=sidePlace(guide,t);box.dataset.split=place;
   box.dataset.sizestyle=['chip','pill','square','underline','plain'].includes(guide.size_style)?guide.size_style:'chip';box.dataset.head=p.headStyle;
   box.dataset.border=['none','thin','strong'].includes(guide.border_style)?guide.border_style:'thin';box.dataset.font=['small','large'].includes(guide.font_scale)?guide.font_scale:'medium';box.dataset.sticky=guide.sticky_size===false?'0':'1';{const f=loadFont(guide.font_family);if(f)box.style.fontFamily=f+'PingARLT,Tahoma,Arial,sans-serif';}
@@ -391,7 +653,12 @@ function render(host,full,productName,close,pick){
   if(close){const b=el('button',ref?undefined:'×','close');if(ref)b.append(document.importNode(new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m2 2 12 12M14 2 2 14" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>','image/svg+xml').documentElement,true));b.type='button';b.setAttribute('aria-label',w.close);b.onclick=close;hero.append(b)}
   const chosen=LAYOUTS.includes(guide.layout_type)?guide.layout_type:'tabs',layoutType=ref&&chosen==='tabs'?'page':chosen,tabbed=layoutType==='tabs'||layoutType==='cards';box.dataset.layout=layoutType;
   const body=el('div',undefined,'body'),tabs=el('div',undefined,'tabs');tabs.setAttribute('role','tablist');
-  const measured=guide.columns.map((c,i)=>c.kind==='measurement'?i:-1).filter(i=>i>=0),hasFinder=guide.calculator===true&&measured.length>0;
+  const bodyTable=full.body_table&&Array.isArray(full.body_table.columns)&&Array.isArray(full.body_table.rows)&&full.body_table.columns.length&&full.body_table.rows.length?full.body_table:null;
+  const bodyGuide=bodyTable?{...full,columns:bodyTable.columns,rows:bodyTable.rows,cell_styles:[],col_widths:[],side_image:'',side_image_back:'',calculator:false,measurement_type:'body'}:null;
+  const finderGuide=full.measurement_type==='body'?full:(bodyGuide||full);
+  const garmentFinder=finderGuide.measurement_type!=='body',copy=fitCopy[lang];
+  const compareState={product:{},body:{}};
+  const measured=finderGuide.columns.map((c,i)=>c.kind==='measurement'?i:-1).filter(i=>i>=0),hasFinder=guide.calculator===true&&measured.length>0;
   const tabDefs=[['table',w.table],['how',w.how],...(hasFinder?[['finder',w.finder]]:[])],tabButtons=[],panels={};
   const grid=el('div',undefined,'tpanel'),how=el('div'),finder=el('div',undefined,'finder');panels.table=grid;panels.how=how;panels.finder=finder;
   const showArt=HOW_ART.includes(guide.how_art)&&guide.how_art!=='none';
@@ -404,6 +671,13 @@ function render(host,full,productName,close,pick){
   if(tabbed)body.append(tabs,grid,how,finder);
   else if(layoutType==='page')body.append(grid,...(hasFinder?[fold(w.finder,finder)]:[]),...(ref?[]:[fold(w.how,how)]));
   else body.append(grid);
+  if(layoutType==='page' && t.mode==='howfirst'){
+    const section=how.closest('details');
+    if(section){section.open=true;body.prepend(section)}
+  }
+  if(layoutType==='page' && ['howlast','systems'].includes(t.mode)){
+    const section=how.closest('details');if(section)section.open=true;
+  }
   box.append(hero,body);
   function select(name){if(!tabbed){if(name==='table')grid.scrollIntoView?.({block:'nearest'});return}tabDefs.forEach(([id],i)=>{const on=id===name;panels[id].hidden=!on;tabButtons[i].setAttribute('aria-selected',String(on));tabButtons[i].tabIndex=on?0:-1;});}
   if(tabbed)tabDefs.forEach(([id,label],i)=>{
@@ -418,15 +692,14 @@ function render(host,full,productName,close,pick){
     node.contentEditable='plaintext-only';if(node.contentEditable!=='plaintext-only')node.contentEditable='true';
     node.setAttribute('role','textbox');node.setAttribute('aria-label',part==='head'?'اسم العمود':part==='size'||part==='sizeLabel'?'المقاس':'قيمة');node.spellcheck=false;node.dataset.orig=text;return node;
   }
-  let hit=-1,refreshLabels=()=>{},sysIdx=-1;const sideState={view:0};
+  const lookState={row:0,group:null,sections:new Map()};
+  let hit=-1,hitView='product',refreshLabels=()=>{},sysIdx=-1;const sideState={view:0};
   let systems=guide.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);if(ref&&systems.length)sysIdx=systems[0];
   let vsys='',vcodes=[],vsysTouched=false;
   const sizeText=r=>vsys?((mapSize(vsys,r.size)||'—')+(r.size?' ('+r.size+')':'')):sysIdx>=0?(r.values[sysIdx]||r.size||'—'):(r.size||'—');
-  const bodyTable=full.body_table&&Array.isArray(full.body_table.columns)&&Array.isArray(full.body_table.rows)&&full.body_table.columns.length&&full.body_table.rows.length?full.body_table:null;
-  const bodyGuide=bodyTable?{...full,columns:bodyTable.columns,rows:bodyTable.rows,cell_styles:[],col_widths:[],side_image:'',side_image_back:'',calculator:false,measurement_type:'body'}:null;
   const sysOf=g=>g.columns.map((c,i)=>c.kind==='text'&&SIZE_SYSTEM.test(String(c.label).trim())?i:-1).filter(i=>i>=0);
   function draw(){
-    guide=view==='body'&&bodyGuide?bodyGuide:full;systems=sysOf(guide);if(guide!==full)hit=-1;
+    guide=view==='body'&&bodyGuide?bodyGuide:full;systems=sysOf(guide);if(view!==hitView)hit=-1;
     {const real=new Set(systems.map(i=>String(guide.columns[i].label).trim().toUpperCase().split(/[^A-Z]/)[0]));
      vcodes=wantedSystems(guide).filter(c=>!real.has(c)&&guide.rows.some(r=>mapSize(c,r.size)));
      if(!vcodes.includes(vsys))vsys=ref&&!systems.length&&vcodes.length&&!vsysTouched?vcodes[0]:'';}
@@ -442,7 +715,7 @@ function render(host,full,productName,close,pick){
     }
     if(bodyGuide){
       const views=el('div',undefined,'tvs');views.setAttribute('role','group');views.setAttribute('aria-label',w.viewsLabel);
-      for(const [id,label] of [['product',w.productTable],['body',bodyTable.title||w.bodyTable]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(view===id));b.onclick=()=>{view=id;draw()};views.append(b)}
+      for(const [id,label] of [['product',w.productTable],['body',bodyTable.title||w.bodyTable]]){const b=el('button',label);b.type='button';b.setAttribute('aria-pressed',String(view===id));b.onclick=()=>{view=id;sysIdx=-1;lookState.row=0;lookState.group=null;draw()};views.append(b)}
       col.append(views);
     }
     const tools=el('div',undefined,'tools');
@@ -479,6 +752,9 @@ function render(host,full,productName,close,pick){
       r.values.forEach((v,i)=>{const td=el('td',editing?undefined:(i===sysIdx?(r.size||'—'):guide.columns[i]?.kind==='measurement'?convert(v,guide.unit,unit):v));if(editing)td.append(editable('cell',index,i,v,40));paint(td,ps.cell(index,i));mark(td,'cell',index,i);row.append(td)});
       if(editing){const cell=el('td',undefined,'ctl'),x=el('button','×','ed-del');x.type='button';x.setAttribute('aria-label',w.delRow+': '+(r.size||index+1));x.onclick=()=>ed.remove('row',index);cell.append(x);row.append(cell)}tb.append(row)});
     table.append(tb);scroll.append(table);col.append(scroll);
+    if(t.mode && !editing && !pick?.onPick) {
+      presentChart({mode:t.mode, table, scroll, col, guide, unit, lang, state:lookState, hit, sysIdx});
+    }
     if(editing){
       const add=el('button','+ '+w.addRow,'ed-add');add.type='button';add.onclick=()=>ed.add('row');col.append(add);
       const commit=node=>{if(node.textContent===node.dataset.orig)return;const ok=ed.set({part:node.dataset.part,row:Number(node.dataset.row),col:Number(node.dataset.col)},node.textContent.replace(/\s+/g,' ').trim());if(ok===false)node.textContent=node.dataset.orig;else node.dataset.orig=node.textContent};
@@ -494,36 +770,67 @@ function render(host,full,productName,close,pick){
     }
       if(!ref){let lit=-1;const light=n=>{if(n===lit)return;lit=n;for(const row of table.rows)for(const cell of row.cells)cell.classList.toggle('col-hl',n>=0&&cell.cellIndex===n)};
       table.addEventListener('pointerover',e=>{const cell=e.target.closest?.('td,th');if(cell&&e.pointerType!=='touch')light(cell.cellIndex)});table.addEventListener('pointerleave',()=>light(-1));}
-    }if(guide.notes)col.append(el('p',guide.notes,'notes'));if(vsys)col.append(el('p',w.sysNote,'notes'));
+    }
+    if(full.show_fit_details && (full.fit_advice?.trim()||copy[full.lining_stretch])){
+      const note=el('aside',undefined,'fit-advice');note.append(el('strong',copy.fit));
+      if(full.fit_advice?.trim())note.append(el('p',full.fit_advice.trim()));
+      if(full.lining_stretch && copy[full.lining_stretch])note.append(el('small',full.lining_stretch==='unlined'?copy.unlined:copy.lining+' · '+copy[full.lining_stretch]));
+      col.append(note);
+    }
+    if(full.compare_sizes){const panel=comparePanel(guide,unit,unit==='cm'?w.cm:w.inch,copy,compareState[view]);if(panel)col.append(panel)}
+    if(guide.notes)col.append(el('p',guide.notes,'notes'));if(vsys)col.append(el('p',w.sysNote,'notes'));
     if(ref?(guide!==full||!bodyGuide)&&(showArt||full.instructions||images.length||embed):guide!==full&&(showArt||full.instructions)){const d=el('details',undefined,'fold-section'),inner=el('div');d.open=true;d.append(el('summary',w.how),inner);
       inner.append(ref?how:showArt?measureGuide(full.how_art,cat.id,lang,full.instructions):el('div',full.instructions,'instructions'));col.append(d)}
     col.append(el('p',w.hint,'hint'));grid.append(col);
     if(place!=='none')grid.append(sideFigure(guide,lang,cat.id,sideState));
   }
   if(hasFinder){
-    finder.append(el('p',w.intro));const fields=el('div',undefined,'fields'),inputs={},result=el('div',undefined,'result');result.setAttribute('aria-live','polite');
-    const labels={};refreshLabels=()=>{for(const i of measured)labels[i].textContent=full.columns[i].label+' ('+(unit==='cm'?w.cm:w.inch)+')';};
+    finder.append(el('p',garmentFinder?copy.garment:w.intro));const fields=el('div',undefined,'fields'),inputs={},result=el('div',undefined,'result');result.setAttribute('aria-live','polite');
+    const labels={};let inputUnit=unit;
+    refreshLabels=()=>{
+      for(const i of measured){
+        labels[i].textContent=finderGuide.columns[i].label+' ('+(unit==='cm'?w.cm:w.inch)+')';
+        if(inputUnit!==unit && inputs[i].value.trim())inputs[i].value=convert(inputs[i].value,inputUnit,unit);
+      }
+      inputUnit=unit;
+    };
     for(const i of measured){const f=el('div',undefined,'field'),label=el('label'),input=el('input');
       input.type='text';input.inputMode='decimal';input.autocomplete='off';input.id='sg-find-'+i;label.htmlFor=input.id;labels[i]=label;inputs[i]=input;f.append(label,input);fields.append(f)}
     refreshLabels();
     const actions=el('div',undefined,'actions'),find=el('button',w.find,'primary'),clear=el('button',w.clear,'ghost'),show=el('button',w.show,'ghost');for(const b of [find,clear,show])b.type='button';show.hidden=true;actions.append(find,clear,show);
+    fields.addEventListener('input',()=>{result.replaceChildren();show.hidden=true;if(hit!==-1){hit=-1;draw()}});
     find.onclick=()=>{
       const values={};for(const [i,input] of Object.entries(inputs)){const n=Number(normalizeNumber(input.value));if(input.value.trim()&&Number.isFinite(n)&&n>0)values[i]=unit===full.unit?n:(unit==='in'?n*2.54:n/2.54);}
       result.replaceChildren();show.hidden=true;hit=-1;
-      if(!Object.keys(values).length){result.append(el('span',w.none));return}
-      const found=recommend(guide,values);
-      if(!found){result.append(el('span',w.nomatch));return}
-      hit=found.index;result.append(el('small',found.exact?w.fit:w.near),el('strong',full.rows[found.index].size||'—'),el('small',w.note));show.hidden=false;draw();
+      if(Object.values(inputs).some(input=>input.value.trim() && !(Number(normalizeNumber(input.value))>0 && Number.isFinite(Number(normalizeNumber(input.value)))))){
+        result.append(el('span',lang==='en'?'Enter a positive number for each measurement.':'أدخلي رقمًا موجبًا لكل قياس مكتوب.'));draw();return;
+      }
+      if(!Object.keys(values).length){result.append(el('span',w.none));draw();return}
+      const found=recommend(finderGuide,values);
+      if(!found||!found.exact){result.append(el('span',copy.unavailable));draw();return}
+      view=finderGuide===full?'product':'body';hitView=view;sysIdx=-1;hit=found.index;lookState.row=hit;lookState.group=null;result.append(el('small',garmentFinder?copy.garmentResult:w.fit),el('strong',finderGuide.rows[found.index].size||'—'),el('small',w.note));show.hidden=false;draw();
       window.SizeGuideUI?.onEvent?.('recommend');
     };
     clear.onclick=()=>{for(const input of Object.values(inputs))input.value='';result.replaceChildren();show.hidden=true;hit=-1;draw();};
     show.onclick=()=>{select('table');tabButtons[0]?.focus()};
     finder.append(fields,actions,result);
   }
-  draw();select('table');host.append(box);
+  draw();select(initialPanel && panels[initialPanel] ? initialPanel : 'table');host.append(box);
+  if(t.mode==='fit' && tabbed && !initialPanel && !pick){
+    for(const [index,[id,label]] of tabDefs.entries()){
+      const button=tabButtons[index];
+      button.onclick=()=>open(full,productName,id);
+      button.setAttribute('aria-haspopup','dialog');
+      button.removeAttribute('role');button.removeAttribute('aria-controls');button.removeAttribute('aria-selected');
+      button.removeAttribute('tabindex');button.onkeydown=null;
+    }
+    tabs.setAttribute('role','group');
+    tabs.setAttribute('aria-label',lang==='en'?'Fit information':'تفاصيل المقاس والقصّة');
+    for(const panel of Object.values(panels)){panel.removeAttribute('role');panel.removeAttribute('aria-labelledby')}
+  }
 }
 function shadow(host){const root=host.shadowRoot||host.attachShadow({mode:'open'});root.replaceChildren();root.append(el('style',css));return root}
 function preview(host,guide,name,pick){let root=shadow(host),surface=el('div');root.append(surface);render(surface,guide,name,undefined,pick)}
-function open(guide,name){const previous=document.activeElement;const host=el('div');host.style.cssText='position:relative;z-index:2147483647';document.body.append(host);const root=shadow(host),dialog=el('dialog');dialog.dir=language(guide)==='en'?'ltr':'rtl';dialog.setAttribute('aria-labelledby','size-guide-title');dialog.dataset.theme=tokens(guide).theme.id;const close=()=>dialog.close();root.append(dialog);render(dialog,guide,name,close);dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});dialog.addEventListener('close',()=>{host.remove();previous?.focus()},{once:true});dialog.showModal()}
-window.SizeGuideUI={fonts:FONTS,mapSize,SYSTEM_CODES,tipsFor,preview,open,convert,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
+function open(guide,name,initialPanel){const previous=document.activeElement;const host=el('div');host.style.cssText='position:relative;z-index:2147483647';document.body.append(host);const root=shadow(host),dialog=el('dialog');dialog.dir=language(guide)==='en'?'ltr':'rtl';dialog.setAttribute('aria-labelledby','size-guide-title');dialog.dataset.theme=tokens(guide).theme.id;const close=()=>dialog.close();root.append(dialog);render(dialog,guide,name,close,undefined,initialPanel);dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});dialog.addEventListener('close',()=>{host.remove();previous?.focus()},{once:true});dialog.showModal()}
+window.SizeGuideUI={fonts:FONTS,mapSize,SYSTEM_CODES,tipsFor,preview,open,convert,cellRange,recommend,categories,themes,emblem,tokens,palette,mix,language,contrast,brandStyle};
 })();
