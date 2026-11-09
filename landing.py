@@ -16,9 +16,16 @@ def contact():
         return f'راسلنا على <a href="mailto:{safe}">{safe}</a>.',f'<a href="mailto:{safe}">{safe}</a>'
     return 'تواصل معنا من صفحة التطبيق في متجر تطبيقات سلة.','دعم التطبيق من متجر سلة'
 
+def big_email():
+    email=os.environ.get('SUPPORT_EMAIL','').strip()
+    if '@' in email and ' ' not in email and len(email)<=120:
+        safe=html.escape(email,quote=True)
+        return f'<a class="email" href="mailto:{safe}">{safe}</a>'
+    return ''
+
 def page(name):
     long,short=contact()
-    text=(STATIC/name).read_text(encoding='utf-8').replace('{{CONTACT_SHORT}}',short).replace('{{CONTACT}}',long).replace('{{DATE}}',UPDATED)
+    text=(STATIC/name).read_text(encoding='utf-8').replace('{{EMAIL_BIG}}',big_email()).replace('{{CONTACT_SHORT}}',short).replace('{{CONTACT}}',long).replace('{{DATE}}',UPDATED)
     return HTMLResponse(text,headers={'Cache-Control':'public, max-age=300','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'})
 
 @router.api_route('/about',methods=['GET','HEAD'],include_in_schema=False)
@@ -28,7 +35,7 @@ def about():return page('landing.html')
 def privacy():return page('privacy.html')
 
 
-BRAND={'bear.webp':'image/webp','DMSans-Regular.woff2':'font/woff2','Epilogue-Black.woff2':'font/woff2'}
+BRAND={'bear.webp':'image/webp','fuzz.webp':'image/webp','fuzz.js':'application/javascript','fuzz.css':'text/css','app.css':'text/css','DMSans-Regular.woff2':'font/woff2','Epilogue-Black.woff2':'font/woff2'}
 
 @router.get('/brand-assets/{name}',include_in_schema=False)
 def brand_asset(name:str):
