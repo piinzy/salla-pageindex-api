@@ -1,8 +1,8 @@
 @font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
 @font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Medium.woff2') format('woff2');font-weight:500 600;font-display:swap}
 @font-face{font-family:PingARLT;src:url('https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Bold.woff2') format('woff2');font-weight:700 900;font-display:swap}
-:root{color-scheme:light;--bg:#f8f8f8;--surface:#fff;--surface-soft:#f5f7f7;--ink:#25363a;--muted:#65777c;--green:#004d5b;--button-ink:#fff;--line:#e1e7e8;--accent:#73fcd7;--tag-bg:#e2f8ee;--tag-ink:#176447;--warn-bg:#fff3df;--warn-ink:#805818;--danger-bg:#fff0f0;--danger-ink:#b02835;--focus:#008e79}
-:root[data-theme=dark]{color-scheme:dark;--bg:#202223;--surface:#292b2c;--surface-soft:#303334;--ink:#eef2f3;--muted:#b0b9bc;--green:#a5f4df;--button-ink:#123a34;--line:#454a4c;--accent:#a5f4df;--tag-bg:#173e35;--tag-ink:#a5f4df;--warn-bg:#403624;--warn-ink:#f6cf8b;--danger-bg:#482a30;--danger-ink:#ffb4bd;--focus:#a5f4df}
+:root{color-scheme:light;--bg:#f8f8f8;--surface:#fff;--surface-soft:#f5f7f7;--ink:#25363a;--muted:#65777c;--green:#4d5fcf;--button-ink:#fff;--line:#e1e7e8;--accent:#98aaf3;--tag-bg:#e6eaff;--tag-ink:#3a47a8;--warn-bg:#eef1ff;--warn-ink:#3a47a8;--danger-bg:#fff0f0;--danger-ink:#b02835;--focus:#4d5fcf}
+:root[data-theme=dark]{color-scheme:dark;--bg:#202223;--surface:#292b2c;--surface-soft:#303334;--ink:#eef2f3;--muted:#b0b9bc;--green:#b3c0ff;--button-ink:#10143f;--line:#454a4c;--accent:#b3c0ff;--tag-bg:#2b327a;--tag-ink:#b3c0ff;--warn-bg:#2b327a;--warn-ink:#dfe4ff;--danger-bg:#482a30;--danger-ink:#ffb4bd;--focus:#b3c0ff}
 body.embedded{font-family:PingARLT,Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
 .embedded aside,.embedded .top,.embedded .intro .eyebrow,.embedded #login{display:none!important}
 .embedded main{margin:0;max-width:none;width:100%;padding:24px 28px 36px}

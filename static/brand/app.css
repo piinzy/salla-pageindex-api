@@ -46,3 +46,8 @@ aside footer{color:#aeb9f5}aside footer .secondary{background:#ffffff1c;color:#f
 nav button.active{background:#ffffff24!important;color:#fff}
 nav button.active::before,nav button[aria-current]::before{background:#98aaf3!important}
 .home .hero{min-height:200px}.hero-fz{bottom:-70px;inset-inline-end:230px;width:270px}
+/* one calm notice tone (no amber/brown) and periwinkle "done" marks, in light and dark */
+:root{--warn-bg:#eef1ff;--warn-ink:#3a47a8;--sh-ok:#4d5fcf}
+:root[data-theme=dark]{--warn-bg:#2b327a;--warn-ink:#dfe4ff;--sh-ok:#98aaf3}
+.attention li.warn,.embedded-session-notice,#catalog .missing-bar{border-color:var(--line)}
+:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea{background:var(--surface-soft);color:var(--ink);border-color:var(--line)}

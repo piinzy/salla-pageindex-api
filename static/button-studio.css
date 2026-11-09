@@ -1,5 +1,5 @@
 /* Button studio + guide editor. Scoped so it inherits Salla's light/dark dashboard tokens. */
-#buttonSettings,#editor,#catalog,#library,#stats,#quick{--accent:var(--green,#177e65);--on-accent:var(--button-ink,#fff);--soft:var(--surface-soft,#f5f8f6);--surf:var(--surface,#fff);--hair:var(--line,#e3e9e6);--text:var(--ink,#182c29);--sub:var(--muted,#74817e);
+#buttonSettings,#editor,#catalog,#library,#stats,#quick{--accent:var(--green,#4d5fcf);--on-accent:var(--button-ink,#fff);--soft:var(--surface-soft,#f3f5ff);--surf:var(--surface,#fff);--hair:var(--line,#dfe4fa);--text:var(--ink,#10143f);--sub:var(--muted,#5b6190);
   --glow:color-mix(in srgb,var(--accent) 32%,transparent);--edge:color-mix(in srgb,var(--accent) 70%,#000);--shine:#ffffff70;--lift:0 1px 0 var(--shine) inset,0 1px 2px #0000000d,0 12px 24px -16px #00000040}
 :root[data-theme=dark] :is(#buttonSettings,#editor,#catalog,#library,#stats,#quick){--shine:#ffffff14;--lift:0 1px 0 var(--shine) inset,0 14px 26px -16px #000a}
 #buttonSettings [hidden],#editor [hidden]{display:none!important}
@@ -55,9 +55,9 @@
 #buttonSettings .studio-fields input:not([type=range]),#buttonSettings .studio-fields select{display:block;width:100%;margin-top:7px;font-size:13px;min-height:44px}
 #buttonSettings .studio-wide{grid-column:1/-1}
 #buttonSettings input[type=range]{width:100%;accent-color:var(--accent);height:28px;padding:0;border:0;background:none;margin:0}
-.seg{display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;background:var(--soft,#f5f8f6);border:1px solid var(--hair,#e3e9e6);border-radius:12px;max-width:100%}
-:is(#buttonSettings,#editor) .seg label{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;min-width:44px;margin:0;padding:4px 14px;border-radius:9px;font-size:12.5px;color:var(--sub,#74817e);cursor:pointer;text-align:center;transition:background-color .18s,color .18s,box-shadow .18s}
-:is(#buttonSettings,#editor) .seg label.selected{background:var(--accent,#177e65);color:var(--on-accent,#fff);font-weight:600;box-shadow:0 1px 0 #ffffff55 inset,0 2px 0 var(--edge,#0a4d3d),0 8px 12px -8px var(--glow,#0006)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;background:var(--soft,#f3f5ff);border:1px solid var(--hair,#dfe4fa);border-radius:12px;max-width:100%}
+:is(#buttonSettings,#editor) .seg label{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;min-width:44px;margin:0;padding:4px 14px;border-radius:9px;font-size:12.5px;color:var(--sub,#5b6190);cursor:pointer;text-align:center;transition:background-color .18s,color .18s,box-shadow .18s}
+:is(#buttonSettings,#editor) .seg label.selected{background:var(--accent,#4d5fcf);color:var(--on-accent,#fff);font-weight:600;box-shadow:0 1px 0 #ffffff55 inset,0 2px 0 var(--edge,#0a4d3d),0 8px 12px -8px var(--glow,#0006)}
 :is(#buttonSettings,#editor) .seg-wide{display:flex}:is(#buttonSettings,#editor) .seg-wide label{flex:1}
 :is(#buttonSettings,#editor) .seg input{position:absolute;opacity:0;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;cursor:pointer}
 .seg .icon svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -86,10 +86,10 @@
 #buttonSettings .preview-products button{background:var(--soft);color:var(--sub);border:1px solid var(--hair);border-radius:999px;min-height:34px;padding:3px 13px;font-size:12px;box-shadow:none}
 #buttonSettings .preview-products button[aria-pressed=true]{background:color-mix(in srgb,var(--accent) 12%,var(--surf));color:var(--accent);border-color:var(--accent);font-weight:600}
 #buttonSettings .preview-stage{perspective:1200px;padding:20px 16px 26px;border-radius:16px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--accent) 16%,var(--soft)),var(--soft))}
-#buttonSettings .button-preview-product{position:relative;background:#fff;color:#26372f;border-radius:14px;overflow:hidden;min-height:440px;padding:14px;direction:rtl;margin-inline:auto;isolation:isolate;
+#buttonSettings .button-preview-product{position:relative;background:#fff;color:#10143f;border-radius:14px;overflow:hidden;min-height:440px;padding:14px;direction:rtl;margin-inline:auto;isolation:isolate;
   transform:rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform .3s cubic-bezier(.2,.8,.2,1),max-width .25s;box-shadow:0 0 0 1px #0000000d,0 10px 16px -8px #0004,0 36px 44px -28px #0007}
 #buttonSettings .button-preview-product[data-device=mobile]{max-width:330px;min-height:520px;padding:12px}
-#buttonSettings .button-preview-brand{font:14px Georgia,serif;letter-spacing:3px;border-bottom:1px solid #e9ece9;padding-bottom:12px;margin-bottom:14px;text-align:center;color:#243c30}
+#buttonSettings .button-preview-brand{font:14px Georgia,serif;letter-spacing:3px;border-bottom:1px solid #e9ece9;padding-bottom:12px;margin-bottom:14px;text-align:center;color:#10143f}
 #buttonSettings .preview-product-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
 #buttonSettings [data-device=mobile] .preview-product-grid{grid-template-columns:1fr}
 #buttonSettings .preview-photo{position:relative;border-radius:10px;overflow:hidden;background:#ede7de;aspect-ratio:3/4;min-width:0;isolation:isolate;box-shadow:inset 0 0 0 1px #0000000d}
@@ -98,13 +98,13 @@
 #buttonSettings .preview-photo>svg.preview-emblem{padding:16%;background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--accent) 16%,#fff),#efe9df)}
 #buttonSettings .preview-photo-caption{position:absolute;top:10px;left:10px;background:#ffffffd6;padding:4px 8px;font-size:10px;border-radius:5px;color:#536159;pointer-events:none}
 #buttonSettings .preview-product-info{min-width:0;font-size:12px}
-#buttonSettings .preview-product-info h3{font-size:17px;line-height:1.6;margin:0 0 9px;color:#26372f}
-#buttonSettings .preview-price{display:flex;gap:7px;align-items:center;font-size:18px;font-weight:700;margin:0 0 12px;color:#26372f}
+#buttonSettings .preview-product-info h3{font-size:17px;line-height:1.6;margin:0 0 9px;color:#10143f}
+#buttonSettings .preview-price{display:flex;gap:7px;align-items:center;font-size:18px;font-weight:700;margin:0 0 12px;color:#10143f}
 #buttonSettings .preview-price small{font-size:10px;font-weight:400}#buttonSettings .preview-category{color:#849087;font-size:11px;display:block;margin-bottom:7px}
 #buttonSettings .preview-options{margin-top:12px}#buttonSettings .button-preview-size-label{font-size:12px;color:#617166;display:block;margin:10px 0}
 #buttonSettings .button-preview-sizes{display:flex;gap:5px;flex-wrap:wrap;direction:ltr;justify-content:flex-end}
 #buttonSettings .button-preview-sizes span{border:1px solid #dce1da;min-width:30px;text-align:center;padding:7px 6px;border-radius:7px;font-size:11px;background:#fff}
-#buttonSettings .button-preview-sizes span:nth-child(2){border-color:#243c30;background:#f3f5ef;box-shadow:0 2px 0 #243c3026}
+#buttonSettings .button-preview-sizes span:nth-child(2){border-color:#10143f;background:#f3f5ef;box-shadow:0 2px 0 #243c3026}
 #buttonSettings .preview-cart{display:block;background:linear-gradient(180deg,#34503f,#263d32);color:#fff;min-height:42px;border-radius:9px;padding:10px;text-align:center;margin-top:16px;font-size:12px;box-shadow:inset 0 1px 0 #fff3,0 3px 0 #16251d,0 10px 14px -8px #0007}
 #buttonSettings .preview-caption{font-size:11px;color:#8a968e;margin:12px 0 0}
 #buttonSettings #buttonLivePreview,#buttonSettings [data-index]{font-family:Tahoma,Arial,sans-serif}
@@ -165,7 +165,7 @@
 #catalog .bulk-card{display:flex;flex-direction:column;gap:9px;padding:14px;border:1px solid var(--hair);border-radius:14px;background:var(--surf)}
 .opt-label{font-size:12.5px;font-weight:600;color:var(--text,inherit)}
 .bulk-buttons{display:flex;gap:8px;flex-wrap:wrap}
-label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:34px;cursor:pointer}label.check input{width:18px;height:18px;accent-color:var(--accent,#177e65)}
+label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:34px;cursor:pointer}label.check input{width:18px;height:18px;accent-color:var(--accent,#4d5fcf)}
 :is(#catalog,#library,#editor) button.small{font-size:12px;min-height:36px;padding:4px 14px}
 /* shared guides */
 #editor fieldset.edit-fields{border:0;padding:0;margin:0;min-width:0}
@@ -263,21 +263,21 @@ label.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:
 #editor .upload-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 #editor .upload-thumb button{position:absolute;top:3px;inset-inline-start:3px;padding:0 6px;font-size:13px;line-height:20px;border-radius:50%}
 #editor .side-slots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}#editor .side-slot{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
-#billingBar{margin:14px 0 0;padding:11px 16px;border-radius:12px;font-size:13px;line-height:1.8;background:#eef5f1;color:#2b5b49;border:1px solid #d9e8df}#billingBar[data-tone=warn]{background:#fff3e2;color:#8a5a14;border-color:#f0dcb6}
+#billingBar{margin:14px 0 0;padding:11px 16px;border-radius:12px;font-size:13px;line-height:1.8;background:#eef1ff;color:#3a47a8;border:1px solid #dfe4fa}#billingBar[data-tone=warn]{background:#eef1ff;color:#3a47a8;border-color:#c5cdfa}
 #editor .paint-panel{margin-top:14px;display:grid;gap:12px}#editor .paint-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#editor .tool-row small{flex-basis:100%}
 #editor .width-editor{margin-top:10px;display:grid;gap:8px}#editor .width-row{display:flex;gap:8px;flex-wrap:wrap}#editor .width-row label{display:grid;gap:4px;font-size:12px;min-width:84px}#editor .width-row input{width:84px;min-height:44px}
-#catalog .missing-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;padding:11px 14px;border-radius:12px;background:#fff3e2;color:#8a5a14;border:1px solid #f0dcb6;font-size:13px}
+#catalog .missing-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0;padding:11px 14px;border-radius:12px;background:#eef1ff;color:#3a47a8;border:1px solid #c5cdfa;font-size:13px}
 .rules-card{margin-top:22px;padding-top:6px;border-top:1px solid var(--line)}.rules-list{display:grid;gap:8px;margin:10px 0}.rule-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px}
 .rule-add{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.rule-add select{flex:1;min-width:160px}
-#insights{margin-top:26px;padding-top:6px;border-top:1px solid var(--line)}.insight-alerts{display:grid;gap:10px;margin:14px 0}.insight-alert{padding:12px 14px;border-radius:12px;background:#fff3e2;color:#6f4510;border:1px solid #f0dcb6}.insight-alert p{margin:4px 0 8px;color:inherit}
-.size-chip{display:inline-block;margin:2px 3px;padding:2px 9px;border-radius:999px;background:#edf4f1;color:#2b5b49;font-size:12px}.size-chip.warn{background:#fde8e4;color:#9a3a2c;font-weight:600}
+#insights{margin-top:26px;padding-top:6px;border-top:1px solid var(--line)}.insight-alerts{display:grid;gap:10px;margin:14px 0}.insight-alert{padding:12px 14px;border-radius:12px;background:#eef1ff;color:#6f4510;border:1px solid #c5cdfa}.insight-alert p{margin:4px 0 8px;color:inherit}
+.size-chip{display:inline-block;margin:2px 3px;padding:2px 9px;border-radius:999px;background:#eef1ff;color:#3a47a8;font-size:12px}.size-chip.warn{background:#fde8e4;color:#9a3a2c;font-weight:600}
 
 /* ===== Dashboard shell: sidebar, home, KPIs, calmer pages ===== */
-:root{--sh-card:var(--surface,#fff);--sh-line:var(--line,#e3e9e6);--sh-ink:var(--ink,#182c29);--sh-muted:var(--muted,#74817e);--sh-accent:var(--green,#177e65);--sh-soft:var(--surface-soft,#f4f7f5);--sh-ok:#1f8a63;--sh-warn:#b4741a;--sh-r:14px}
+:root{--sh-card:var(--surface,#fff);--sh-line:var(--line,#dfe4fa);--sh-ink:var(--ink,#10143f);--sh-muted:var(--muted,#5b6190);--sh-accent:var(--green,#4d5fcf);--sh-soft:var(--surface-soft,#f3f5ff);--sh-ok:#4d5fcf;--sh-warn:#3a47a8;--sh-r:14px}
 aside nav{display:grid;gap:4px}aside nav button{display:flex;align-items:center;gap:12px;margin:0;padding:11px 14px;border-radius:12px;font-size:14px;line-height:1.4;text-align:start;position:relative;transition:background-color .18s,color .18s}
 aside nav button .nav-ico{flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-aside nav button:hover:not(.active){background:#ffffff12;color:#fff}aside nav button.active{background:#25483d;color:#fff;box-shadow:inset 3px 0 0 #8bd4ae}
-aside nav button:focus-visible{outline:2px solid #8bd4ae;outline-offset:2px}
+aside nav button:hover:not(.active){background:#ffffff12;color:#fff}aside nav button.active{background:#38449c;color:#fff;box-shadow:inset 3px 0 0 #98aaf3}
+aside nav button:focus-visible{outline:2px solid #98aaf3;outline-offset:2px}
 main .tab{margin-top:18px}
 .home .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;padding:6px 2px 4px}.home .hero h1{margin:6px 0 6px;font-size:28px;letter-spacing:0}.home .hero p{margin:0;max-width:640px}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
@@ -291,7 +291,7 @@ main .tab{margin-top:18px}
 .checklist .mark{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--sh-card);border:1.5px solid var(--sh-line);color:var(--sh-muted)}
 .checklist li.done .mark{background:var(--sh-ok);border-color:var(--sh-ok);color:#fff}.checklist li.done strong{color:var(--sh-muted);text-decoration:line-through}
 .attention li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.7;background:var(--sh-soft);border:1px solid var(--sh-line)}
-.attention li.warn{background:#fff3e2;border-color:#f0dcb6;color:#7a4f10}.attention li.ok{color:var(--sh-ok)}.attention li button{flex:none}
+.attention li.warn{background:#eef1ff;border-color:#c5cdfa;color:#3a47a8}.attention li.ok{color:var(--sh-ok)}.attention li button{flex:none}
 .strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px;padding:14px 20px;border:1px dashed var(--sh-line);border-radius:var(--sh-r);color:var(--sh-muted)}
 .strip label{display:block;font-size:12px}.strip b{display:block;margin-top:4px;color:var(--sh-ink);font-size:14px;font-weight:600;overflow-wrap:anywhere}
 #billingBar{margin:0 0 14px}
@@ -305,10 +305,10 @@ main .tab{margin-top:18px}
 @media(max-width:900px){aside nav{display:flex;overflow-x:auto;margin-top:12px;gap:6px}aside nav button{white-space:nowrap;flex:none;padding:9px 12px;font-size:13px}aside nav button.active{box-shadow:none}}
 @media(max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.strip{grid-template-columns:1fr}.home .hero h1{font-size:23px}.checklist li{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){aside nav button,.fold>summary::before{transition:none}}
-.attention li.warn{background:var(--warn-bg,#fff3e2);border-color:var(--sh-line);color:var(--warn-ink,#7a4f10)}
-#billingBar{background:var(--tag-bg,#eef5f1)!important;color:var(--tag-ink,#2b5b49)!important;border-color:var(--sh-line)!important}#billingBar[data-tone=warn]{background:var(--warn-bg,#fff3e2)!important;color:var(--warn-ink,#7a4f10)!important}
+.attention li.warn{background:var(--warn-bg,#eef1ff);border-color:var(--sh-line);color:var(--warn-ink,#3a47a8)}
+#billingBar{background:var(--tag-bg,#eef1ff)!important;color:var(--tag-ink,#3a47a8)!important;border-color:var(--sh-line)!important}#billingBar[data-tone=warn]{background:var(--warn-bg,#eef1ff)!important;color:var(--warn-ink,#3a47a8)!important}
 .home .hero{margin-bottom:14px}#catalog>.tablewrap td:last-child{width:170px}
-#catalog .missing-bar{background:var(--warn-bg,#fff3e2);color:var(--warn-ink,#8a5a14);border-color:var(--sh-line)}
+#catalog .missing-bar{background:var(--warn-bg,#eef1ff);color:var(--warn-ink,#3a47a8);border-color:var(--sh-line)}
 
 /* ===== Dashboard motion and polish (interface only; never the guide shown to shoppers) ===== */
 :root{--ease:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);--t1:.15s;--t2:.22s;--t3:.34s}
@@ -331,7 +331,7 @@ main .tab{margin-top:18px}
 :is(.preset-card,.theme-card,.button-design-option,.studio-choice):hover{transform:translateY(-2px);box-shadow:0 14px 24px -18px rgba(16,40,35,.45)}
 /* sidebar: a bar that grows on the active section, icons that nudge */
 aside nav button{overflow:hidden}aside nav button.active{box-shadow:none}
-aside nav button::before{content:'';position:absolute;inset-block:10px;inset-inline-start:0;width:3px;border-radius:3px;background:#8bd4ae;transform:scaleY(0);transition:transform var(--t2) var(--spring)}
+aside nav button::before{content:'';position:absolute;inset-block:10px;inset-inline-start:0;width:3px;border-radius:3px;background:#98aaf3;transform:scaleY(0);transition:transform var(--t2) var(--spring)}
 aside nav button.active::before{transform:scaleY(1)}
 aside nav button .nav-ico{transition:transform var(--t2) var(--spring)}aside nav button:hover .nav-ico{transform:scale(1.12)}
 /* a section arrives with a short rise; its cards follow one after another */
@@ -368,7 +368,7 @@ tbody tr{transition:background-color var(--t1)}
 html[dir=rtl] #editor .switch input:checked+.knob:after{transform:translateX(-18px)}
 /* toasts: a stack that rises in and glides */
 #toast.stack{display:flex;flex-direction:column;gap:10px;padding:0;background:transparent;box-shadow:none;max-width:min(420px,calc(100vw - 32px));top:24px;bottom:auto;left:24px;position:fixed;z-index:50}
-.toast-item{padding:14px 20px;background:#193e32;color:#fff;border-radius:12px;box-shadow:0 10px 30px #102f2930;line-height:1.7;cursor:pointer;will-change:transform,opacity}
+.toast-item{padding:14px 20px;background:#10143f;color:#fff;border-radius:12px;box-shadow:0 10px 30px #102f2930;line-height:1.7;cursor:pointer;will-change:transform,opacity}
 .toast-item.toast-in{animation:toastRise .28s ease-out}
 @keyframes toastRise{from{opacity:0;transform:translateY(20px)}}
 .toast-item.motion-out{opacity:0;transform:translateY(8px);transition:opacity .18s ease-out,transform .18s ease-out}
@@ -386,7 +386,7 @@ html[dir=rtl] #editor .switch input:checked+.knob:after{transform:translateX(-18
 /* the moving pill behind the active item */
 .has-pill{position:relative}.has-pill>button{position:relative;z-index:1}
 .motion-pill{position:absolute;left:0;top:0;z-index:0;border-radius:12px;pointer-events:none;transform-origin:0 0;opacity:0;will-change:transform}
-aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.active{background:transparent}
+aside nav.has-pill .motion-pill{background:#38449c}aside nav.has-pill button.active{background:transparent}
 #buttonSettings .studio-tabs.has-pill .motion-pill{background:var(--surf);border-radius:10px;box-shadow:0 1px 0 var(--shine) inset,0 2px 0 var(--hair),0 8px 14px -8px #0004}
 #buttonSettings .studio-tabs.has-pill button[aria-selected=true]{background:transparent;box-shadow:none}
 /* progress meter: only the fill moves */
@@ -403,9 +403,9 @@ aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.act
 #buttonSettings .icon-dd{position:relative;display:inline-block;max-width:100%}
 #buttonSettings .icon-dd-trigger{display:inline-flex;align-items:center;gap:10px;min-width:220px;min-height:44px;justify-content:flex-start;font-size:13px}
 #buttonSettings .icon-dd-trigger .dd-glyph svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
-#buttonSettings .icon-dd-trigger .dd-caret{margin-inline-start:auto;color:var(--sub,#74817e)}
+#buttonSettings .icon-dd-trigger .dd-caret{margin-inline-start:auto;color:var(--sub,#5b6190)}
 #buttonSettings .seg.dd-panel{max-width:none;position:absolute;z-index:30;top:calc(100% + 6px);inset-inline-start:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;width:min(440px,88vw);max-height:340px;overflow:auto;padding:8px;
-  background:var(--surf,#fff);border:1px solid var(--hair,#e3e9e6);border-radius:14px;box-shadow:0 18px 40px -18px #0006;opacity:0;visibility:hidden;transition:opacity .1s ease-out,visibility 0s linear .1s}
+  background:var(--surf,#fff);border:1px solid var(--hair,#dfe4fa);border-radius:14px;box-shadow:0 18px 40px -18px #0006;opacity:0;visibility:hidden;transition:opacity .1s ease-out,visibility 0s linear .1s}
 #buttonSettings .seg.dd-panel.open{opacity:1;visibility:visible;transition:opacity .15s ease-out,visibility 0s}
 #buttonSettings .seg.dd-panel label{justify-content:flex-start;min-height:44px;gap:10px}
 #buttonSettings .seg.dd-panel .icon svg{width:22px;height:22px}
@@ -414,7 +414,7 @@ aside nav.has-pill .motion-pill{background:#25483d}aside nav.has-pill button.act
 /* editor sections fold like a numbered menu: press a section's title to open its options */
 #editor .ed-card.acc>h3{cursor:pointer;margin:0;user-select:none;justify-content:flex-start}
 #editor .ed-card.acc>h3 .acc-btn{all:unset;display:flex;align-items:center;gap:9px;flex:1;cursor:pointer;font:inherit;border-radius:10px}
-#editor .ed-card.acc>h3 .acc-btn:focus-visible{outline:2px solid var(--accent,#177e65);outline-offset:3px}
+#editor .ed-card.acc>h3 .acc-btn:focus-visible{outline:2px solid var(--accent,#4d5fcf);outline-offset:3px}
 #editor .ed-card.acc>h3::after{content:"";margin-inline-start:auto;width:8px;height:8px;border-inline-end:2px solid currentColor;border-block-end:2px solid currentColor;transform:rotate(45deg);transition:transform .2s ease;opacity:.6;flex:none}
 #editor .ed-card.acc.open>h3::after{transform:rotate(225deg)}
 #editor .ed-card.acc.open>h3{margin-bottom:12px}
