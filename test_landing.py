@@ -23,3 +23,26 @@ class LandingTests(unittest.TestCase):
     def test_head_supported(self):
         self.assertEqual(self.c.head('/about').status_code,200)
 if __name__=='__main__':unittest.main()
+
+
+class FaqAndMailTests(unittest.TestCase):
+    def setUp(self):
+        import landing, mailer
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        app=FastAPI();app.include_router(landing.router);self.c=TestClient(app);self.mailer=mailer
+
+    def test_faq_and_email_assets(self):
+        r=self.c.get('/faq');self.assertEqual(r.status_code,200);self.assertIn('الأسئلة الشائعة',r.text);self.assertNotIn('{{',r.text)
+        for n in ('logo.png','character.jpg'):self.assertEqual(self.c.get('/email-assets/'+n).status_code,200)
+        self.assertEqual(self.c.get('/email-assets/x.png').status_code,404)
+
+    def test_welcome_message_and_demo_address(self):
+        s,b,t=self.mailer.welcome_message('<b>متجر</b>','https://sizes.mutakaml.com','info@mutakaml.com')
+        self.assertIn('دليلك بلس',s);self.assertNotIn('<b>متجر</b>',b);self.assertIn('/email-assets/logo.png',b)
+        os_env={'MAIL_FROM':'a@b.c','MAIL_BCC':''}
+        with unittest.mock.patch.dict('os.environ',os_env):
+            self.assertIsNone(self.mailer.message('x@email.partners','s','b'))
+        with unittest.mock.patch.dict('os.environ',{'MAIL_FROM':'a@b.c','MAIL_BCC':'me@b.c'}):
+            self.assertEqual(self.mailer.message('x@email.partners','s','b')['to'],['me@b.c'])
+            self.assertEqual(self.mailer.message('m@shop.sa','s','b')['bcc'],['me@b.c'])
