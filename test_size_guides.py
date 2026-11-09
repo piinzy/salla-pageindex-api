@@ -84,7 +84,7 @@ class SizeGuideTests(unittest.TestCase):
         for guide in guides:
             with self.subTest(category=guide['category'],columns=len(guide['columns'])):
                 parsed=sg.Guide(**guide)  # every key the editor produces is accepted by the server
-                self.assertTrue(parsed.calculator)
+                self.assertEqual(parsed.calculator,guide['category']!='general')  # the general starter is the plain table, the others offer the size finder
         self.assertEqual(set(guides[0]),set(sg.Guide.model_fields),'the editor and the server agree on every field')
     def test_ready_made_looks_are_valid_appearance_only(self):
         import json, pathlib, shutil, subprocess
