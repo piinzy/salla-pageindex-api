@@ -69,13 +69,13 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // products without a guide are offered up front
     assert.equal(hidden('#missingBar'),false);assert.match($('#missingBar').textContent,/2|٢/);assert.match($('#missingBar').textContent,/أنشئ قاعدة/);
     $('#guideFilter').value='none';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();assert.match(calls.filter(c=>c.path.startsWith('products?')).pop().path,/guide=none/);$('#guideFilter').value='';$('#guideFilter').dispatchEvent(new w.Event('change'));await settle();
-    // ---- a brand-new guide starts as a women's dress guide with its own theme and template list
+    // ---- a brand-new guide starts as the plain standard table: general category, minimal theme, no drawing
     $('[data-edit="42"]').click();await settle();
-    assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'women');assert.equal($('[name="guide-theme"]:checked').value,'rose');
-    assert.equal(all('#themeChoices [name="guide-theme"]').length,14);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'rose','recommended themes come first');
+    assert.equal(hidden('#editor'),false);assert.equal($('[name="guide-category"]:checked').value,'special');assert.equal($('[name="guide-theme"]:checked').value,'minimal');
+    assert.equal(all('#themeChoices [name="guide-theme"]').length,14);assert.equal($('#themeChoices .theme-card [name="guide-theme"]').value,'classic','recommended themes come first');
     assert.ok($('#themeChoices .theme-card small'),'recommended badge');
-    assert.deepEqual(all('#template option').map(o=>o.value),['women-dresses','women-tops','women-pants','women-skirts','women-lingerie','women-abaya']);
-    assert.equal(all('#gridEditor thead th input').length,4);assert.equal(guideWrap().dataset.theme,'rose');assert.ok($('#guidePreview').shadowRoot.querySelector('svg.emblem'));
+    assert.deepEqual(all('#template option').map(o=>o.value),['general-basic']);
+    assert.equal(all('#gridEditor thead th input').length,3);assert.equal(guideWrap().dataset.theme,'minimal');assert.equal($('#guidePreview').shadowRoot.querySelector('svg.emblem'),null,'plain start has no drawing');
     assert.equal($('#calculator').checked,true,'new guides get the size finder');assert.equal(hidden('.only-library'),true);assert.equal(hidden('.only-product'),false);
 
     // ---- category follows an untouched guide
