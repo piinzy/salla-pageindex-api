@@ -57,9 +57,9 @@ function makeApp(url){
   try{
     await settle();assert.equal(app.errors.length,0,app.errors.map(e=>e.message).join('\n'));
 
-    // ---- five sections only; the product-data tool, the sync log tab and the install tab are gone
-    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['home','catalog','library','buttonSettings','stats'],'tab order');
-    assert.ok(all('aside nav [data-tab] svg.nav-ico').length===5,'icons are vector, not emoji');
+    // ---- six sections only; the product-data tool, the sync log tab and the install tab are gone
+    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['home','catalog','batch','library','buttonSettings','stats'],'tab order');
+    assert.ok(all('aside nav [data-tab] svg.nav-ico').length===6,'icons are vector, not emoji');
     for(const gone of ['#quick','#install','#activity','#quickSearch','#quickResults'])assert.equal($(gone),null,gone+' was removed');
     assert.equal(hidden('#home'),false);assert.equal(hidden('#catalog'),true);assert.equal($('aside nav [data-tab="home"]').classList.contains('active'),true);
 
@@ -116,11 +116,11 @@ function makeApp(url){
   }finally{app.dom.window.close();}
 
   // ---- a dedicated Salla page can open straight on one section; the retired quick link lands on the products
-  for(const [view,shown] of [['stats','stats'],['library','library'],['home','home'],['buttonSettings','buttonSettings'],['quick','catalog'],['unknown','home']]){
+  for(const [view,shown] of [['stats','stats'],['batch','batch'],['library','library'],['home','home'],['buttonSettings','buttonSettings'],['quick','catalog'],['unknown','home']]){
     const deep=makeApp('https://app.test/salla/embedded?view='+view);
     try{await settle();assert.equal(deep.d.querySelector('#'+shown).classList.contains('hidden'),false,view+' opens '+shown);
-      for(const other of ['home','catalog','library','stats','buttonSettings'])if(other!==shown)assert.equal(deep.d.querySelector('#'+other).classList.contains('hidden'),true,other+' is hidden for '+view);
+      for(const other of ['home','catalog','batch','library','stats','buttonSettings'])if(other!==shown)assert.equal(deep.d.querySelector('#'+other).classList.contains('hidden'),true,other+' is hidden for '+view);
       assert.equal(deep.errors.length,0,deep.errors.map(e=>e.message).join('\n'));}finally{deep.dom.window.close();}
   }
-  console.log('PASS: dashboard shell (five sections, home, tidier catalog, developer folds) and the editor finder: SKU/name search, link/unlink/publish, copy rules, deep links.');
+  console.log('PASS: dashboard shell (six sections, home, tidier catalog, developer folds) and the editor finder: SKU/name search, link/unlink/publish, copy rules, deep links.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

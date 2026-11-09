@@ -10,13 +10,18 @@ def like(word):
     return '%' + word.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
 
 @router.get('/dashboard-api/product-lookup', dependencies=[Depends(authenticated)])
-def product_lookup(merchant: str, q: str = ''):
+def product_lookup(merchant: str, q: str = '', exact: bool = False):
     """Up to eight products matching the name or SKU, each with the state of its size guide."""
     require_store(merchant)
     if len(q) > 200:
         raise HTTPException(400, 'نص البحث طويل.')
     clauses, args = ['c.merchant_id=%s'], [merchant]
-    for word in q.split()[:10]:
+    if exact:
+        if not q.strip():
+            return {'items': []}
+        clauses.append('LOWER(BTRIM(c.sku))=LOWER(%s)')
+        args.append(q.strip())
+    for word in ([] if exact else q.split()[:10]):
         clauses.append('(c.title ILIKE %s OR c.sku ILIKE %s)')
         args.extend([like(word)] * 2)
     rows = query('''SELECT c.product_id,c.title,c.sku,c.price,c.currency,c.quantity,c.status,c.image,c.url,

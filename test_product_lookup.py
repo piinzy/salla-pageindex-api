@@ -18,6 +18,17 @@ class ProductLookupTests(unittest.TestCase):
         self.assertEqual(anonymous.get('/dashboard-api/product-lookup?merchant=123').status_code, 401)
         self.assertIn(self.client.put('/dashboard-api/products/42?merchant=123', json={'price': 1}).status_code, (404, 405), 'the app never writes product data to Salla')
 
+    def test_exact_sku_keeps_leading_zeroes_and_detects_ambiguity(self):
+        with patch.object(pl, 'query', return_value=[{'product_id': '1'}, {'product_id': '2'}]) as query:
+            res = self.client.get('/dashboard-api/product-lookup', params={'merchant': '123', 'q': ' 000_7 ', 'exact': 'true'})
+            self.assertEqual(len(res.json()['items']), 2)
+            sql, params = query.call_args.args
+            self.assertIn('LOWER(BTRIM(c.sku))=LOWER(%s)', sql)
+            self.assertEqual(params[:2], ['123', '000_7'])
+            query.reset_mock()
+            self.assertEqual(self.client.get('/dashboard-api/product-lookup?merchant=123&exact=true').json()['items'], [])
+            query.assert_not_called()
+
     def test_lookup_is_parameterised_and_limited(self):
         calls = []
         with patch.object(pl, 'query', side_effect=lambda sql, args=(), one=False: calls.append((sql, args)) or []):

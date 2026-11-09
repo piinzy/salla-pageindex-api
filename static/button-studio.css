@@ -424,3 +424,56 @@ aside nav.has-pill .motion-pill{background:#38449c}aside nav.has-pill button.act
 #editor .acc-tools{display:flex;gap:8px;margin:0 0 12px}
 @media(prefers-reduced-motion:reduce){#editor .ed-card.acc.open>.acc-body{animation:none}#editor .ed-card.acc>h3::after{transition:none}}
 #editor .sys-checks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0}#editor .sys-checks label{display:inline-flex;align-items:center;gap:4px;font-size:13px}
+
+/* Guide palettes are previewed on a miniature chart with the same semantic colors. */
+#editor .guide-palette-picker{margin-block:4px 22px}
+#editor .palette-picker-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+#editor .palette-picker-head h4{margin:0;font:inherit;font-weight:700}
+#guidePalettes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:9px}
+#guidePalettes .guide-palette{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:7px;border-radius:10px;color:var(--ink,#242739);background:var(--paper,#fff);border:1px solid var(--line,#ccc);text-align:start}
+#guidePalettes .guide-palette[aria-pressed=true]{outline:2px solid var(--green,#514ead);outline-offset:-2px}
+#guidePalettes .guide-palette:focus-visible{outline:3px solid var(--green,#514ead);outline-offset:2px}
+.palette-mini{display:grid;grid-template-columns:.8fr 1fr 1fr;background:var(--line);color:var(--ink);gap:1px;border:1px solid var(--line);border-radius:4px;overflow:hidden;text-align:center;direction:rtl;font:10px/1.5 Tahoma,Arial,sans-serif}
+.palette-mini span{min-width:0;background:var(--paper);padding:2px 0}
+.palette-mini span:nth-child(-n+3){background:var(--head-bg);color:var(--head-ink);font-size:9px}
+.palette-mini span:nth-child(n+7){background:var(--alt)}
+.palette-mini span:nth-child(3n+4){background:var(--chip-bg);color:var(--chip-ink);font-weight:700}
+.palette-name{display:flex;align-items:center;justify-content:space-between;gap:5px;padding-inline:3px;font-size:12px;font-weight:600}
+.guide-palette[aria-pressed=true] .palette-name::after{content:'✓';font-family:Arial,sans-serif}
+#palettePaintOption{margin-block:10px}
+
+#customCard .acc-body > details.studio-custom{margin-block:0 8px}
+#customCard details.studio-custom summary{cursor:pointer;min-height:44px;padding-block:10px;font-weight:700}
+#customCard details.studio-custom[open] > summary{margin-block-end:10px}
+.workspace-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block:clamp(24px,5vw,52px) 0;padding-block:6px 2px;border-block-start:1px dashed var(--line,#d8d6de);color:var(--muted,#56546a)}
+.workspace-footer .footer-signature{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.workspace-footer a{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding-inline:6px;font-size:13px;color:inherit;text-underline-offset:4px}
+.workspace-footer a:focus-visible{outline:2px solid currentColor;outline-offset:2px;border-radius:3px}
+@media(max-width:620px){.workspace-footer{margin-block-start:24px}}
+
+/* Batch review uses the same panel and controls in the standalone and embedded dashboards. */
+#batch [hidden]{display:none!important}
+#batch h2,#batch h3,#batch h4{margin:0 0 .4em}
+#batchFields{border:0;padding:0;margin:0;min-width:0}
+.batch-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-block-end:20px}
+.batch-head p{margin:0}
+.batch-help{max-width:38rem}.batch-help summary,.batch-codes summary,.batch-entry summary{cursor:pointer;padding-block:8px;color:var(--ink,#263453);font-weight:600}
+.batch-help ol{padding-inline-start:22px;line-height:1.85}
+.batch-upload{border:1px dashed var(--line,#b9c5e2);background:var(--bg,#f5f6fb);border-radius:12px;padding:18px}
+.batch-file{position:relative;display:inline-flex;padding:9px 18px;background:var(--green,#354a9d);color:white;border-radius:8px;cursor:pointer}
+.batch-file:focus-within{outline:2px solid currentColor;outline-offset:3px}
+.batch-file input{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
+.batch-upload small{margin-inline-start:12px}.batch-codes{margin-block-start:10px}
+#batch textarea,#batch input[type="search"]{display:block;width:100%;font:inherit;margin-block:6px}
+.batch-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.batch-entry,.batch-group{border-block-start:1px solid var(--line,#d9deea);padding:17px 0}
+.batch-entry{display:grid;grid-template-columns:minmax(125px,185px) minmax(0,1fr);gap:16px}
+.batch-entry img{display:block;max-width:100%;max-height:150px;object-fit:contain;border-radius:6px}
+.batch-product{display:flex;align-items:center;gap:8px}.batch-product img{width:44px;height:52px;object-fit:cover}
+.batch-entry small,.batch-group small{display:block;margin-block:5px}
+.batch-entry .batch-meta{display:flex;gap:12px;flex-wrap:wrap}.batch-meta label{display:grid;gap:4px}
+.batch-sheet{overflow:auto;margin:8px 0}.batch-sheet table{border-collapse:collapse;width:auto;min-width:0;font-variant-numeric:tabular-nums}
+.batch-sheet td,.batch-sheet th{border:1px solid var(--line,#d6daeb);padding:5px 9px;text-align:start;white-space:nowrap}
+.batch-group label{display:flex;gap:8px;align-items:center;font-weight:650}.batch-group input[type=checkbox]{width:auto}
+#batchMessage{min-height:1.4em}.batch-issue{color:var(--ink,#473c30);border-inline-start:3px solid #ae8656;padding-inline-start:7px}
+@media(max-width:620px){.batch-entry{grid-template-columns:minmax(0,1fr)}.batch-entry>div:first-child img{max-height:110px}.batch-help{width:100%}}

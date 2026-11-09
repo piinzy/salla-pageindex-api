@@ -93,7 +93,8 @@ class Guide(BaseModel):
     instructions:str=Field(default='',max_length=3000)
     color:str=Field(default='#177e65',pattern=r'^#[0-9a-fA-F]{6}$')
     category:Literal['general','women','men','kids','shoes','pets','accessories']='general'
-    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','linen','minimal','reference']='classic'
+    theme:Literal['classic','rose','velvet','gold','tailor','slate','sport','leather','paws','mint','night','linen','minimal','reference',
+                  'atlas','maison','folio','correspondence','atelier','fitting','garment','runway','coordinates','measure','wrap','ranges','stature','paris','silhouette','numeric','continental','precision','matrix','paired']='classic'
     table_style:Literal['zebra','lines','cards','plain']='zebra'
     density:Literal['compact','comfortable']='comfortable'
     corners:Literal['sharp','soft','round']='soft'
@@ -114,6 +115,11 @@ class Guide(BaseModel):
     paper_color:str=Field(default='',pattern=HEX_OR_EMPTY)
     size_bg:str=Field(default='',pattern=HEX_OR_EMPTY)
     size_text:str=Field(default='',pattern=HEX_OR_EMPTY)
+    compare_sizes:bool=False
+    show_fit_details:bool=False
+    fit_advice:str=Field(default='',max_length=300)
+    lining_stretch:Literal['','none','slight','stretch','unlined']=''
+    review_measurements:bool=False
     calculator:bool=False
     language:Literal['ar','en','auto']='ar'
     how_images:list[str]=Field(default_factory=list,max_length=4)
@@ -171,7 +177,7 @@ class Guide(BaseModel):
         return self
 
 # Appearance only (never the table's contents): what a saved design ("preset") may carry.
-STYLE_FIELDS=('theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style',
+STYLE_FIELDS=('layout_type','theme','color','table_style','density','corners','depth3d','header_icon','size_style','header_style','border_style',
               'font_scale','font_family','sticky_size','header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text')
 GuideStyle=create_model('GuideStyle',__config__=ConfigDict(extra='forbid'),
                         **{name:(Guide.model_fields[name].annotation,Guide.model_fields[name]) for name in STYLE_FIELDS})
@@ -275,6 +281,12 @@ def public_guide(merchant:str,product_id:str):
         AND (CASE WHEN g.library_id IS NOT NULL THEN l.published IS NOT NULL ELSE g.published IS NOT NULL END)
         AND c.status IN ('sale','out','out-and-notify') AND COALESCE(s.access_token,'')<>'' ''',(merchant,product_id),True)
     if not row:return JSONResponse({'detail':'Not found'},status_code=404,headers=PUBLIC_HEADERS)
+    published=dict(row['guide'])
+    published.pop('review_measurements',None)
+    if not published.get('show_fit_details'):
+        published.pop('fit_advice',None)
+        published.pop('lining_stretch',None)
+    row['guide']=published
     row['button_settings']=row.get('button_settings') or ButtonSettings().model_dump()
     return JSONResponse(jsonable_encoder(row),headers=PUBLIC_HEADERS)
 

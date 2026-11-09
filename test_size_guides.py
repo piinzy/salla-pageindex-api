@@ -13,6 +13,17 @@ G={'title':'دليل المقاسات','button_label':'دليل المقاسات
    'instructions':'اختبار فقط','notes':'','color':'#177e65'}
 
 class SizeGuideTests(unittest.TestCase):
+    def test_optional_features_round_trip_and_stay_separate_from_style(self):
+        old=sg.Guide(**G)
+        self.assertFalse(old.compare_sizes or old.show_fit_details or old.review_measurements)
+        options=dict(compare_sizes=True,show_fit_details=True,review_measurements=True,
+                     lining_stretch='slight',fit_advice='الخصر ثابت')
+        new=sg.Guide(**{**G,**options}).model_dump()
+        self.assertEqual({key:new[key] for key in options},options)
+        self.assertFalse(set(options).intersection(sg.STYLE_FIELDS))
+        with self.assertRaises(ValidationError):
+            sg.Guide(**{**G,'lining_stretch':'unspecified'})
+
     def test_grid_shape(self):
         with self.assertRaises(ValidationError):sg.Guide(**{**G,'rows':[{'size':'S','values':['90']}]})
     def test_category_theme_and_style_options(self):
@@ -93,13 +104,12 @@ class SizeGuideTests(unittest.TestCase):
                 "console.log(JSON.stringify({presets:w.SizeGuideCatalog.stylePresets,fields:w.SizeGuideCatalog.STYLE_FIELDS}))")
         data=json.loads(subprocess.run(['node','-e',script],capture_output=True,text=True,check=True,cwd=pathlib.Path(__file__).parent).stdout)
         self.assertEqual(set(data['fields']),set(sg.STYLE_FIELDS),'editor and server agree on what a look contains')
-        self.assertEqual([x['id'] for x in data['presets']],['pure','reference'],'the owner\'s ready-made looks')
-        accents={'classic':'#177e65','rose':'#b4456a','velvet':'#7b2338','gold':'#a8812c','tailor':'#23375b','slate':'#3d4a56','sport':'#d9480f','leather':'#8a5a35','paws':'#d9701a','mint':'#1b8f7c','night':'#7be0c3','linen':'#2d2630','minimal':'#2b2b2b','reference':'#000000'}
-        for preset in data['presets']:
-            with self.subTest(preset=preset['id']):
-                style=sg.GuideStyle(**{**preset['style'],'color':accents[preset['style']['theme']]})
-                full=sg.Guide(**{**G,**style.model_dump()})   # a look can always be applied to a guide
-                self.assertEqual(full.columns[0].label,'محيط الصدر')
+        self.assertEqual(data['presets'], [], 'the appearance picker is the only built-in gallery')
+        for theme in sg.Guide.model_fields['theme'].annotation.__args__:
+            style = sg.GuideStyle(theme=theme)
+            full = sg.Guide(**{**G, **style.model_dump()})
+            self.assertEqual(full.theme, theme)
+            self.assertEqual(full.columns[0].label, 'محيط الصدر')
     def test_style_model_never_carries_content(self):
         for content in ['title','columns','rows','notes','instructions','category','language','calculator','how_video','logo_url','size_label']:
             self.assertNotIn(content,sg.STYLE_FIELDS);self.assertNotIn(content,sg.GuideStyle.model_fields)

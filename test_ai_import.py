@@ -257,10 +257,16 @@ class AiImportTests(unittest.TestCase):
     def test_the_total_time_is_bounded(self):
         # clock reads: rate limiter, start, then one per attempt; the third attempt would begin with only 5 s of the 90 s left
         clock = iter([0, 0, 0, 50, 85] + [500] * 20)
-        with patch.object(ai.time, 'time', side_effect=lambda: next(clock)), patch.object(ai.requests, 'post', side_effect=requests.ReadTimeout('slow')) as call:
+        with patch.object(ai, 'time', MagicMock(time=lambda: next(clock))), patch.object(ai.requests, 'post', side_effect=requests.ReadTimeout('slow')) as call:
             r = self.post()
         self.assertEqual(r.status_code, 504); self.assertEqual(call.call_count, 2, 'no new attempt starts when little time is left')
         self.assertEqual(call.call_args_list[1].kwargs['timeout'], (5, 40), 'an attempt never outlasts the remaining time')
+
+    def test_batch_sku_is_explicit_and_headers_cannot_loop(self):
+        self.assertEqual(ai.to_grid(CHART)['product_sku'], '')
+        result = ai.to_grid({**CHART, 'product_sku': ' 0017-M ', 'columns': ['Chest', 'Chest 3', 'Chest']})
+        self.assertEqual(result['product_sku'], '0017-M')
+        self.assertEqual([c['label'] for c in result['columns']], ['Chest', 'Chest 3', 'Chest 4'])
 
     def test_hourly_limit_per_store(self):
         with patch.object(ai.requests, 'post', return_value=gemini(CHART)):

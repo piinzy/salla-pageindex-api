@@ -12,3 +12,151 @@
 .fz-eye.r .fz-lid{transform-origin:50% 0}
 .fz.is-down .fz-body{transform:scale(.985,.975)!important}
 @media (prefers-reduced-motion:reduce){.fz-body{transition:none}}
+
+/* Gaze follows input in short eased moves. A blink only runs for a visible character. */
+.fz-body{transform:rotateX(var(--fz-nod,0deg)) rotateY(var(--fz-turn,0deg));transition:transform .24s ease-out}
+.fz-pupil{transition:transform .13s cubic-bezier(.2,.7,.3,1)}
+.fz-eye .fz-lid{transition:transform .16s ease-out}
+.fz[data-fuzz-visible] .fz-lid{animation:fz-blink var(--fz-blink-cycle,5s) linear infinite}
+@keyframes fz-blink{
+  0%,75%,80%,100%{transform:scaleY(var(--lid,1))}
+  77.5%{transform:scaleY(1.97)}
+}
+.fz[data-fuzz-ready]:active .fz-body{transform:scale(.986,.977)}
+.fz-section-title{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:clamp(8px,1.2vw,17px);align-content:center;min-width:0}
+.fz-section-title>:not(.fz-scene){grid-column:2;min-width:0}
+.fz-scene{display:block;grid-column:1;grid-row:1 / span 2;align-self:center;position:relative;isolation:isolate;pointer-events:none;width:clamp(70px,8vw,100px);aspect-ratio:1.48}
+#buttonSettings .fz-scene{grid-row:1 / span 3}
+.fz-scene::before,.fz-scene::after{position:absolute;content:"";pointer-events:none}
+.fz-scene .fz{display:block;position:absolute;width:100%;inset:0;max-width:none;z-index:1}
+.fz-scene .fz-eye{font-size:clamp(1.5px,.45vw,5px);transform:rotate(var(--tilt))}
+.fz-scene::before{inset:5% 8% 8%;z-index:0;border-radius:50%;background:radial-gradient(ellipse at 45% 60%,#ccd3fd 3%,#edf0ff 62%,transparent 68%)}
+/* Section tools sit next to the character on the same baseline. */
+.fz-scene-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32%;
+  align-items: end;
+  column-gap: 6px;
+  width: clamp(92px, 9vw, 112px);
+  aspect-ratio: auto;
+}
+.fz-scene-pair::before, .fz-scene-pair::after,
+.fz-scene-footer::before, .fz-scene-footer::after {
+  content: none;
+}
+.fz-scene-pair .fz, .fz-scene-footer .fz {
+  display: block;
+  position: relative;
+  inset: auto;
+  width: 100%;
+  transform: none;
+}
+.fz-scene:is(.fz-scene-pair, .fz-scene-footer) .fz .fz-body {
+  transform: none;
+}
+.fz-prop {
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  margin-block-end: 1px;
+}
+.fz-prop-ruler {
+  aspect-ratio: 2.85;
+  border: 1px solid #997a48;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #876d47 0 1px, transparent 1px 4px) center top / calc(100% - 5px) 42% no-repeat,
+              linear-gradient(#f5e4bb, #e8cc94);
+  box-shadow: inset 0 -1px #d5b67d;
+}
+.fz-prop-books {
+  display: grid;
+  gap: 1px;
+  justify-items: start;
+}
+.fz-prop-books > i {
+  box-sizing: border-box;
+  width: 100%;
+  height: clamp(5px, .45vw, 7px);
+  border: 1px solid var(--cover);
+  border-block-start-width: 2px;
+  border-inline-start-width: 4px;
+  border-radius: 1px 2px 2px 1px;
+  background: linear-gradient(#fffaf0 55%, #e9dfc9 55%);
+}
+.fz-prop-books > i:nth-child(1) {width: 76%; --cover: #6676a7}
+.fz-prop-books > i:nth-child(2) {width: 89%; --cover: #b28c68}
+.fz-prop-books > i:nth-child(3) {--cover: #6e8582}
+.fz-prop-switch {
+  aspect-ratio: 2;
+  border-radius: 99px;
+  border: 1px solid #6978ac;
+  background: linear-gradient(#9faedb, #8395c7);
+}
+.fz-prop-switch::before {
+  content: "";
+  position: absolute;
+  inset-block: 15%;
+  inset-inline-start: 9%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fffdf7;
+  box-shadow: 0 1px 2px #46527855;
+}
+.fz-scene-footer {
+  width: 60px;
+  aspect-ratio: 1500 / 1020;
+}
+.fz-scene-chart .fz{inset:auto 0 3% auto;width:77%;transform:rotate(6deg)}
+.fz-scene-chart::after{z-index:2;bottom:10%;left:2%;width:49%;height:65%;background:linear-gradient(#b3bde1,#758bb8) 100% 100%/24% 40% no-repeat,linear-gradient(#91baaf,#628e85) 50% 100%/24% 65% no-repeat,linear-gradient(#d7ba90,#a98c68) 0 100%/24% 91% no-repeat;border-bottom:1px solid #60667b}
+.fz-scene-draft{width:64px;aspect-ratio:1.6}
+.fz-scene-draft .fz{width:93%;inset:-5% 0 auto auto;transform:rotate(-6deg)}
+.fz-scene-draft::before{background:radial-gradient(ellipse,#7682a2 0%,#465068 50%,transparent 70%)}
+.fz-scene-draft::after{z-index:2;bottom:18%;left:0;width:48%;height:12%;border-radius:1px;transform:rotate(-32deg);background:linear-gradient(90deg,#3d3346 0 9%,#d9b48b 9% 22%,#b69ad1 22% 90%,#bebdc7 90%);clip-path:polygon(0 50%,20% 0,100% 0,100% 100%,20% 100%)}
+/* The editor keeps one companion beside the preview; its small prop follows the current task. */
+.fz-scene-draft[data-tool=tape] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  aspect-ratio: auto;
+}
+.fz-scene-draft[data-tool=tape] .fz {
+  position: relative;
+  inset: auto;
+  width: 92%;
+  transform: none;
+}
+.fz-scene-draft[data-tool=tape]::before {content: none}
+.fz-scene-draft[data-tool=tape]::after {
+  position: static;
+  box-sizing: border-box;
+  width: 76%;
+  height: 6px;
+  clip-path: none;
+  transform: none;
+  border: 1px solid #997a48;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #876d47 0 1px, transparent 1px 4px) center top / calc(100% - 5px) 50% no-repeat, #efdbad;
+}
+.fz-scene-draft[data-tool=sizes]::after{content:"S  M";bottom:10%;left:0;width:auto;height:auto;line-height:1.15;padding:1px 3px;font:700 8px/1.2 system-ui;color:#3e3b45;white-space:pre;direction:ltr;background:linear-gradient(90deg,#f1decb 0 46%,#a99797 47% 49%,#ddd7f1 50%);border:1px solid #948998;border-radius:3px;clip-path:none;transform:rotate(-7deg)}
+.fz-scene-draft[data-tool=swatches]::after{bottom:11%;width:36%;height:22%;transform:rotate(-18deg);clip-path:none;border-radius:2px;background:linear-gradient(90deg,#d2a298 0 34%,#f1dfb6 34% 67%,#9dbbad 67%);border:1px solid #ede2d950;box-shadow:2px 2px 0 #9d90a9}
+.fz-scene-draft[data-tool=sheet]::after{bottom:7%;width:28%;height:40%;transform:rotate(-13deg);clip-path:none;border:1px solid #909ab0;border-radius:2px;background:repeating-linear-gradient(0deg,transparent 0 23%,#bac9cc 23% 29%) center/75% 70% no-repeat,#f8f2dc}
+@media(max-width:900px){
+  #home .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;min-height:0;align-items:center}
+  #home .hero .hero-fz{display:block;position:relative;grid-column:2;grid-row:1;inset:auto;translate:none;width:clamp(62px,13vw,105px);align-self:center}
+  #home .hero>div:not(.hero-fz){grid-row:1;grid-column:1}
+  #home .hero>button{grid-column:1/-1;justify-self:start}
+}
+@media(max-width:620px){
+  .fz-scene{width:58px}
+  .fz-scene-pair{width:82px;column-gap:4px}
+  .fz-scene-footer{width:52px}
+  .fz-scene-draft{width:42px}
+  .fz-section-title{column-gap:6px}
+  #catalog>.panelhead,#library>.panelhead,#stats>.panelhead{flex-wrap:wrap;row-gap:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .fz .fz-body,.fz[data-fuzz-ready]:active .fz-body,.fz .fz-pupil{transform:none!important;transition:none}
+  .fz[data-fuzz-visible] .fz-lid{animation:none;transition:none;transform:scaleY(1)}
+}

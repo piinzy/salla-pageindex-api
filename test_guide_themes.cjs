@@ -8,7 +8,7 @@ const w=dom.window,d=w.document;
 (async()=>{try{
   w.eval(read('size-guide-renderer.js'));w.eval(read('size-guide-catalog.js'));
   const UI=w.SizeGuideUI,Catalog=w.SizeGuideCatalog;
-  assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,14);
+  assert.equal(UI.categories.length,7);assert.equal(UI.themes.length,20);
 
   // every starter template satisfies the server's grid rules and ships no invented measurements
   for(const t of Catalog.templates){
@@ -28,8 +28,33 @@ const w=dom.window,d=w.document;
   for(const category of UI.categories)for(const theme of UI.themes)for(const table_style of ['zebra','lines','cards','plain']){
     const host=d.createElement('div');UI.preview(host,{...guide,category:category.id,theme:theme.id,table_style},'منتج');
     const wrap=shadow(host).querySelector('.wrap');assert.equal(wrap.dataset.theme,theme.id);assert.equal(wrap.dataset.table,table_style);
-    assert.equal(shadow(host).querySelectorAll('tbody tr').length,2);assert.equal(shadow(host).querySelectorAll('thead th').length,3);
+    const tables=shadow(host).querySelectorAll('table');assert.ok(tables.length);
+    for(const value of ['S','M','90','94-98','36','38'])assert.ok([...tables].some(table=>table.textContent.includes(value)),theme.id+' retains '+value);
     assert.ok(shadow(host).querySelector('svg.emblem'),'category emblem');
+  }
+  // Theme-specific views must read the same values as the editor, including ranges,
+  // non-measurement columns and the alternate body table.
+  {
+    const host=d.createElement('div');
+    const sample={...guide,columns:[{label:'القامة',kind:'text'},{label:'الصدر',kind:'measurement'}],
+      rows:[{size:'S',values:['عادية','81–86']},{size:'S-P',values:['قصيرة','79–83']}]};
+    const original=JSON.stringify(sample);
+    const show=theme=>{UI.preview(host,{...sample,theme},'منتج');return host.shadowRoot};
+    let root=show('stature');
+    root.querySelectorAll('.look-options button')[1].click();
+    assert.equal(root.querySelector('tbody tr:not([hidden]) th').textContent,'S-P');
+    root.querySelectorAll('.units button')[1].click();
+    assert.match(root.querySelector('tbody tr:not([hidden])').textContent,/31.1 – 32.7/);
+    root=show('atelier');
+    root.querySelectorAll('.look-options button')[1].click();
+    assert.equal(root.querySelectorAll('tbody tr:not([hidden])').length,1);
+    root=show('numeric');
+    assert.equal(root.querySelector('thead tr').cells.length,4);
+    assert.equal(root.querySelector('tbody tr').cells[3].textContent,'31.9 – 33.9');
+    root=show('folio');
+    assert.equal(root.querySelectorAll('table').length,2);
+    assert.deepEqual([...root.querySelector('table').tHead.rows[0].cells].map(c=>c.textContent),['المقاس','S','S-P']);
+    assert.equal(JSON.stringify(sample),original);
   }
   // old guides without the new fields still render with safe defaults
   {const host=d.createElement('div');UI.preview(host,guide,'منتج');const wrap=shadow(host).querySelector('.wrap');
@@ -58,6 +83,27 @@ const w=dom.window,d=w.document;
    const dialog=d.body.lastElementChild.shadowRoot.querySelector('dialog');assert.equal(dialog.getAttribute('aria-labelledby'),'size-guide-title');assert.ok(dialog.hasAttribute('open'));
    const close=dialog.querySelector('.close');assert.equal(close.getAttribute('aria-label'),'إغلاق دليل المقاسات');close.click();
    assert.equal([...d.body.children].filter(n=>n.shadowRoot).length,0,'window removed after closing');assert.equal(d.activeElement,opener);}
+  // All preset colors survive theme selection, including both axes of the transformed tables.
+  {
+    assert.equal(Catalog.colorPalettes.length,9);
+    for(const {id,colors} of Catalog.colorPalettes){
+      const pal=UI.palette(colors),token=UI.tokens(colors).vars;
+      for(const [fg,bg] of [[pal.ink,pal.paper],[pal.ink,pal.alt],[pal.headInk,pal.headBg],
+        [pal.chipInk,pal.chipBg],[pal.accentInk,pal.paper],[pal.accentInk,pal.alt],
+        [pal.muted,pal.alt],[pal.muted,pal.paper],[token['--on-accent'],pal.accent]]){
+        assert.ok(UI.contrast(fg,bg)>=4.5,id+' contrast '+fg+' on '+bg);
+      }
+      for(const theme of UI.themes){
+        const host=d.createElement('div');
+        UI.preview(host,{...guide,...colors,theme:theme.id,size_style:'plain'},'منتج');
+        const wrap=host.shadowRoot.querySelector('.wrap');
+        assert.equal(wrap.style.getPropertyValue('--paper'),colors.paper_color);
+        assert.equal(wrap.style.getPropertyValue('--head-bg'),colors.header_bg);
+        assert.equal(wrap.style.getPropertyValue('--chip-bg'),colors.size_bg);
+        assert.ok(wrap.hasAttribute('data-custom-size')&&wrap.hasAttribute('data-custom-rows'));
+      }
+    }
+  }
   // the merchant's own colours win over the theme, and header text stays readable
   {const base={...guide,theme:'classic',color:'#177e65'},plain=UI.palette(base);
    const own=UI.palette({...base,header_bg:'#101010',row_alt:'#fafafa',border_color:'#ff0000',text_color:'#222222',paper_color:'#fefefe',size_bg:'#0a0a0a'});
@@ -105,6 +151,36 @@ const w=dom.window,d=w.document;
    assert.equal(UI.recommend(chart,{0:36.2*2.54}).index,1);
    const none=d.createElement('div');UI.preview(none,{...guide,calculator:false},'منتج');assert.equal(shadow(none).querySelectorAll('[role=tab]').length,2,'finder is opt-in');
    const textOnly=d.createElement('div');UI.preview(textOnly,{...guide,columns:[{label:'EU',kind:'text'}],rows:[{size:'S',values:['36']}],calculator:true},'منتج');assert.equal(shadow(textOnly).querySelectorAll('[role=tab]').length,2,'no finder without measurements');}
+  // Optional comparisons follow the visible table and the selected unit, including reversed choices.
+  {
+    const host=d.createElement('div'),root=()=>host.shadowRoot;
+    const product={...guide,layout_type:'compact',columns:[{label:'عرض الخصر',kind:'measurement'}],
+      rows:[{size:'S',values:['32']},{size:'M',values:['36']}],compare_sizes:true,
+      show_fit_details:true,fit_advice:'الخصر ثابت',lining_stretch:'none'};
+    UI.preview(host,product,'فستان');
+    assert.match(root().querySelector('.fit-advice').textContent,/الخصر ثابت.*غير مطاطية/);
+    const compare=()=>root().querySelector('.size-comparison');
+    assert.match(compare().querySelector('tbody').textContent,/32.*36.*\+4/);
+    const select=compare().querySelector('select');select.value='1';select.onchange();
+    assert.match(compare().querySelector('tbody').textContent,/36.*32.*-4/);
+    root().querySelectorAll('.units button')[1].click();
+    assert.match(compare().querySelector('tbody').textContent,/14.2.*12.6.*-1.6/);
+    UI.preview(host,{...product,compare_sizes:false,show_fit_details:false},'فستان');
+    assert.equal(compare(),null);assert.equal(root().querySelector('.fit-advice'),null);
+    const body={columns:[{label:'محيط الصدر',kind:'measurement'},{label:'محيط الخصر',kind:'measurement'}],
+      rows:[{size:'M',values:['94','74']},{size:'S',values:['90','—']}]};
+    UI.preview(host,{...product,body_table:body,layout_type:'tabs',calculator:true},'فستان');
+    const fields=root().querySelectorAll('.finder input'),find=root().querySelector('.finder .primary');
+    assert.match(root().querySelector('.finder label').textContent,/محيط الصدر/);
+    fields[0].value='94';fields[1].value='74';find.click();
+    assert.equal(root().querySelector('.result strong').textContent,'M');
+    assert.equal(root().querySelector('tbody tr.hit th').textContent,'M');
+    assert.match(compare().textContent,/محيط الصدر/);
+    fields[0].value='90';fields[1].value='100';find.click();
+    assert.equal(root().querySelector('.result strong'),null);assert.equal(root().querySelector('tr.hit'),null);
+    UI.preview(host,{...product,calculator:true,layout_type:'tabs'},'فستان');
+    assert.match(root().querySelector('.finder p').textContent,/قطعة تناسبك/);
+  }
   // finder inside the window: highlight + jump to the table
   {const chart={...guide,columns:[{label:'الصدر',kind:'measurement'}],rows:[{size:'S',values:['86-90']},{size:'M',values:['90-94']}],calculator:true};
    const host=d.createElement('div');UI.preview(host,chart,'منتج');const root=shadow(host);
@@ -265,7 +341,7 @@ const w=dom.window,d=w.document;
    for(const bad of ['red','#12345','','javascript:x',null,undefined])assert.equal(UI.brandStyle(bad),null);
    assert.ok(Math.abs(UI.contrast('#000000','#ffffff')-21)<.01);}
   // ready-made looks only touch appearance fields and render with every theme
-  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.map(x=>x.id).join(),'pure,reference','the owner\'s ready-made looks');
+  {const C=w.SizeGuideCatalog,allowed=new Set(C.STYLE_FIELDS);assert.equal(C.stylePresets.map(x=>x.id).join(),'','the owner\'s ready-made looks');
    for(const preset of C.stylePresets){
      assert.ok(Object.keys(preset.style).every(k=>allowed.has(k)),'only appearance fields: '+preset.id);
      for(const key of ['header_bg','header_text','row_alt','border_color','text_color','paper_color','size_bg','size_text'])assert.match(preset.style[key],/^(#[0-9a-f]{6})?$/i,'valid colour: '+preset.id);
@@ -274,5 +350,5 @@ const w=dom.window,d=w.document;
    }
    assert.equal(C.STYLE_FIELDS.filter(k=>['title','columns','rows','notes','instructions','category','language','calculator'].includes(k)).length,0,'content never travels with a look');
    for(const c of UI.categories){const list=C.phrasesFor(c.id);assert.ok(list.length>=4);assert.ok(list.every(x=>x.length<=300&&x.trim()));assert.equal(new Set(list).size,list.length)}}
-  console.log('PASS: 7 categories x 14 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
+  console.log('PASS: 7 categories x 20 themes x 4 table styles, starter templates, safe fallbacks, accent contrast, escaping, units, tabs, custom colours, size-cell styles, languages, size finder, media, brand colour, ready-made looks and dialog.');
 }finally{w.close();}})().catch(error=>{console.error(error);process.exit(1)});
