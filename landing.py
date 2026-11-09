@@ -31,6 +31,16 @@ def page(name):
 @router.api_route('/about',methods=['GET','HEAD'],include_in_schema=False)
 def about():return page('landing.html')
 
+@router.api_route('/faq',methods=['GET','HEAD'],include_in_schema=False)
+def faq():return page('faq.html')
+
+EMAIL_ASSETS={'logo.png':'image/png','character.jpg':'image/jpeg'}
+
+@router.get('/email-assets/{name}',include_in_schema=False)
+def email_asset(name:str):
+    if name not in EMAIL_ASSETS:raise HTTPException(404)
+    return FileResponse(STATIC/'email'/name,media_type=EMAIL_ASSETS[name],headers={'Cache-Control':'public, max-age=86400','X-Content-Type-Options':'nosniff'})
+
 @router.api_route('/privacy',methods=['GET','HEAD'],include_in_schema=False)
 def privacy():return page('privacy.html')
 

@@ -3,6 +3,7 @@ from contextlib import closing
 import hmac
 import logging
 import os
+import threading
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -37,6 +38,7 @@ for extra_router in (sales_router, rules_router, billing_router, library_router,
     app.include_router(extra_router)
 from embedded import router as embedded_router, RedactTokenQuery
 app.include_router(embedded_router)
+import mailer
 from landing import router as landing_router
 app.include_router(landing_router)
 logging.getLogger('uvicorn.access').addFilter(RedactTokenQuery())
@@ -99,6 +101,7 @@ def startup_event():
     initialize_billing()
     initialize_size_rules()
     initialize_size_sales()
+    mailer.initialize()
 
 
 @app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
@@ -338,6 +341,7 @@ async def salla_webhook(request: Request):
         await run_in_threadpool(billing_event, event, merchant_id, data)
     except Exception as error:   # the plan record must never block an installation
         logger.error("Billing record failed for merchant %s: %s", merchant_id, type(error).__name__)
+    threading.Thread(target=mailer.send_welcome, args=(merchant_id, access_token), daemon=True).start()
     logger.info("Store authorization saved for merchant %s", merchant_id)
     return {"status": "success", "event_received": event, "merchant_id": merchant_id}
 
