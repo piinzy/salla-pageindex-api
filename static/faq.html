@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-ui-theme="night">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="dark light">
+<script src="/brand-assets/app-theme.js"></script>
 <title>الأسئلة الشائعة — دليلك بلس</title>
 <meta name="robots" content="index,follow">
 <link rel="preconnect" href="https://cdn.salla.network" crossorigin>
@@ -41,12 +42,18 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-bet
 @media(max-width:700px){.nav .btn{display:none}.peek{width:62%;bottom:-70px}.top .wrap{padding-bottom:120px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<link rel="stylesheet" href="/brand-assets/daylight-switch.css">
+<link rel="stylesheet" href="/brand-assets/doc-night.css">
+<script type="module" src="/brand-assets/daylight-switch.js?v=toolbar1"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute"><defs><symbol id="tape" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8h18v8H3zM7 8v4M11 8v3M15 8v4M19 8v3"/></symbol></defs></svg>
 <header class="nav"><div class="wrap">
 <a class="logo" href="/about"><i aria-hidden="true"><svg><use href="#tape"/></svg></i>دليلك بلس</a>
 <span class="grow"></span>
+<div class="doc-appearance"><span class="appearance-label" aria-hidden="true">مظهر التطبيق</span>
+<!-- Daylight switch artwork by @Lattice_Node, ludion.ai/p/toggle-daylight (MIT). -->
+<div data-ld-part="toggle-daylight"><canvas class="scene" aria-hidden="true"></canvas><button class="hit" type="button" role="switch" aria-checked="true" aria-label="المظهر الليلي"></button><span class="vh" role="status" aria-live="polite" data-status></span><span class="probe" aria-hidden="true"></span></div></div>
 <a class="btn" href="/about">العودة إلى الصفحة الرئيسية</a>
 </div></header>
 <div class="top"><div class="wrap">

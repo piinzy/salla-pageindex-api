@@ -28,11 +28,16 @@ class LandingTests(unittest.TestCase):
         self.assertEqual(header.count('role="switch"'),1)
         self.assertIn('id="store"',header)
         self.assertIn('data-ld-part="toggle-daylight"',header)
-        for page in ('faq.html','privacy.html','size-guide-widget.js','size-guide-renderer.js'):
+        for page in ('faq.html','privacy.html'):   # the public documents carry the same switch and share the choice with the home page
+            source=(static/page).read_text()
+            self.assertEqual(source.count('role="switch"'),1)
+            self.assertIn('src="/brand-assets/app-theme.js"',source)
+            self.assertIn('daylight-switch.js',source)
+        for page in ('size-guide-widget.js','size-guide-renderer.js'):   # what shoppers see never loads it
             source=(static/page).read_text()
             self.assertNotIn('daylight-switch.js',source)
             self.assertNotIn('data-ld-part="toggle-daylight"',source)
-        for name in ('daylight-switch.js','daylight-switch.css','app-theme.js','landing-night.css'):
+        for name in ('daylight-switch.js','daylight-switch.css','app-theme.js','landing-night.css','doc-night.css'):
             self.assertEqual(self.c.get('/brand-assets/'+name).status_code,200)
 
     def test_dashboard_mascot_accessories_are_served_for_every_scene(self):
