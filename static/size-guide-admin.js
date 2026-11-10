@@ -957,7 +957,7 @@ $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),
     card.classList.add('acc');card.append(body);setOpen(card,false);
     h.addEventListener('click',e=>{if(e.target.closest('.acc-btn')===null&&e.target!==h)return;const on=!card.classList.contains('open');if(on&&!openAll)cards.forEach(c=>c!==card&&setOpen(c,false));setOpen(card,on)});
   });
-  let openAll=false;const first=document.getElementById('dataCard');
+  let openAll=false;const first=document.getElementById('presetCard');
   if(first){setOpen(first,true);const tools=document.createElement('div'),b=document.createElement('button');tools.className='acc-tools';b.type='button';b.className='secondary';b.id='accAll';b.textContent='فتح كل الأقسام';
     const jumps=mk('div','editor-jumps');
     jumps.setAttribute('role','group');jumps.setAttribute('aria-label','الانتقال إلى قسم في محرر الجدول');
