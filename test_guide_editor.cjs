@@ -251,7 +251,7 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
         assert.ok(advanced.contains($('#'+id)), id+' is grouped under advanced customization');
       }
       assert.equal(advanced.querySelectorAll('details[open]').length, 0);
-      const shortcut = [...d.querySelectorAll('.editor-jumps button')].find(b => b.textContent === 'تخصيص متقدم');
+      const shortcut = [...d.querySelectorAll('.editor-jumps button')].find(b => b.textContent === 'تخصيص');
       shortcut.click();
       assert.equal(shortcut.getAttribute('aria-expanded'), 'true');
       assert.equal(appearance.querySelector('.acc-btn').getAttribute('aria-expanded'), 'false');

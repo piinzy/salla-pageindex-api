@@ -5,7 +5,10 @@
 :root[data-theme=dark]{color-scheme:dark;--bg:#202223;--surface:#292b2c;--surface-soft:#303334;--ink:#eef2f3;--muted:#b0b9bc;--green:#a9b8ff;--button-ink:#10143f;--line:#454a4c;--accent:#a9b8ff;--tag-bg:#2b327a;--tag-ink:#a9b8ff;--warn-bg:#283062;--warn-ink:#d3dbff;--danger-bg:#482a30;--danger-ink:#ffb4bd;--focus:#a9b8ff}
 body.embedded{font-family:PingARLT,Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
 .embedded aside,.embedded .intro .eyebrow,.embedded #login{display:none!important}
-.embedded #workspaceTop > .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 18px;padding-block-end:12px}
+.embedded #workspaceTop > .top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px 18px;padding-block-end:14px}
+.embedded #workspaceTop > .top > .embedded-tabs{grid-column:2;justify-self:center}
+.embedded #workspaceTop > .top > .workspace-actions{grid-column:3;justify-self:end}
+@media(max-width:1100px){.embedded #workspaceTop > .top{grid-template-columns:1fr;justify-items:center}.embedded #workspaceTop > .top > .embedded-tabs,.embedded #workspaceTop > .top > .workspace-actions{grid-column:1;justify-self:center}}
 .embedded #workspaceTop > .top > div:not(.workspace-actions),.embedded #workspaceTop > .top #store{display:none}
 .embedded #workspaceTop > .top .workspace-appearance{border-inline-start:0;padding-inline-start:0}
 

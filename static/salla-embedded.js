@@ -42,7 +42,7 @@
     }
     return data;
   }
-  const TABS = ['home', 'catalog', 'batch', 'library', 'buttonSettings', 'stats'];
+  const TABS = ['home', 'catalog', 'buttonSettings', 'batch', 'library', 'stats'];
   function markTabs(tab) {
     const selected = tab === 'editor' ? 'catalog' : tab;
     document.querySelectorAll('.embedded-tabs button').forEach(button => {
