@@ -80,6 +80,11 @@ class Login(BaseModel):
 def dashboard_page():
     return FileResponse(Path(__file__).parent/'static/dashboard.html',headers={'Cache-Control':'no-store'})
 
+@router.get('/dashboard-night.css',include_in_schema=False)
+def dashboard_night_styles():
+    return FileResponse(Path(__file__).parent/'static/dashboard-night.css',media_type='text/css',
+                        headers={'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'})
+
 @router.post('/dashboard-api/login')
 def login(body:Login,request:Request):
     key=signing_key()
@@ -231,9 +236,10 @@ def update_product_event(merchant,event,data):
             cur.execute('DELETE FROM dashboard_catalog WHERE merchant_id=%s AND product_id=%s',(merchant,str(product_id)))
             cur.execute('DELETE FROM product_categories WHERE merchant_id=%s AND product_id=%s',(merchant,str(product_id)))
         else:
-            row=query('SELECT access_token FROM stores WHERE merchant_id=%s',(merchant,),True)
+            cur.execute('SELECT access_token FROM stores WHERE merchant_id=%s',(merchant,))
+            row=cur.fetchone()
             if not row: raise HTTPException(404,'Unknown merchant')
-            p=salla_get('/products/'+str(product_id),row['access_token'],None,merchant).get('data')
+            p=salla_get('/products/'+str(product_id),row[0],None,merchant).get('data')
             if not isinstance(p,dict): raise HTTPException(502,'Invalid product response')
             cur.execute(UPSERT,normalize(p,merchant))
             from size_rules import save_categories

@@ -45,7 +45,7 @@ def email_asset(name:str):
 def privacy():return page('privacy.html')
 
 
-BRAND={'bear.webp':'image/webp','fuzz.webp':'image/webp','fuzz.js':'application/javascript','fuzz.css':'text/css','app.css':'text/css','admin.css':'text/css','DMSans-Regular.woff2':'font/woff2','Epilogue-Black.woff2':'font/woff2'}
+BRAND={'fuzz-props.svg':'image/svg+xml','daylight-switch.css':'text/css','app-theme.js':'application/javascript','daylight-switch.js':'application/javascript','landing-night.css':'text/css','preview-oxford-shirt.webp':'image/webp','bear.webp':'image/webp','fuzz.webp':'image/webp','fuzz.js':'application/javascript','fuzz.css':'text/css','app.css':'text/css','admin.css':'text/css','DMSans-Regular.woff2':'font/woff2','Epilogue-Black.woff2':'font/woff2'}
 
 @router.get('/brand-assets/{name}',include_in_schema=False)
 def brand_asset(name:str):

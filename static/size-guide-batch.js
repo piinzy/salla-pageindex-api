@@ -250,7 +250,7 @@
       try{
         if(items.some(i=>i.done && String(i.product.product_id)===id))throw Error('تم حفظ هذا المنتج في الدفعة. ابدأ دفعة جديدة لإعادة تعديله.');
         const grid=merge(entries),record=await request(guidePath(id));
-        if(record.library)throw Error('مرتبط بجدول مشترك. عدّله من مكتبة الجداول أو افصل الربط من محرر المنتج.');
+        if(record.library)throw Error('مرتبط بجدول مشترك. عدّله من جداولي أو افصل الربط من محرر المنتج.');
         g.version=record.version;g.existing=!!record.guide;g.guide=buildGuide(record,grid,entries);
       }catch(e){g.error=e.message;}
       checkStore();groups.push(g);

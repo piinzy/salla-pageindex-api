@@ -3,7 +3,7 @@
   'use strict';
   let sdk, session = '', appId = '', connected = false, expired = false;
   const navValues = new Set();
-  const titles = {catalog:'المنتجات والمقاسات', batch:'تجهيز دفعة', editor:'تحرير دليل المقاسات', library:'مكتبة الجداول', home:'الرئيسية', buttonSettings:'إعدادات الزر', stats:'الإحصاءات'};
+  const titles = {catalog:'المنتجات والمقاسات', batch:'تجهيز دفعة', editor:'تحرير دليل المقاسات', library:'جداولي', home:'الرئيسية', buttonSettings:'إعدادات الزر', stats:'الإحصاءات'};
   const applyTheme = value => { document.documentElement.dataset.theme = value === 'dark' ? 'dark' : 'light'; };
   applyTheme(new URLSearchParams(location.search).get('theme'));
   function status(message, loading = false) {

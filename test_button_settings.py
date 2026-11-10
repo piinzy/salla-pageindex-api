@@ -58,6 +58,13 @@ class ButtonSettingsTests(unittest.TestCase):
         script=pathlib.Path('static/size-guide-button.js').read_text(encoding='utf-8')
         listed=lambda name:re.findall(r"id:'([a-z_0-9]+)'",re.search(name+r' = \[(.*?)\n  \];',script,re.S).group(1))
         self.assertEqual(set(listed('const designs')),set(bs.ButtonStyle.model_fields['design'].annotation.__args__))
+        designs=listed('const designs')
+        self.assertEqual((len(designs),len(set(designs))),(50,50))
+        for design in designs:
+            with self.subTest(design=design):
+                stored=bs.ButtonSettings(design=design,extra_buttons=[{'design':design}]).model_dump()
+                restored=bs.ButtonSettings.model_validate(stored)
+                self.assertEqual((restored.design,restored.extra_buttons[0].design),(design,design))
         self.assertEqual(set(listed('const placements')),set(bs.ButtonStyle.model_fields['placement'].annotation.__args__))
         self.assertEqual(set(listed('const icons')),set(bs.ButtonStyle.model_fields['icon'].annotation.__args__))
 

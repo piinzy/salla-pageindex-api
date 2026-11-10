@@ -3,7 +3,8 @@
   const byId=id=>document.getElementById(id),UI=window.SizeGuideButton;
   const fields=[['background_color','الخلفية'],['text_color','النص الرئيسي'],['border_color','الإطار'],['icon_color','الأيقونة والسهم'],['secondary_text_color','النص المساعد']];
   const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
-  let settings=UI.normalize(UI.defaults()),saved=structuredClone(settings),version=0,store='',loaded=false,busy=false,requestId=0,device='desktop',current=0,pane='design';
+  let settings=UI.normalize(UI.defaults()),saved=structuredClone(settings),version=0,store='',loaded=false,busy=false,requestId=0,current=0;
+  let device=window.matchMedia?.('(max-width:969px)').matches?'mobile':'desktop';
   const target=()=>current===0?settings:(settings.extra_buttons[current-1]||settings);
   const sample={title:'دليل المقاسات',button_label:'دليل المقاسات',unit:'cm',measurement_type:'garment',
     columns:[{label:'الصدر',kind:'measurement'},{label:'الخصر',kind:'measurement'},{label:'الطول',kind:'measurement'}],
@@ -24,7 +25,7 @@
   const valid=()=>fields.every(([key])=>byId('button-hex-'+key).checkValidity())&&['buttonEdgeOffset','buttonBottomOffset'].every(id=>byId(id).checkValidity());
   const isDirty=()=>loaded&&(JSON.stringify(settings)!==JSON.stringify(saved)||!valid());
   function status(message){byId('buttonSettingsState').textContent=message;}
-  function controls(){byId('buttonSettingsFields').disabled=!loaded||busy;byId('saveButtonSettings').disabled=!loaded||busy||!isDirty()||!valid();byId('reloadButtonSettings').disabled=busy;strip();}
+  function controls(){byId('buttonSettingsFields').disabled=!loaded||busy;byId('saveButtonSettings').disabled=!loaded||busy||(version>0&&!isDirty())||!valid();byId('reloadButtonSettings').disabled=busy;strip();}
   function luminance(hex){const rgb=hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;}
   function contrast(){
     const s=target(),a=luminance(s.design==='icon'?s.icon_color:s.text_color),b=luminance(s.background_color);
@@ -62,13 +63,27 @@
     dropdowns.push(refresh);refresh();
   }
   const tiles=[];
+  const families={line:'روابط وسطور',frame:'أزرار مؤطّرة',fill:'أزرار ممتلئة',badge:'بطاقات وشارات',
+    paper:'ورق وملصقات',measure:'أدوات القياس',iconwork:'أيقونات بارزة',rows:'صفوف إرشادية',geometry:'أشكال هندسية',fabric:'تفاصيل الأقمشة'};
+  function currentPalette(s){
+    const matches=source=>UI.colors.every(key=>source[key].toLowerCase()===s[key].toLowerCase());
+    const palette=UI.palettes.find(p=>matches(UI.paletteColors(p.id,s.design)));
+    if(palette)return palette.id;
+    return matches(UI.defaults(s.design))?'default':'custom';
+  }
+  function shapeColors(s,id,palette){
+    const source=palette==='default'?UI.defaults(id):palette==='custom'?s:UI.paletteColors(palette,id);
+    return Object.fromEntries(UI.colors.map(key=>[key,source[key]]));
+  }
   function renderTiles(){
-    const s=target();
-    // Transparent designs sit on a light tile: borrow the solid colour when the text colour is pale.
-    const ink=luminance(s.text_color)>.55?(luminance(s.background_color)<.55?s.background_color:'#243c30'):s.text_color;
-    for(const {id,example} of tiles){
-      const quiet=['link','row'].includes(id);
-      UI.render(example,{...s,design:id,size:'small',scale:100,width:'auto',placement:'above_price',extra_buttons:undefined,...(quiet?{text_color:ink,icon_color:ink,border_color:ink,secondary_text_color:ink}:{})},sample);
+    if(!loaded)return;
+    const s=target(),palette=currentPalette(s);
+    for(const tile of tiles){
+      const paint=shapeColors(s,tile.id,palette);
+      const signature=JSON.stringify([s.label,s.subtitle,s.icon,s.radius,s.depth,s.effect,paint]);
+      if(tile.signature===signature)continue;
+      UI.render(tile.example,{...s,...paint,design:tile.id,size:'small',scale:100,width:'auto'},sample);
+      tile.signature=signature;
     }
   }
   function strip(){
@@ -102,6 +117,7 @@
     for(const [name,value] of [['button-design',s.design],['button-placement',s.placement]])document.querySelectorAll(`[name="${name}"]`).forEach(radio=>{radio.checked=radio.value===value;radio.closest('label').classList.toggle('selected',radio.checked);});
     document.querySelectorAll('[data-palette]').forEach(button=>{const palette=UI.paletteColors(button.dataset.palette,s.design);const selected=UI.colors.every(key=>palette[key].toLowerCase()===s[key].toLowerCase());button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));});
     byId('buttonScaleOut').textContent=s.scale+'%';byId('buttonRadiusOut').textContent=s.radius<0?'حسب الشكل':s.radius+'px';
+    byId('buttonQuickIcons').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.icon===s.icon)));
     syncSegs();renderTiles();contrast();controls();
   }
   function changed(){status('تعديلات غير محفوظة');preview();}
@@ -123,25 +139,70 @@
     finally{if(id===requestId){busy=false;controls();}}
   }
   async function save(){
-    if(!loaded||busy||!isDirty()||!valid()||store!==merchant)return;
+    if(!loaded||busy||(version>0&&!isDirty())||!valid()||store!==merchant)return;
     busy=true;controls();status('جارٍ حفظ الأزرار…');const targetStore=merchant,id=requestId;
     try{const data=await api('button-settings?'+new URLSearchParams({merchant:targetStore}),{method:'PUT',body:JSON.stringify({version,settings})});
       if(id!==requestId||merchant!==targetStore)return;
-      settings=UI.normalize(data.settings);saved=structuredClone(settings);version=data.version;current=Math.min(current,settings.extra_buttons.length);populate();status('تم الحفظ. حدّث صفحة المنتج لرؤية التغييرات.');toast('تم حفظ إعدادات أزرار المتجر.');
+      settings=UI.normalize(data.settings);saved=structuredClone(settings);version=data.version;current=Math.min(current,settings.extra_buttons.length);populate();status('تم الحفظ. حدّث صفحة المنتج لرؤية التغييرات.');toast('تم حفظ إعدادات أزرار المتجر.');window.dispatchEvent(new Event('guide-button-saved'));
     }catch(error){if(id===requestId){status(error.message);toast(error.message);}}
     finally{if(id===requestId){busy=false;controls();}}
   }
   // Design tiles show the current colours, icon and depth so choosing a shape is a real preview.
-  for(const design of UI.designs){
-    const label=el('label',undefined,'button-design-option'),head=el('span',undefined,'button-design-head');
-    const radio=el('input');radio.type='radio';radio.name='button-design';radio.value=design.id;head.append(radio,el('span',design.name));
-    const example=el('div',undefined,'button-design-sample');example.inert=true;example.setAttribute('aria-hidden','true');tiles.push({id:design.id,example});
-    if(['band','card'].includes(design.id))label.classList.add('wide');
-    label.append(example,head);label.title=design.hint;byId('buttonDesignChoices').append(label);
-    radio.onchange=()=>{if(radio.checked){target().design=design.id;populate();changed();}};
+  const arabicNumber=new Intl.NumberFormat('ar-SA-u-nu-arab');
+  byId('buttonDesignCount').textContent=arabicNumber.format(UI.designs.length)+' شكلًا';
+  for(const [key,name] of Object.entries(families)){
+    const section=el('section',undefined,'shape-family'),heading=el('h4',name);
+    heading.id='buttonFamily-'+key;heading.tabIndex=-1;section.setAttribute('aria-labelledby',heading.id);
+    const members=UI.designs.filter(item=>item.family===key);
+    const start=tiles.length+1,end=tiles.length+members.length;
+    const range=el('bdi',arabicNumber.format(start)+'–'+arabicNumber.format(end),'shape-range');
+    heading.append(range);
+    const grid=el('div',undefined,'button-design-choices');
+    const option=el('option',name+' ('+range.textContent+')');option.value=heading.id;byId('buttonFamilyJumps').append(option);
+    section.append(heading,grid);byId('buttonDesignChoices').append(section);
+    for(const design of members){
+      const label=el('label',undefined,'button-design-option'),head=el('span',undefined,'button-design-head');
+      const radio=el('input');radio.type='radio';radio.name='button-design';radio.value=design.id;
+      const ordinal=tiles.length+1;
+      label.id='button-shape-'+ordinal;
+      const number=el('bdi',arabicNumber.format(ordinal),'shape-number');number.setAttribute('aria-hidden','true');
+      head.append(radio,el('span',design.name),number);
+      const example=el('div',undefined,'button-design-sample');example.inert=true;example.setAttribute('aria-hidden','true');
+      tiles.push({id:design.id,example});
+      label.append(example,head);label.title=design.hint;grid.append(label);
+      radio.onchange=()=>{
+        if(!radio.checked)return;
+        const s=target();Object.assign(s,shapeColors(s,design.id,currentPalette(s)),{design:design.id});
+        populate();status('تعديلات غير محفوظة');
+      };
+    }
   }
   seg('buttonIconChoices','button-icon','icon',UI.icons.map(i=>[i.id,i.name,i.id==='none'?null:UI.icon(i.id)]));
   iconDropdown(byId('buttonIconChoices'));
+  for(const key of ['ruler','tape_coil','hanger','dress','mannequin','pattern']){
+    const def=UI.icons.find(i=>i.id===key),b=el('button');b.type='button';b.dataset.icon=key;
+    b.append(UI.icon(key),el('span',def.name));b.onclick=()=>{target().icon=key;changed();};
+    byId('buttonQuickIcons').append(b);
+  }
+  function goTo(element,focus=element){
+    if(!element)return;
+    focus?.focus({preventScroll:true});
+    element.scrollIntoView?.({block:'start'});
+  }
+  function showNewDesigns(){goTo(byId('buttonFamily-paper'));}
+  byId('jumpNewButtons').onclick=showNewDesigns;
+  byId('buttonSectionJump').onchange=event=>{
+    const destination=byId(event.target.value);
+    if(destination)goTo(destination,destination.querySelector('h3')||destination);
+    event.target.value='';
+  };
+  byId('showProductPreview').onclick=()=>{
+    device='mobile';preview();goTo(byId('buttonProductPreview'));
+  };
+  byId('backToShape').onclick=()=>{
+    const picked=byId('buttonDesignChoices').querySelector('input:checked');
+    if(picked)goTo(picked.closest('label'),picked);
+  };
   for(const [group,title] of [['details','داخل تفاصيل المنتج'],['image','على الصورة الرئيسية'],['floating','مواضع ثابتة على الشاشة']]){
     byId('buttonPlacementChoices').append(el('p',title,'placement-group-label'));
     const grid=el('div',undefined,'placement-choices');
@@ -180,37 +241,36 @@
   byId('resetButtonPalette').onclick=()=>{const palette=UI.defaults(target().design);for(const [key] of fields)target()[key]=palette[key];populate();changed();};
   byId('previewDesktop').onclick=()=>{device='desktop';preview();};byId('previewMobile').onclick=()=>{device='mobile';preview();};
   byId('saveButtonSettings').onclick=save;byId('reloadButtonSettings').onclick=async()=>{if(busy)return;if(isDirty()&&!(await confirmAction('تجاهل تعديلات الأزرار وإعادة تحميل النسخة المحفوظة؟')))return;await load(true);};
-  // Section tabs keep the studio to one decision at a time.
-  const tabs=[...document.querySelectorAll('#studioTabs [data-pane]')];
-  function showPane(name){
-    pane=name;for(const tab of tabs){const on=tab.dataset.pane===name;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;}
-    document.querySelectorAll('#buttonSettings .studio-pane').forEach(section=>{section.hidden=section.dataset.pane!==name;});
-  }
-  tabs.forEach((tab,i)=>{tab.onclick=()=>showPane(tab.dataset.pane);tab.onkeydown=event=>{
-    const step={ArrowLeft:1,ArrowRight:-1}[event.key];if(!step)return;event.preventDefault();const next=tabs[(i+step+tabs.length)%tabs.length];next.focus();showPane(next.dataset.pane);};});
   // Preview products: the merchant can judge the button on a dress, a shirt, a shoe or a pet item.
-  const products={dress:{name:'فستان',title:'فستان كريب',cat:'women',sizes:['S','M','L','XL']},shirt:{name:'قميص',title:'قميص قطني',cat:'men',sizes:['M','L','XL','XXL']},
-    shoe:{name:'حذاء',title:'حذاء رياضي',cat:'shoes',sizes:['39','40','41','42']},pet:{name:'حيوان أليف',title:'طوق جلدي',cat:'pets',sizes:['XS','S','M','L']}};
-  const original=byId('previewImage').innerHTML;
+  const products={
+    shirt:{name:'قميص',title:'قميص أكسفورد قطني',section:'القمصان',color:'أزرق سماوي',swatch:'#a3bbd8',cat:'men',sizes:['S','M','L','XL']},
+    dress:{name:'فستان',title:'فستان يومي',section:'الفساتين',color:'رمادي',swatch:'#a5a6a8',cat:'women',sizes:['S','M','L','XL']},
+    shoe:{name:'حذاء',title:'حذاء رياضي',section:'الأحذية',color:'رمادي',swatch:'#a6a9aa',cat:'shoes',sizes:['39','40','41','42']},
+    pet:{name:'طوق',title:'طوق جلدي',section:'مستلزمات الحيوانات',color:'بني',swatch:'#865c45',cat:'pets',sizes:['XS','S','M','L']}
+  };
   function setProduct(kind){
     const item=products[kind],photo=byId('previewImage');
-    byId('previewTitle').textContent=item.title;byId('previewSizeLabel').nextElementSibling.replaceChildren(...item.sizes.map(label=>el('span',label)));
-    const emblem=kind==='dress'||!window.SizeGuideUI?.emblem?null:window.SizeGuideUI.emblem(item.cat,'preview-emblem');
-    photo.querySelectorAll('svg,.preview-emblem').forEach(node=>node.remove());
-    if(emblem)photo.prepend(emblem);else photo.insertAdjacentHTML('afterbegin',original.slice(0,original.indexOf('<span')));
-    photo.dataset.kind=kind;document.querySelectorAll('#previewProducts button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
+    byId('previewTitle').textContent=item.title;surface.querySelector('.preview-category').textContent=item.section;
+    byId('previewColorName').textContent=item.color;surface.querySelector('.preview-tone i').style.background=item.swatch;
+    const sizeBox=surface.querySelector('.button-preview-sizes');
+    sizeBox.replaceChildren(...item.sizes.map((size,i)=>{
+      const b=el('button',size);b.type='button';b.setAttribute('aria-pressed',String(i===1));
+      b.onclick=()=>sizeBox.querySelectorAll('button').forEach(chip=>chip.setAttribute('aria-pressed',String(chip===b)));
+      return b;
+    }));
+    photo.querySelector('.sample-visual')?.remove();
+    let visual;
+    if(kind==='shirt'){
+      visual=el('img');visual.src='/brand-assets/preview-oxford-shirt.webp';visual.alt='قميص أكسفورد أزرق للتوضيح';visual.width=640;visual.height=960;visual.loading='lazy';
+    }else visual=window.SizeGuideUI?.emblem?.(item.cat,'preview-emblem')||UI.icon(({dress:'dress',shoe:'shoe',pet:'paw'})[kind]);
+    visual.classList.add('sample-visual');photo.prepend(visual);
+    sample.category=item.cat;sample.rows=item.sizes.map(size=>({size,values:sample.columns.map(()=>'—')}));
+    photo.dataset.kind=kind;byId('previewProducts').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
     preview();
   }
   const productBar=el('div',undefined,'preview-products');productBar.id='previewProducts';productBar.setAttribute('role','group');productBar.setAttribute('aria-label','منتج المعاينة');
-  for(const [kind,item] of Object.entries(products)){const b=el('button',item.name);b.type='button';b.dataset.kind=kind;b.setAttribute('aria-pressed',String(kind==='dress'));b.onclick=()=>setProduct(kind);productBar.append(b);}
+  for(const [kind,item] of Object.entries(products)){const b=el('button',item.name);b.type='button';b.dataset.kind=kind;b.setAttribute('aria-pressed',String(kind==='shirt'));b.onclick=()=>setProduct(kind);productBar.append(b);}
   document.querySelector('#buttonSettings .preview-header').after(productBar);
-  // A gentle 3D tilt of the product card follows the pointer; it is skipped when motion is reduced.
-  const stage=document.querySelector('#buttonSettings .preview-stage');
-  if(stage&&window.matchMedia?.('(hover:hover) and (prefers-reduced-motion:no-preference)').matches){
-    stage.addEventListener('pointermove',event=>{const box=stage.getBoundingClientRect();
-      stage.style.setProperty('--tilt-y',(((event.clientX-box.left)/box.width-.5)*5).toFixed(2)+'deg');stage.style.setProperty('--tilt-x',((.5-(event.clientY-box.top)/box.height)*4).toFixed(2)+'deg');});
-    stage.addEventListener('pointerleave',()=>{stage.style.removeProperty('--tilt-x');stage.style.removeProperty('--tilt-y');});
-  }
-  showPane(pane);populate();status('اختر متجرًا لتحميل إعدادات الأزرار.');
-  window.SizeGuideSettings={load,isDirty,isBusy:()=>busy,discard};
+  setProduct('shirt');populate();status('اختر متجرًا لتحميل إعدادات الأزرار.');
+  window.SizeGuideSettings={configured:merchantId=>loaded&&store===merchantId&&version>0,load,isDirty,isBusy:()=>busy,discard,showNewDesigns};
 })();
