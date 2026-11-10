@@ -1,0 +1,16 @@
+/* Day and night for the privacy and FAQ pages. The choice is shared with the home page (same storage key). */
+.doc-appearance{display:flex;align-items:center;gap:6px}
+.doc-appearance .appearance-label{font-size:13px;font-weight:700;color:var(--muted)}
+.doc-appearance [data-ld-part]{width:clamp(112px,10vw,140px);flex:none;--ld-accent:#eaa249;--ld-fg:#273056;--ld-muted:#8eacc7}
+@media(max-width:700px){.doc-appearance .appearance-label{display:none}.doc-appearance [data-ld-part]{width:104px}}
+html[data-ui-theme="day"]{color-scheme:light}
+html[data-ui-theme="night"]{color-scheme:dark;--navy:#f3f2fb;--mist:#141a28;--muted:#bbc4d9;--line:#424d65;--peri-d:#b0bfff;--raised:#252e41;--dark-ink:#151c2b}
+[data-ui-theme="night"] header.nav{background:rgb(22 29 44 / .9)}
+[data-ui-theme="night"] .top{background:radial-gradient(68% 75% at 52% 110%,#3e4668,transparent 73%),radial-gradient(58% 66% at 100% 0%,#2b3754,transparent 76%),linear-gradient(160deg,#151c2c,#20283e 60%,#262d44)}
+[data-ui-theme="night"] .lead{color:#e0e3ef}
+[data-ui-theme="night"] h1{color:var(--navy)}
+[data-ui-theme="night"] .eyebrow,[data-ui-theme="night"] .btn{background:#dfe3ff;color:var(--dark-ink)}
+[data-ui-theme="night"] .logo i{background:#c4cef8}[data-ui-theme="night"] .logo svg{color:var(--dark-ink)}
+[data-ui-theme="night"] details.q{background:var(--raised);box-shadow:0 0 0 1px var(--line)}
+[data-ui-theme="night"] details.q summary{color:var(--navy)}
+[data-ui-theme="night"] .doc a{color:#c1ceff}
