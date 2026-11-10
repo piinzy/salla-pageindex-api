@@ -55,5 +55,5 @@ try{
   const bad=UI.normalize({scale:500,radius:99,depth:'x',effect:'x',icon:'x',devices:'x',width:'x',extra_buttons:[{design:'glass'},{},{},{},{}]});
   assert.deepEqual([bad.scale,bad.radius,bad.depth,bad.effect,bad.icon,bad.devices,bad.width],[100,-1,'soft','lift','ruler','all','auto']);
   assert.equal(bad.extra_buttons.length,3,'at most three extra buttons');assert.equal(bad.extra_buttons[0].design,'glass');assert.equal(bad.extra_buttons[0].extra_buttons,undefined);}
- console.log('PASS: 15 placements, mobile override, four gallery corners, label/cart restoration, fallback, legacy migration, shared multi-button rows, device visibility, 3D/size options and 16 accessible designs.');
+ console.log('PASS: 15 placements, mobile override, four gallery corners, label/cart restoration, fallback, legacy migration, shared multi-button rows, device visibility, 3D/size options and 50 accessible designs.');
 }finally{w.close();}

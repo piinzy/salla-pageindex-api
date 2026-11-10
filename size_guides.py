@@ -37,6 +37,8 @@ def initialize():
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), published_at TIMESTAMPTZ,
         PRIMARY KEY(merchant_id,library_id))''')
     query('ALTER TABLE product_size_guides ADD COLUMN IF NOT EXISTS library_id TEXT')
+    query('ALTER TABLE product_size_guides ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ')
+    query('ALTER TABLE size_guide_library ADD COLUMN IF NOT EXISTS previous_published JSONB')
 
 class Column(BaseModel):
     model_config=ConfigDict(extra='forbid')
@@ -208,7 +210,7 @@ def ensure_not_linked(merchant,product_id):
 
 def product(merchant,product_id):
     require_store(merchant)
-    result=query('SELECT product_id,title,sku,image,status FROM dashboard_catalog WHERE merchant_id=%s AND product_id=%s',(merchant,product_id),True)
+    result=query('SELECT product_id,title,sku,image,status,url FROM dashboard_catalog WHERE merchant_id=%s AND product_id=%s',(merchant,product_id),True)
     if not result:raise HTTPException(404,'المنتج غير موجود في هذا المتجر. زامن المنتجات أولًا.')
     return result
 
@@ -227,11 +229,12 @@ def list_guides(merchant:str):
 def get_guide(product_id:str,merchant:str):
     p=product(merchant,product_id)
     row=query(f'''SELECT COALESCE(l.draft,g.draft) AS draft,g.library_id,l.name AS library_name,
+        CASE WHEN g.last_seen_at >= (CASE WHEN {LINKED} THEN l.published_at ELSE g.published_at END) THEN g.last_seen_at END AS last_seen_at,
         CASE WHEN {LINKED} THEN l.published IS NOT NULL ELSE g.published IS NOT NULL END AS is_published,g.version
         FROM product_size_guides g LEFT JOIN size_guide_library l ON l.merchant_id=g.merchant_id AND l.library_id=g.library_id
         WHERE g.merchant_id=%s AND g.product_id=%s''',(merchant,product_id),True)
     library={'library_id':row['library_id'],'name':row['library_name']} if row and row.get('library_id') else None
-    return {'product':p,'guide':row['draft'] if row else None,'version':row['version'] if row else 0,'is_published':bool(row and row['is_published']),'library':library}
+    return {'product':p,'last_seen_at':row.get('last_seen_at') if row else None,'guide':row['draft'] if row else None,'version':row['version'] if row else 0,'is_published':bool(row and row['is_published']),'library':library}
 
 @router.put('/dashboard-api/size-guides/{product_id}',dependencies=[Depends(authenticated)])
 def save_guide(product_id:str,merchant:str,body:SaveGuide):

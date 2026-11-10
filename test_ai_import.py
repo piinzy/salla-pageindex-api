@@ -82,14 +82,14 @@ class AiImportTests(unittest.TestCase):
         self.assertEqual((plain['title'], plain['instructions'], plain['notes'], plain['category']), ('', '', 'مرجع', None), 'a chart with no extra text returns empty fields')
 
     def test_a_chart_printed_sideways_with_two_units_comes_back_one_row_per_size(self):
-        # La Vallee style: sizes across the top, measurements down the side, each size with IN and CM sub-columns
+        # Sizes across the top, measurements down the side, each size with IN and CM sub-columns
         sideways = {'layout': 'sizes_across', 'units_present': ['cm', 'in'], 'unit': 'cm', 'size_header': 'المقاس', 'category': 'women', 'measurement_type': 'body', 'language': 'ar',
-                    'columns': ['محيط الصدر', 'الطول', 'الأكمام'], 'instructions': 'الصدر: أكبر جزء.', 'other_text': 'لافالي',
-                    'rows': [{'size': '38/S', 'values': ['91.4', '147.3', '61']}, {'size': '40/M', 'values': ['96.5', '147.3', '61']}]}
+                    'columns': ['محيط الصدر', 'الطول', 'الأكمام'], 'instructions': 'الصدر: أكبر جزء.', 'other_text': 'نموذج قياسات',
+                    'rows': [{'size': '38/S', 'values': ['86.5', '105.5', '55']}, {'size': '40/M', 'values': ['90.5', '105.5', '55']}]}
         with patch.object(ai.requests, 'post', return_value=gemini(sideways)) as call:
             data = self.post().json()
         self.assertEqual([c['label'] for c in data['columns']], ['محيط الصدر', 'الطول', 'الأكمام'])
-        self.assertEqual([r['size'] for r in data['rows']], ['38/S', '40/M']); self.assertEqual(data['rows'][0]['values'], ['91.4', '147.3', '61'])
+        self.assertEqual([r['size'] for r in data['rows']], ['38/S', '40/M']); self.assertEqual(data['rows'][0]['values'], ['86.5', '105.5', '55'])
         self.assertEqual((data['unit'], data['layout'], data['units_present'], data['size_label']), ('cm', 'sizes_across', ['cm', 'in'], 'المقاس'))
         text = ' '.join(data['warnings']); self.assertIn('بالمقلوب', text); self.assertIn('الوحدتين', text)
         prompt = call.call_args.kwargs['json']['contents'][0]['parts'][0]['text']

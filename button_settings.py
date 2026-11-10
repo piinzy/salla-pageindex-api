@@ -11,7 +11,13 @@ router = APIRouter()
 HEX = r'^#[0-9a-fA-F]{6}$'
 
 DESIGNS = Literal['link', 'outline', 'solid', 'pill', 'soft', 'dashed', 'split', 'band',
-                  'card', 'icon', 'row', 'tile', 'gradient', 'glass', 'raised', 'chip']
+                  'card', 'icon', 'row', 'tile', 'gradient', 'glass', 'raised', 'chip', 'bracket', 'bookmark', 'doubleline', 'ticket',
+                  'folio', 'dogear', 'binder', 'hangtag', 'stack',
+                  'ruleredge', 'dimensionline', 'caliper', 'draftgrid', 'stitchpath',
+                  'medallion', 'lozenge', 'archmark', 'satellite', 'bookend',
+                  'plusrow', 'arrowblock', 'dotleader', 'guidepost', 'captionline',
+                  'chamfer', 'archway', 'stadiumcut', 'facet', 'petal',
+                  'selvedge', 'herringbone', 'pleats', 'patch', 'hem']
 PLACEMENTS = Literal['above_price', 'below_price', 'below_title', 'before_options',
                      'beside_size', 'above_cart', 'beside_cart', 'image_top_right',
                      'image_top_left', 'image_bottom_right', 'image_bottom_left',
@@ -37,7 +43,8 @@ class ButtonStyle(BaseModel):
     depth: Literal['flat', 'soft', 'raised', 'deep'] = 'soft'
     effect: Literal['none', 'lift', 'tilt'] = 'lift'
     icon: Literal['ruler', 'shirt', 'shoe', 'paw', 'tape', 'ruler_flat', 'ruler_tall', 'ruler_double', 'ruler_pencil', 'ruler_set',
-                  'tape_case', 'tape_retract', 'tape_coil', 'tape_wave', 'tape_body', 'none'] = 'ruler'
+                  'tape_case', 'tape_retract', 'tape_coil', 'tape_wave', 'tape_body',
+                  'hanger', 'dress', 'mannequin', 'spool', 'french_curve', 'scissors', 'pattern', 'dimension', 'none'] = 'ruler'
     edge_offset: int = Field(default=16, ge=0, le=48, strict=True)
     bottom_offset: int = Field(default=88, ge=0, le=240, strict=True)
 

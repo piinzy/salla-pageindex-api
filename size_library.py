@@ -64,7 +64,7 @@ def existing_products(merchant, ids):
     return {r['product_id'] for r in rows}
 
 def get_library(merchant, lib):
-    row = query('SELECT name,draft,published,version FROM size_guide_library WHERE merchant_id=%s AND library_id=%s', (merchant, lib), True)
+    row = query('SELECT name,draft,published,version,previous_published IS NOT NULL AS can_restore FROM size_guide_library WHERE merchant_id=%s AND library_id=%s', (merchant, lib), True)
     if not row:
         raise HTTPException(404, 'الجدول المشترك غير موجود.')
     return row
@@ -90,7 +90,7 @@ def create_library(merchant: str, body: LibraryBody):
     guide = body.guide.model_dump()
     lib = secrets.token_hex(6)
     row = query('''INSERT INTO size_guide_library(merchant_id,library_id,name,draft,published,published_at)
-        VALUES(%s,%s,%s,%s,%s,CASE WHEN %s THEN now() END) RETURNING library_id,version,published IS NOT NULL AS is_published''',
+        VALUES(%s,%s,%s,%s,%s,CASE WHEN %s THEN now() END) RETURNING library_id,version,published IS NOT NULL AS is_published, previous_published IS NOT NULL AS can_restore''',
                 (merchant, lib, body.name, Json(guide), Json(guide) if publish else None, publish), True)
     return row
 
@@ -99,10 +99,10 @@ def read_library(lib: str, merchant: str):
     require_store(merchant)
     lib = library_id(lib)
     row = get_library(merchant, lib)
-    products = query('''SELECT g.product_id,c.title,c.sku FROM product_size_guides g
+    products = query('''SELECT g.product_id,c.title,c.sku,c.url FROM product_size_guides g
         JOIN dashboard_catalog c USING(merchant_id,product_id) WHERE g.merchant_id=%s AND g.library_id=%s ORDER BY c.title''', (merchant, lib))
     return {'library_id': lib, 'name': row['name'], 'guide': row['draft'], 'version': row['version'],
-            'is_published': row['published'] is not None, 'products': products}
+            'is_published': row['published'] is not None, 'products': products, 'can_restore':row['can_restore']}
 
 @router.put('/dashboard-api/size-library/{lib}', dependencies=[Depends(authenticated)])
 def save_library(lib: str, merchant: str, body: LibraryBody):
@@ -113,10 +113,11 @@ def save_library(lib: str, merchant: str, body: LibraryBody):
         validate_publish(body.guide)
     guide = body.guide.model_dump()
     row = query('''UPDATE size_guide_library SET name=%s,draft=%s,
+        previous_published=CASE WHEN %s AND published IS NOT NULL AND published IS DISTINCT FROM %s::jsonb THEN published ELSE previous_published END,
         published=CASE WHEN %s THEN %s ELSE published END,published_at=CASE WHEN %s THEN now() ELSE published_at END,
         version=version+1,updated_at=now() WHERE merchant_id=%s AND library_id=%s AND version=%s
-        RETURNING library_id,version,published IS NOT NULL AS is_published''',
-                (body.name, Json(guide), publish, Json(guide), publish, merchant, lib, body.version), True)
+        RETURNING library_id,version,published IS NOT NULL AS is_published, previous_published IS NOT NULL AS can_restore''',
+                (body.name, Json(guide), publish, Json(guide), publish, Json(guide), publish, merchant, lib, body.version), True)
     if not row:
         raise HTTPException(409, 'تم تعديل الجدول المشترك من نافذة أخرى. أعد فتحه قبل الحفظ.')
     return row
@@ -125,8 +126,8 @@ def save_library(lib: str, merchant: str, body: LibraryBody):
 def unpublish_library(lib: str, merchant: str, body: Version):
     require_store(merchant)
     lib = library_id(lib)
-    row = query('''UPDATE size_guide_library SET published=NULL,published_at=NULL,version=version+1,updated_at=now()
-        WHERE merchant_id=%s AND library_id=%s AND version=%s RETURNING library_id,version,published IS NOT NULL AS is_published''',
+    row = query('''UPDATE size_guide_library SET previous_published=COALESCE(published,previous_published),published=NULL,published_at=NULL,version=version+1,updated_at=now()
+        WHERE merchant_id=%s AND library_id=%s AND version=%s RETURNING library_id,version,published IS NOT NULL AS is_published, previous_published IS NOT NULL AS can_restore''',
                 (merchant, lib, body.version), True)
     if not row:
         raise HTTPException(409, 'النسخة تغيرت. أعد فتح الجدول المشترك.')
@@ -234,3 +235,63 @@ def bulk_state(merchant: str, body: BulkBody):
         query('''UPDATE product_size_guides SET published=NULL,published_at=NULL,version=version+1,updated_at=now()
             WHERE merchant_id=%s AND product_id=ANY(%s) AND library_id IS NULL''', (merchant, ok))
     return {'updated': ok, 'skipped': skipped}
+
+
+class ExcelFile(BaseModel):
+    content: str = Field(min_length=1, max_length=2_800_000)
+
+
+@router.post('/dashboard-api/size-workbook/preview', dependencies=[Depends(authenticated)])
+def preview_excel(merchant: str, body: ExcelFile):
+    from excel_guides import preview_workbook
+    require_store(merchant)
+    try:
+        return preview_workbook(body.content)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(400, 'تعذرت قراءة ملف Excel. استخدم ملف xlsx سليمًا.') from exc
+
+
+class ImportedSheet(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    guide: Guide
+
+
+class WorkbookDrafts(BaseModel):
+    request_id: str = Field(pattern=r'^[0-9a-f-]{36}$')
+    sheets: list[ImportedSheet] = Field(min_length=1, max_length=50)
+
+
+@router.post('/dashboard-api/size-workbook/save', dependencies=[Depends(authenticated)])
+def save_workbook(merchant: str, body: WorkbookDrafts):
+    from contextlib import closing
+    from hashlib import sha256
+    from dashboard import db
+    require_store(merchant)
+    with closing(db()) as conn, conn, conn.cursor() as cursor:
+        cursor.execute('SELECT merchant_id FROM stores WHERE merchant_id=%s FOR UPDATE', (merchant,))
+        cursor.execute('SELECT library_id FROM size_guide_library WHERE merchant_id=%s', (merchant,))
+        existing = {row[0] for row in cursor.fetchall()}
+        additions = []
+        for sheet in body.sheets:
+            key = sha256((body.request_id+'|'+sheet.name).encode()).hexdigest()[:12]
+            if key not in existing:
+                additions.append((merchant,key,sheet.name,Json(sheet.guide.model_dump())))
+                existing.add(key)
+        if additions and len(existing)>MAX_LIBRARIES:
+            raise HTTPException(400, 'لا توجد مساحة كافية للأوراق المحددة في جداولي.')
+        cursor.executemany('INSERT INTO size_guide_library(merchant_id,library_id,name,draft) VALUES(%s,%s,%s,%s)', additions)
+    return {'count':len(body.sheets)}
+
+
+@router.post('/dashboard-api/size-library/{lib}/restore', dependencies=[Depends(authenticated)])
+def restore_library(lib: str, merchant: str, body: Version):
+    require_store(merchant)
+    row = query('''UPDATE size_guide_library SET draft=previous_published, published=previous_published,
+        previous_published=published, published_at=now(), updated_at=now(), version=version+1
+        WHERE merchant_id=%s AND library_id=%s AND version=%s AND previous_published IS NOT NULL
+        RETURNING version''', (merchant,library_id(lib),body.version), True)
+    if not row:
+        raise HTTPException(409, 'تغيّر الجدول أو لا توجد نسخة سابقة. أعد فتحه.')
+    return row

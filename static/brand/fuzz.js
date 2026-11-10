@@ -1,4 +1,4 @@
-/* The same illustrated character appears throughout the app. Only its stage and resting gaze change. */
+/* Shared character, eye movement and the accessories it holds in the dashboard. */
 (() => {
   const source = document.currentScript?.dataset.src || '/brand-assets/fuzz.webp';
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -72,6 +72,19 @@
     const eye = side => '<div class="fz-eye ' + side + '"><div class="fz-white"><i class="fz-pupil"></i></div><div class="fz-lid"></div></div>';
     root.innerHTML = '<div class="fz-body"><img alt="" draggable="false"><div class="fz-eyes">' + eye('l') + eye('r') + '</div></div>';
     root.querySelector('img').src = source;
+    const prop = root.dataset.fuzzProp;
+    if (prop) {
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const accessory = document.createElementNS(svgNS, 'svg');
+      accessory.setAttribute('class', 'fz-accessory');
+      accessory.setAttribute('viewBox', '0 0 100 68');
+      accessory.setAttribute('focusable', 'false');
+      accessory.setAttribute('aria-hidden', 'true');
+      const drawing = document.createElementNS(svgNS, 'use');
+      drawing.setAttribute('href', '/brand-assets/fuzz-props.svg#' + prop);
+      accessory.append(drawing);
+      root.querySelector('.fz-body').append(accessory);
+    }
     characters.set(root, {x: Number(root.dataset.lookX) || 0, y: Number(root.dataset.lookY) || 0});
     root.style.setProperty('--fz-blink-cycle', (4.5 + Math.random() * 1.8).toFixed(2) + 's');
     if (observer) observer.observe(root);
@@ -84,10 +97,10 @@
   function dressSections() {
     const scenes = [
       ['#catalog > .panelhead > div', 'ruler', -.3, .5],
-      ['#editor .studio-heading > div', 'draft', -.5, .35],
+      ['#editor .studio-heading > div', 'preview', .1, .48],
       ['#library > .panelhead > div', 'books', -.35, .65],
       ['#buttonSettings > .studio-header > div', 'switch', -.65, .4],
-      ['#stats > .panelhead > div', 'chart', -.75, -.15],
+      ['#stats > .panelhead > div', 'chart', .42, -.4],
     ];
     for (const [selector, name, x, y] of scenes) {
       const title = document.querySelector(selector);
@@ -98,47 +111,16 @@
       scene.setAttribute('aria-hidden', 'true');
       const character = document.createElement('span');
       character.dataset.fuzz = '';
+      character.dataset.fuzzProp = name;
       character.dataset.lookX = x;
       character.dataset.lookY = y;
       scene.append(character);
-      if (['ruler', 'books', 'switch'].includes(name)) {
-        scene.classList.add('fz-scene-pair');
-        const prop = document.createElement('span');
-        prop.className = 'fz-prop fz-prop-' + name;
-        if (name === 'books') {
-          for (let i = 0; i < 3; i++) prop.append(document.createElement('i'));
-        }
-        scene.append(prop);
-      }
       title.prepend(scene);
     }
   }
 
-  function dressEditor() {
-    const fields = document.getElementById('editFields');
-    const scene = document.querySelector('#editor .fz-scene-draft');
-    if (!fields || !scene) return;
-    const toolFor = {
-      dataCard: 'tape', categoryCard: 'tape', customerCard: 'sizes',
-      presetCard: 'swatches', importPanel: 'sheet',
-    };
-    function changeTool(card) {
-      scene.dataset.tool = toolFor[card?.id] || 'pencil';
-    }
-    changeTool(fields.querySelector('.ed-card.open'));
-    fields.addEventListener('focusin', e => {
-      const card = e.target.closest('.ed-card');
-      if (card) changeTool(card);
-    });
-    fields.addEventListener('click', e => {
-      const card = e.target.closest('.ed-card');
-      if (card) changeTool(card.classList.contains('open') ? card : fields.querySelector('.ed-card.open'));
-    });
-  }
-
   function init() {
     dressSections();
-    dressEditor();
     document.querySelectorAll('[data-fuzz]').forEach(mount);
     window.addEventListener('pointermove', e => {
       if (e.pointerType !== 'touch') lookAt(e.clientX, e.clientY);

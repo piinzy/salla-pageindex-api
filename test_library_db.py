@@ -43,6 +43,42 @@ class LibraryDatabaseTests(unittest.TestCase):
     def public(self, pid, merchant='123'):
         return self.client.get(f'/public/size-guides/{merchant}/{pid}')
 
+    def test_previous_publication_and_storefront_observation(self):
+        lid = self.make_library()
+        route = f'/dashboard-api/size-library/{lid}'
+        self.call('POST', route+'/link', json={'product_ids':['1']})
+        saved = self.call('PUT', route, json={'version':1, 'name':'فساتين', 'action':'publish', 'guide':{**G, 'title':'جديد'}})
+        self.assertTrue(saved.json()['can_restore'])
+        self.client.post('/public/size-guides/123/1/event?t=shown')
+        self.assertIsNotNone(self.call('GET','/dashboard-api/size-guides/1').json()['last_seen_at'])
+        self.assertEqual(self.call('POST',route+'/restore',json={'version':1}).status_code,409)
+        self.assertEqual(self.call('POST',route+'/restore',json={'version':2}).status_code,200)
+        self.assertEqual(self.public('1').json()['guide']['title'], 'دليل المقاسات')
+        self.assertIsNone(self.call('GET','/dashboard-api/size-guides/1').json()['last_seen_at'])
+
+    def test_excel_preview_selected_sheets_and_retry(self):
+        import base64, io, uuid
+        from openpyxl import Workbook
+        book=Workbook()
+        book.active.title='فساتين'
+        for sheet in [book.active,book.create_sheet('بناطيل')]:
+            sheet.append(['المقاس','الطول']);sheet.append(['M',98])
+        book.create_sheet('فارغة')
+        stream=io.BytesIO();book.save(stream)
+        preview=self.call('POST','/dashboard-api/size-workbook/preview',json={'content':base64.b64encode(stream.getvalue()).decode()})
+        self.assertEqual(preview.status_code,200,preview.text)
+        sheets=preview.json()
+        self.assertEqual(sheets[0]['rows'][1],['M','98'])
+        self.assertIn('error',sheets[2])
+        payload={'request_id':str(uuid.uuid4()),'sheets':[{'name':s['name'],'guide':G} for s in sheets[:2]]}
+        for _ in range(2):
+            response=self.call('POST','/dashboard-api/size-workbook/save',json=payload)
+            self.assertEqual(response.status_code,200,response.text)
+        drafts=self.call('GET','/dashboard-api/size-library').json()
+        self.assertEqual({s['name'] for s in drafts},{'فساتين','بناطيل'})
+        self.assertTrue(all(not s['is_published'] for s in drafts))
+        self.assertEqual(self.call('GET','/dashboard-api/size-library',merchant='999').json(),[])
+
     def test_link_publish_edit_and_unlink(self):
         lid = self.make_library()
         r = self.call('POST', f'/dashboard-api/size-library/{lid}/link', json={'product_ids': ['1', '2', '77']})

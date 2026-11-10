@@ -16,6 +16,34 @@ class LandingTests(unittest.TestCase):
         self.assertIn('mailto:help@example.com',about.text);self.assertIn('mailto:help@example.com',privacy.text)
         self.assertNotIn('{{',about.text+privacy.text,'every placeholder is filled')
         self.assertIn('لا نخزّن أسماء العملاء',privacy.text)
+    def test_appearance_control_is_available_on_home_and_dashboard(self):
+        from pathlib import Path
+        static=Path(landing.__file__).parent/'static'
+        home=self.c.get('/about').text
+        self.assertEqual(home.count('role="switch"'),1)
+        self.assertIn('src="/brand-assets/daylight-switch.js',home)
+        self.assertIn('src="/brand-assets/app-theme.js"',(static/'dashboard.html').read_text())
+        self.assertIn('/dashboard-night.css',(static/'dashboard.html').read_text())
+        header=(static/'dashboard.html').read_text().split('<header class="top">',1)[1].split('</header>',1)[0]
+        self.assertEqual(header.count('role="switch"'),1)
+        self.assertIn('id="store"',header)
+        self.assertIn('data-ld-part="toggle-daylight"',header)
+        for page in ('faq.html','privacy.html','size-guide-widget.js','size-guide-renderer.js'):
+            source=(static/page).read_text()
+            self.assertNotIn('daylight-switch.js',source)
+            self.assertNotIn('data-ld-part="toggle-daylight"',source)
+        for name in ('daylight-switch.js','daylight-switch.css','app-theme.js','landing-night.css'):
+            self.assertEqual(self.c.get('/brand-assets/'+name).status_code,200)
+
+    def test_dashboard_mascot_accessories_are_served_for_every_scene(self):
+        from xml.etree import ElementTree
+        response=self.c.get('/brand-assets/fuzz-props.svg')
+        self.assertEqual(response.status_code,200)
+        self.assertIn('image/svg+xml',response.headers['content-type'])
+        root=ElementTree.fromstring(response.content)
+        ids={el.get('id') for el in root.findall('{http://www.w3.org/2000/svg}symbol')}
+        self.assertTrue({'ruler','books','switch','chart','preview','heart'} <= ids)
+
     def test_support_email_is_escaped_and_optional(self):
         with patch.dict(os.environ,{'SUPPORT_EMAIL':'x"><script>@a.b'}):self.assertNotIn('><script>@a.b',self.c.get('/about').text)
         with patch.dict(os.environ,{'SUPPORT_EMAIL':''}):

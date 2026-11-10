@@ -21,6 +21,8 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
       calls.push({method,path:p+u.search,body});let data=[];
       if(p==='stores')data=[{merchant_id:'123',store_name:'متجر',product_count:3,connected:true}];
       else if(p==='products')data={items:[{product_id:'42',title:'منتج جديد',sku:'S1',price:10,currency:'SAR',quantity:2,status:'sale'},{product_id:'43',title:'منتج قديم',sku:'S2',price:10,currency:'SAR',quantity:2,status:'sale'},{product_id:'44',title:'منتج مرتبط',sku:'S3',price:10,currency:'SAR',quantity:2,status:'sale'}],pages:1,total:3};
+      else if(p==='size-workbook/preview')data=['فساتين','بناطيل'].map(name=>({name,rows:[['المقاس','الخصر'],['M','80']]}));
+      else if(p==='size-workbook/save')data={count:body.sheets.length};
       else if(p==='button-settings')data={settings:{design:'outline'},version:0};
       else if(p==='size-guides')data=guideIndex();
       else if(p==='size-guides/42'&&method==='PUT')data={version:body.version+1,is_published:body.action==='publish'};
@@ -389,6 +391,14 @@ const oldGuide={title:'دليل قديم',button_label:'دليل',unit:'cm',meas
     // ---- library: list, create, link, edit, delete
     $('[data-tab="library"]').click();await settle();
     assert.equal(hidden('#library'),false);assert.equal(all('#libraryList .lib-card').length,1);assert.match($('#libraryList .lib-card').textContent,/فساتين/);assert.ok($('#libraryList svg.emblem'));
+    Object.defineProperty($('#workbookFile'),'files',{value:[new w.File(['example'],'store.xlsx')]});
+    await $('#workbookFile').onchange();
+    assert.equal(all('#workbookSheets details').length,2);
+    all('#workbookSheets input')[1].checked=false;
+    await $('#saveWorkbook').onclick();
+    const imported=call('POST','size-workbook/save')[0].body.sheets;
+    assert.deepEqual(imported.map(sheet=>sheet.name),['فساتين']);
+    assert.deepEqual(imported[0].guide.rows,[{size:'M',values:['80']}]);
     // category rules: choose a shared guide per category, then link the products that have none
     assert.equal(all('#ruleCategory option').length,1);assert.equal($('#ruleLibrary').value.length>0,true);assert.equal($('#ruleApply').disabled,true,'nothing to apply before a rule exists');
     $('#ruleSave').click();await settle();const rulePut=calls.filter(c=>c.method==='PUT'&&c.path.startsWith('size-rules')).pop();assert.deepEqual(Object.keys(rulePut.body).sort(),['category_id','library_id']);assert.equal(rulePut.body.category_id,'100');

@@ -44,7 +44,16 @@
   function track(id,type){try{fetch(`${base}/public/size-guides/${merchant}/${id}/event?t=${type}`,{method:'POST',keepalive:true,credentials:'omit',mode:'cors'}).catch(()=>{});}catch{/* analytics never blocks shopping */}}
   // One slot per configured button: the main one plus up to three extras, each with its own placement engine.
   let slots=[];
-  function teardown(){for(const slot of slots){slot.engine.reset();slot.host.remove();}slots=[];host=null;}
+  let observer;
+  function observeButtons(ctx){
+    if(!window.IntersectionObserver)return;
+    observer=new IntersectionObserver(entries=>{
+      if(context()?.key!==ctx.key || !entries.some(entry=>entry.isIntersecting))return;
+      observer.disconnect();track(ctx.id,'shown');
+    });
+    for(const slot of slots)observer.observe(slot.rendered.button);
+  }
+  function teardown(){observer?.disconnect();for(const slot of slots){slot.engine.reset();slot.host.remove();}slots=[];host=null;}
   function place(slot,ctx){if(ctx)slot.engine.apply(slot.host,ctx,slot.settings);}
   function build(data,ctx,activate){
     teardown();
@@ -83,7 +92,7 @@
         }
         finally {for(const button of buttons){button.disabled=false;button.removeAttribute('aria-busy');}}
       };
-      build(data,ctx,activate);
+      build(data,ctx,activate);observeButtons(ctx);
     } catch {current='';/* Retry on the next scheduled update without interrupting shopping. */}
     finally {loading=false;if((context()?.key||'')!==key)schedule();}
   }

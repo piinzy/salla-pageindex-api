@@ -17,7 +17,12 @@ def initialize():
 @router.post('/public/size-guides/{merchant}/{product_id}/event', include_in_schema=False)
 def record_event(merchant: str, product_id: str, t: str = ''):
     """No body, no cookies and no personal data: only a per-day counter, and only for products that have a guide."""
-    if not DIGITS.fullmatch(merchant) or not DIGITS.fullmatch(product_id) or t not in KINDS:
+    if not DIGITS.fullmatch(merchant) or not DIGITS.fullmatch(product_id):
+        return Response(status_code=204, headers=CORS)
+    if t == 'shown':
+        query('UPDATE product_size_guides SET last_seen_at=now() WHERE merchant_id=%s AND product_id=%s', (merchant, product_id))
+        return Response(status_code=204, headers=CORS)
+    if t not in KINDS:
         return Response(status_code=204, headers=CORS)
     column = KINDS[t]  # fixed allow-list, never user text
     query(f'''INSERT INTO size_guide_events(merchant_id,product_id,{column})

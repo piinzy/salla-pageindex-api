@@ -54,6 +54,9 @@ async function boot(){
   await bootStores();
   // A dedicated Salla page can open straight on one tool: ...?view=quick
   const wanted=new URLSearchParams(location.search).get('view');if(wanted==='quick')show('catalog');else if(['home','catalog','batch','library','stats','buttonSettings'].includes(wanted))show(wanted);
+  if(wanted==='buttonSettings' && new URLSearchParams(location.search).get('from')==='21'){
+    requestAnimationFrame(()=>{if(view==='buttonSettings')window.SizeGuideSettings?.showNewDesigns();});
+  }
 }
 async function bootStores(){window.SizeGuideBatch?.reset();stores=await api('stores');$('#store').innerHTML=stores.map(s=>`<option value="${esc(s.merchant_id)}">${esc(s.store_name===s.merchant_id?'متجر سلة • '+s.merchant_id:s.store_name)}</option>`).join('');$('#login').classList.add('hidden');$('#app').classList.remove('hidden');if(stores.length){merchant=$('#store').value;await load()}else{$('#sync').disabled=true;$('#empty').classList.remove('hidden');$('#empty').textContent='لا يوجد متجر مربوط. أعد إرسال رمز الوصول من تطبيق سلة.'}}
 async function load(){let s=stores.find(s=>s.merchant_id===merchant);if(!s)return;setCount($('#count'),Number(s.product_count));$('#connection').textContent=s.connected?'متصل بسلة':'غير متصل';$('#merchant').textContent=merchant;$('#last').textContent=date(s.last_sync);guideIndex=await api('size-guides'+qs());await Promise.all([loadLibraryIndex(),loadPresets(),loadProducts(),loadJobs(),window.SizeGuideSettings?.load(),loadBilling(),loadRules().catch(()=>{})]);loadHome().catch(()=>{})}
@@ -145,7 +148,7 @@ function renderHome(){
   renderPlan();
   const steps=[[products>0,'زامن منتجاتك من سلة','يجلب أسماء المنتجات وصورها لتبدأ.',products>0?'':'مزامنة',()=>$('#sync').click()],
     [published>0,'أنشئ أول جدول مقاسات وانشره','اختر منتجًا، أو اصنع جدولًا مشتركًا لعدة منتجات.',published>0?'':'ابدأ',()=>show(libraries.length||products===0?'library':'catalog')],
-    [false,'اضبط شكل الزر ومكانه','اختر تصميمه وموضعه في صفحة المنتج وجرّبه في المعاينة.','إعدادات الزر',()=>show('buttonSettings')]];
+    [!!window.SizeGuideSettings?.configured?.(merchant),'اضبط شكل الزر ومكانه','اختر تصميمه وموضعه في صفحة المنتج وجرّبه في المعاينة.','إعدادات الزر',()=>show('buttonSettings')]];
   $('#checklist').replaceChildren(...steps.map(([done,title,hint,action,go],i)=>{
     const li=mk('li',done?'done':''),mark=mk('span','mark',done?'✓':String(i+1)),text=mk('div','',''),strong=mk('strong','',title);text.append(strong,mk('small','',hint));li.append(mark,text);
     if(action){const b=mk('button','secondary small',action);b.type='button';b.dataset.nudge='forward';b.onclick=go;li.append(b)}return li}));
@@ -159,6 +162,7 @@ function renderHome(){
     const li=mk('li',tone);li.append(mk('span','',text));if(action){const b=mk('button','secondary small',action);b.type='button';b.dataset.nudge='forward';b.onclick=go;li.append(b)}return li}));
   window.UIMotion?.enhance($('#home'));
 }
+window.addEventListener('guide-button-saved',renderHome);
 async function loadHome(){
   homeLoading=true;renderHome();
   const [stats,insights]=await Promise.allSettled([api('size-guide-stats?'+new URLSearchParams({merchant,days:30})),api('size-insights?'+new URLSearchParams({merchant,days:90}))]);
@@ -212,16 +216,58 @@ $('#statsDays').onchange=()=>loadStats().catch(e=>toast(e.message));
 /* ---------- editor: open, fill, save ---------- */
 async function openEditor(id){
   if(!(await mayLeave()))return;const d=await api('size-guides/'+encodeURIComponent(id)+qs());
-  mode='product';libraryId=null;libraryProducts=[];editing=d.product;linkedTo=d.library;guide=d.guide?withDefaults(d.guide):fresh();version=d.version;published=d.is_published;dirty=false;pending=null;
+  lastSeen=d.last_seen_at;canRestore=false;mode='product';libraryId=null;libraryProducts=[];editing=d.product;linkedTo=d.library;guide=d.guide?withDefaults(d.guide):fresh();version=d.version;published=d.is_published;dirty=false;pending=null;
   fill();show('editor');$('#editor').scrollIntoView({behavior:'smooth',block:'start'});
 }
-async function openLibrary(id){
+async function openLibrary(id, importTable = false){
   if(!(await mayLeave()))return;mode='library';linkedTo=null;pending=null;
-  if(id){const d=await api('size-library/'+id+qs());libraryId=id;libraryName=d.name;guide=withDefaults(d.guide);version=d.version;published=d.is_published;libraryProducts=d.products}
+  canRestore=false;lastSeen=null;
+  if(id){const d=await api('size-library/'+id+qs());libraryId=id;libraryName=d.name;canRestore=!!d.can_restore;guide=withDefaults(d.guide);version=d.version;published=d.is_published;libraryProducts=d.products}
   else{libraryId=null;libraryName='';guide=fresh();version=0;published=false;libraryProducts=[]}
   editing={title:libraryName||'جدول مشترك جديد'};dirty=false;fill();show('editor');$('#editor').scrollIntoView({behavior:'smooth',block:'start'});
+  if(importTable){
+    window.openEditorSection?.($('#importPanel'));
+    $('#pasteTable').value='';
+    $('#pasteTable').focus();
+  }
 }
+let lastSeen=null,canRestore=false;
+function showPublication(){
+  const box=$('#publicationInfo');
+  box.replaceChildren();
+  $('#restoreLibrary').hidden=mode!=='library'||!canRestore;
+  if(!published)return;
+  const product=mode==='library'?libraryProducts.find(p=>p.url):editing;
+  const productUrl=url(product?.url);
+  if(productUrl){
+    const link=mk('a','secondary',mode==='library'?'افتح منتجًا مرتبطًا في متجري':'افتح المنتج في متجري');
+    link.href=productUrl;link.target='_blank';link.rel='noopener noreferrer';box.append(link);
+  }
+  if(mode!=='product')return;
+  const status=mk('span','micro',lastSeen?'آخر ظهور مرصود للزر: '+date(lastSeen):'بانتظار رصد ظهور الزر على صفحة المنتج.');
+  const refresh=mk('button','secondary small','تحديث حالة الظهور');
+  refresh.type='button';
+  refresh.onclick=async()=>{
+    const current=editing,store=merchant;
+    refresh.disabled=true;
+    try{
+      const d=await api('size-guides/'+encodeURIComponent(current.product_id)+qs());
+      if(current===editing&&store===merchant){lastSeen=d.last_seen_at;showPublication()}
+    }catch(e){toast(e.message)}finally{refresh.disabled=false}
+  };
+  box.append(status,refresh);
+}
+$('#restoreLibrary').onclick=async()=>{
+  if(saving||!canRestore||!libraryId)return;
+  if(!await confirmAction(`استعادة النسخة المنشورة السابقة لـ ${libraryProducts.length} منتج مرتبط؟ ستستبدل المسودة الحالية أيضًا.`))return;
+  saving=true;
+  try{
+    await api('size-library/'+libraryId+'/restore'+qs(),{method:'POST',body:JSON.stringify({version})});
+    dirty=false;saving=false;await openLibrary(libraryId);toast('تمت استعادة النسخة المنشورة السابقة.');
+  }catch(e){toast(e.message)}finally{saving=false}
+};
 function applyMode(){
+  showPublication();
   const library=mode==='library';
   document.querySelectorAll('#editor .only-library').forEach(n=>n.classList.toggle('hidden',!library));document.querySelectorAll('#editor .only-product').forEach(n=>n.classList.toggle('hidden',library));
   $('#editorKind').textContent=library?'جدول مشترك':'تحرير دليل المنتج';$('#deleteLibrary').classList.toggle('hidden',!library||!libraryId);
@@ -264,6 +310,7 @@ $('#unlinkThis').onclick=async()=>{
   if(!linkedTo||!(await confirmAction('فصل هذا المنتج؟ سيحتفظ بنسخة مستقلة من الجدول المشترك الحالي ويمكنك تعديلها بحرية.')))return;
   try{await api('size-guides/unlink'+qs(),{method:'POST',body:JSON.stringify({product_ids:[editing.product_id]})});dirty=false;toast('تم فصل المنتج.');await openEditor(editing.product_id)}catch(e){toast(e.message)}
 };
+$('#importLibrary').onclick=()=>openLibrary(null,true).catch(e=>toast(e.message));
 $('#newLibrary').onclick=()=>openLibrary(null).catch(e=>toast(e.message));
 $('#deleteLibrary').onclick=async()=>{
   if(!libraryId||!(await confirmAction('حذف هذا الجدول المشترك نهائيًا؟ لا يمكن حذفه وهو مرتبط بمنتجات.')))return;
@@ -624,8 +671,10 @@ async function save(action){
       const body=JSON.stringify({version,name:libraryName.trim(),guide,action});
       d=libraryId?await api('size-library/'+libraryId+qs(),{method:'PUT',body}):await api('size-library'+qs(),{method:'POST',body});
       if(!libraryId)libraryId=d.library_id;
+      canRestore=!!d.can_restore;
     }else d=await api('size-guides/'+encodeURIComponent(editing.product_id)+qs(),{method:'PUT',body:JSON.stringify({version,guide,action})});
-    version=d.version;published=d.is_published;dirty=JSON.stringify(guide)!==savedSnapshot;
+    if(action==='publish')lastSeen=null;
+    version=d.version;published=d.is_published;showPublication();dirty=JSON.stringify(guide)!==savedSnapshot;
     guideIndex=await api('size-guides'+qs());loadLibraryIndex().catch(()=>{});
     if(!dirty)fill();else{$('#editState').textContent='حُفظت النسخة السابقة؛ لديك تعديلات أحدث غير محفوظة.';$('#unpublish').disabled=!published}
     toast(action==='publish'?(mode==='library'?'نُشر الجدول المشترك لكل المنتجات المرتبطة.':'نُشر الجدول. سيظهر الزر بعد تركيب المقطع في سلة.'):'حُفظت المسودة دون تغيير النسخة المنشورة.');
@@ -680,7 +729,7 @@ $('#liningStretch').onchange=()=>{if(guide){guide.lining_stretch=$('#liningStret
 $('#addColumn').onclick=()=>{if(guide.columns.length>=10)return toast('الحد الأقصى 10 أعمدة.');guide.columns.push({label:'قياس '+(guide.columns.length+1),kind:'measurement'});guide.rows.forEach(r=>r.values.push(''));drawGrid();changed()};$('#addRow').onclick=()=>{if(guide.rows.length>=30)return toast('الحد الأقصى 30 مقاسًا.');guide.rows.push({size:'',values:guide.columns.map(()=> '')});drawGrid();changed()};$('#applyTemplate').onclick=async()=>{if(!(await confirmAction('استبدال صفوف وأعمدة المسودة بهيكل فارغ؟')))return;const t=fresh($('#template').value,guide.category);guide.columns=t.columns;guide.rows=t.rows;if(t.category!==guide.category){guide.category=t.category;syncChoices()}drawGrid();changed()};$('#copyGuide').onclick=async()=>{const id=$('#copyFrom').value;if(!id)return toast('اختر المنتج المصدر.');if(!(await confirmAction('استبدال محتوى المسودة بجدول المنتج الآخر؟')))return;try{const d=await api('size-guides/'+encodeURIComponent(id)+qs());if(!d.guide)return toast('لا يوجد جدول لهذا المنتج.');guide=withDefaults(JSON.parse(JSON.stringify(d.guide)));fill();changed()}catch(e){toast(e.message)}};$('#previewModal').onclick=()=>window.SizeGuideUI.open(guide,editing.title);$('#saveDraft').onclick=()=>save('draft');$('#publish').onclick=()=>save('publish');
 $('#unpublish').onclick=async()=>{
   if(!published||saving||!(await confirmAction(mode==='library'?'إخفاء الجدول المشترك عن عملاء كل المنتجات المرتبطة مع الاحتفاظ بالمسودة؟':'إخفاء دليل المقاسات عن عملاء هذا المنتج مع الاحتفاظ بالمسودة؟')))return;
-  try{const path=mode==='library'?'size-library/'+libraryId+'/unpublish':'size-guides/'+encodeURIComponent(editing.product_id)+'/unpublish';const d=await api(path+qs(),{method:'POST',body:JSON.stringify({version})});version=d.version;published=false;$('#unpublish').disabled=true;$('#editState').textContent=dirty?'أُوقف الظهور؛ لديك تعديلات غير محفوظة.':'أُوقف الظهور. المسودة محفوظة.';guideIndex=await api('size-guides'+qs());toast('أُوقف نشر الجدول.')}catch(e){toast(e.message)}
+  try{const path=mode==='library'?'size-library/'+libraryId+'/unpublish':'size-guides/'+encodeURIComponent(editing.product_id)+'/unpublish';const d=await api(path+qs(),{method:'POST',body:JSON.stringify({version})});version=d.version;published=false;if(mode==='library')canRestore=true;showPublication();$('#unpublish').disabled=true;$('#editState').textContent=dirty?'أُوقف الظهور؛ لديك تعديلات غير محفوظة.':'أُوقف الظهور. المسودة محفوظة.';guideIndex=await api('size-guides'+qs());toast('أُوقف نشر الجدول.')}catch(e){toast(e.message)}
 };
 
 /* ---------- import: pasted Excel/CSV or a photo read by Gemini ---------- */
@@ -722,12 +771,12 @@ function renderExtras(){
 function showPending(extraWarnings=[]){
   const table=mk('table'),head=mk('tr');head.append(mk('th','','المقاس'));for(const c of pending.columns)head.append(mk('th','',c.label+(c.kind==='measurement'?' ⌀':'')));
   const thead=mk('thead');thead.append(head);table.append(thead);const body=mk('tbody');
-  for(const r of pending.rows.slice(0,6)){const tr=mk('tr');tr.append(mk('td','',r.size||'—'));for(const v of r.values)tr.append(mk('td','',v||'—'));body.append(tr)}
+  for(const r of pending.rows){const tr=mk('tr');tr.append(mk('td','',r.size||'—'));for(const v of r.values)tr.append(mk('td','',v||'—'));body.append(tr)}
   table.append(body);$('#importTable').replaceChildren(table);
-  const warnings=[...(pending.warnings||[]),...extraWarnings];if(pending.rows.length>6)warnings.unshift(`تُعرض أول 6 صفوف من ${pending.rows.length}.`);
+  const warnings=[...(pending.warnings||[]),...extraWarnings];
   $('#importWarnings').replaceChildren(...warnings.map(w=>mk('li','',w)));renderExtras();$('#importPreview').classList.remove('hidden');
 }
-$('#applyPaste').onclick=()=>{try{pending=Import.toGrid($('#pasteTable').value);showPending()}catch(e){hidePending();toast(e.message)}};
+$('#applyPaste').onclick=()=>{try{pending=Import.toGrid($('#pasteTable').value, {requireAll: mode==='library'});showPending()}catch(e){hidePending();toast(e.message)}};
 $('#importCancel').onclick=hidePending;
 $('#importTranspose').onclick=()=>{
   if(!pending)return;
@@ -886,10 +935,11 @@ $('#aiRun').onclick=async()=>{
 };
 
 /* ---------- navigation and session ---------- */
+$('#openButtonDesigns').onclick=()=>document.querySelector('[data-tab="buttonSettings"]').click();
 $('#backCatalog').onclick=async()=>{if(!(await mayLeave()))return;dirty=false;const back=mode==='library'?'library':'catalog';show(back);if(back==='catalog')loadProducts().catch(e=>toast(e.message))};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=async()=>{if(!(await mayLeave()))return;dirty=false;show(b.dataset.tab);if(b.dataset.tab==='catalog')loadProducts().catch(e=>toast(e.message))});window.addEventListener('beforeunload',e=>{if(dirty||window.SizeGuideBatch?.pending()||window.SizeGuideSettings?.isDirty()||window.SizeGuideSettings?.isBusy()){e.preventDefault();e.returnValue=''}});
 $('#getSnippet').onclick=async()=>{try{let d=await api('size-guide-snippet'+qs()+'&generic=true');$('#snippet').value=d.javascript}catch(e){toast(e.message)}};$('#copySnippet').onclick=async()=>{if(!$('#snippet').value)return toast('ولّد الكود أولًا.');try{await navigator.clipboard.writeText($('#snippet').value);toast('تم نسخ الكود.')}catch{$('#snippet').select();toast('حدد الكود وانسخه يدويًا.')}};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();$('#loginButton').disabled=true;$('#error').textContent='';try{await api('login',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await boot()}catch(e){$('#error').textContent=e.message}finally{$('#loginButton').disabled=false}};$('#logout').onclick=async()=>{if(!(await mayLeave())||window.SizeGuideBatch && !(await window.SizeGuideBatch.leaveStore()))return;await api('logout',{method:'POST'});dirty=false;location.reload()};
-$('#store').onchange=async()=>{if(!(await mayLeave())||window.SizeGuideBatch && !(await window.SizeGuideBatch.leaveStore())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;merchant=$('#store').value;page=1;selected.clear();libraries=[];savedStyles=[];savedPhrases=[];aiChecked=false;window.SizeGuideQuick?.clear();$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
+$('#store').onchange=async()=>{if(!(await mayLeave())||window.SizeGuideBatch && !(await window.SizeGuideBatch.leaveStore())){$('#store').value=merchant;return}dirty=false;clearInterval(poll);poll=null;clearWorkbook();merchant=$('#store').value;page=1;selected.clear();libraries=[];savedStyles=[];savedPhrases=[];aiChecked=false;window.SizeGuideQuick?.clear();$('#snippet').value='';show('catalog');load().catch(e=>toast(e.message))};
 $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),{method:'POST'});await loadJobs();toast('بدأت مزامنة المنتجات.')}catch(e){toast(e.message);$('#sync').disabled=false}};$('#filter').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{page=1;loadProducts().catch(e=>toast(e.message))},300)};$('#status').onchange=$('#guideFilter').onchange=()=>{page=1;loadProducts().catch(e=>toast(e.message))};$('#prev').onclick=()=>{page--;loadProducts().catch(e=>toast(e.message))};$('#next').onclick=()=>{page++;loadProducts().catch(e=>toast(e.message))};$('#refreshJobs').onclick=()=>loadJobs().catch(e=>toast(e.message));if(window.SizeGuideEmbedded){window.SizeGuideEmbedded.start(boot)}else{boot().catch(e=>{if(!e.message.includes('تسجيل الدخول'))$('#error').textContent=e.message})}
 /* The editor's numbered sections become a folding menu: one open at a time, "open all" for the rest. */
 (function foldSections(){
@@ -926,3 +976,61 @@ $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),
     b.onclick=()=>{openAll=!openAll;b.textContent=openAll?'طيّ الأقسام':'فتح كل الأقسام';cards.forEach(c=>setOpen(c,openAll||c===first))};tools.append(b);first.before(tools)}
   window.openEditorSection=card=>{if(card?.classList?.contains('acc')){if(!openAll)cards.forEach(c=>{if(c!==card)setOpen(c,false)});setOpen(card,true)}};
 })();
+
+/* Import a workbook as independent library drafts after reviewing its worksheets. */
+let workbookReview=null;
+const workbookFile=$('#workbookFile'),workbookSheets=$('#workbookSheets'),saveWorkbook=$('#saveWorkbook');
+function clearWorkbook(){
+  workbookReview=null;
+  workbookFile.value='';
+  workbookSheets.replaceChildren();
+  $('#workbookReview').hidden=true;
+}
+$('#chooseWorkbook').onclick=()=>workbookFile.click();
+$('#cancelWorkbook').onclick=clearWorkbook;
+workbookFile.onchange=async()=>{
+  const file=workbookFile.files[0];
+  clearWorkbook();
+  if(!file)return;
+  if(!/\.xlsx$/i.test(file.name)||file.size>2_000_000)return toast('اختر ملف xlsx بحجم لا يتجاوز ٢ ميغابايت.');
+  const review={store:merchant,id:crypto.randomUUID(),items:[]};
+  workbookReview=review;
+  try{
+    const content=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(Error('تعذرت قراءة الملف.'));
+      reader.readAsDataURL(file);
+    });
+    const sheets=await api('size-workbook/preview?'+new URLSearchParams({merchant:review.store}),{method:'POST',body:JSON.stringify({content})});
+    if(review!==workbookReview||merchant!==review.store)return;
+    $('#workbookReview').hidden=false;
+    for(const sheet of sheets){
+      const block=mk('div','ed-card'),label=mk('label'),check=mk('input');
+      check.type='checkbox';label.append(check,document.createTextNode(' '+sheet.name));block.append(label);workbookSheets.append(block);
+      if(sheet.error){check.disabled=true;block.append(mk('p','micro',sheet.error));continue}
+      const text=sheet.rows.map(row=>row.map(v=>'"'+v.replace(/"/g,'""')+'"').join('\t')).join('\n');
+      const grid=Import.toGrid(text,{requireAll:true});
+      const table=mk('table'),details=mk('details'),scroll=mk('div','tablewrap');
+      details.append(mk('summary','',`معاينة ${grid.rows.length} مقاسًا`));
+      for(const [i,row] of sheet.rows.entries()){
+        const tr=table.insertRow();for(const value of row)tr.append(mk(i===0?'th':'td','',value));
+      }
+      scroll.append(table);details.append(scroll);block.append(details);
+      check.checked=true;
+      review.items.push({check,name:sheet.name,guide:{...fresh(),title:sheet.name,columns:grid.columns,rows:grid.rows,size_label:grid.sizeHeader}});
+    }
+    saveWorkbook.disabled=!review.items.length;
+    if(!sheets.length)workbookSheets.append(mk('p','micro','لا توجد أوراق ظاهرة في الملف.'));
+  }catch(e){if(review===workbookReview){clearWorkbook();toast(e.message)}}
+};
+saveWorkbook.onclick=async()=>{
+  const review=workbookReview;
+  if(!review||review.store!==merchant||saving)return;
+  const sheets=review.items.filter(item=>item.check.checked).map(({name,guide})=>({name,guide}));
+  if(!sheets.length)return toast('حدّد ورقة واحدة على الأقل.');
+  saving=true;saveWorkbook.disabled=true;$('#chooseWorkbook').disabled=true;$('#cancelWorkbook').disabled=true;
+  try{
+    await api('size-workbook/save'+qs(),{method:'POST',body:JSON.stringify({request_id:review.id,sheets})});
+    clearWorkbook();await loadLibrary();toast(`حُفظت ${sheets.length} من أوراق الملف في جداولي.`);
+  }catch(e){toast(e.message)}finally{saving=false;saveWorkbook.disabled=false;$('#chooseWorkbook').disabled=false;$('#cancelWorkbook').disabled=false}
+};

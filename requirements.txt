@@ -3,3 +3,5 @@ uvicorn
 psycopg2-binary
 requests
 python-dotenv
+openpyxl>=3.1.5,<4
+defusedxml>=0.7.1,<1

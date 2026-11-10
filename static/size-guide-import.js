@@ -31,10 +31,11 @@ function unique(labels){
     seen.add(label.toLowerCase());return label;});
 }
 /* First column = size names, first row = headers. Throws a readable message when nothing usable was pasted. */
-function toGrid(text){
+function toGrid(text, {requireAll=false}={}){
   const rows=parseRows(text);
   if(rows.length<2||Math.max(...rows.map(r=>r.length))<2)throw new Error('الصق جدولًا يحتوي صفًا للعناوين وصفًا واحدًا على الأقل، وعمودين على الأقل.');
   const warnings=[],width=Math.max(...rows.map(r=>r.length)),header=rows[0];
+  if(requireAll && (width-1>MAX_COLUMNS || rows.length-1>MAX_ROWS))throw new Error(`يدعم الجدول حتى ${MAX_ROWS} مقاسًا و${MAX_COLUMNS} أعمدة قياس. قسّم الجدول ثم أعد الاستيراد.`);
   if(width-1>MAX_COLUMNS)warnings.push(`تم أخذ أول ${MAX_COLUMNS} أعمدة قياس فقط.`);
   const labels=unique(Array.from({length:Math.min(width-1,MAX_COLUMNS)},(_,i)=>header[i+1]||''));
   let body=rows.slice(1);if(body.length>MAX_ROWS){warnings.push(`تم أخذ أول ${MAX_ROWS} صفًا فقط.`);body=body.slice(0,MAX_ROWS);}

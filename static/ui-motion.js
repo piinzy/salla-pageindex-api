@@ -194,7 +194,6 @@
   function init() {
     enhance();
     pill(document.querySelector('aside nav'), 'button.active');
-    pill(document.getElementById('studioTabs'), 'button[aria-selected=true]');
   }
   window.UIMotion = {rollTo, fill, sparkline, flip, pill, toast, enhance, bezier, easeOutExpo, reduced};
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once: true}); else init();

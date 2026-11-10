@@ -11,6 +11,8 @@ const guide={title:'دليل',button_label:'مقاسات المنتج',unit:'cm'
 async function adminTests(){
   const dom=new JSDOM(file('dashboard.html'),{url:'https://test/dashboard',runScripts:'outside-only'}),w=dom.window;
   try{
+    w.document.getElementById('app').classList.remove('hidden');
+    w.document.getElementById('buttonSettings').classList.remove('hidden');
     w.structuredClone=structuredClone;w.eval(file('size-guide-button.js'));w.eval(file('size-guide-placement.js'));w.merchant='123';
     let opened=null,fail=false,confirmed=false;const writes=[],stores=new Map();
     w.SizeGuideUI={open:(...args)=>{opened=args;}};w.toast=()=>{};w.confirmAction=async()=>confirmed;
@@ -25,16 +27,55 @@ async function adminTests(){
     };
     w.eval(file('button-settings-admin.js'));await w.SizeGuideSettings.load();
     const id=x=>w.document.getElementById(x),input=(x,value)=>{id(x).value=value;id(x).dispatchEvent(new w.Event('input',{bubbles:true}));};
-    assert.equal(w.document.querySelectorAll('[name="button-design"]').length,16);
-    assert.equal(id('saveButtonSettings').disabled,true);
+    assert.equal(w.document.querySelectorAll('[name="button-design"]').length,50);
+    assert.equal(id('saveButtonSettings').disabled,false);
     assert.equal(w.document.querySelectorAll('[name="button-placement"]').length,15);
     assert.equal(w.document.querySelectorAll('[data-palette]').length,10);
+    assert.ok(id('previewImage').querySelector('img[src$="preview-oxford-shirt.webp"]'));
+    const gallery=id('buttonDesignChoices'),families=gallery.querySelectorAll('.shape-family');
+    assert.equal(families.length,10);
+    assert.equal(new Set([...gallery.querySelectorAll('input')].map(input=>input.value)).size,50);
+    assert.equal(id('buttonSettings').querySelector('[role="tablist"]'),null);
+    for(const family of families){
+      assert.equal(family.querySelectorAll('label').length,5);
+      assert.equal(family.closest('[hidden]'),null);
+      assert.ok(family.querySelector('h4').textContent);
+      for(const sample of family.querySelectorAll('.button-design-sample'))assert.ok(sample.shadowRoot.querySelector('button'));
+    }
+    const labels=[...gallery.querySelectorAll('label')];
+    assert.deepEqual(labels.map(label=>label.id),Array.from({length:50},(_,i)=>'button-shape-'+(i+1)));
+    assert.match(labels[20].textContent,/لسان الفهرس/);
+    assert.match(labels[49].textContent,/ثنية الحافة/);
+    id('jumpNewButtons').click();assert.equal(w.document.activeElement.id,'buttonFamily-paper');
+    assert.equal(w.SizeGuideSettings.isDirty(),false);
+    const jump=id('buttonSectionJump');
+    jump.value='buttonFamily-fabric';jump.dispatchEvent(new w.Event('change'));
+    assert.equal(w.document.activeElement.id,'buttonFamily-fabric');
+    assert.equal(w.SizeGuideSettings.isDirty(),false,'jumping between visible groups does not save or change selection');
+    const firstTile=gallery.querySelector('.button-design-sample').shadowRoot.querySelector('button');
+    w.document.querySelector('[name="button-placement"][value="beside_size"]').click();
+    w.document.querySelector('#previewProducts [data-kind="shoe"]').click();
+    assert.equal(w.document.querySelector('.button-preview-sizes button').textContent,'39');
+    assert.equal(id('buttonLivePreview').dataset.placement,'beside_size');
+    assert.ok(id('previewSizeLabel').isConnected);
+    w.document.querySelector('#previewProducts [data-kind="dress"]').click();
+    w.document.querySelector('[name="button-placement"][value="above_price"]').click();
+    id('showProductPreview').click();
+    assert.equal(id('previewMobile').getAttribute('aria-pressed'),'true');
+    assert.equal(w.document.activeElement,id('buttonProductPreview'));
+    id('backToShape').click();
+    assert.equal(w.document.activeElement,gallery.querySelector('input:checked'));
+    assert.equal(gallery.querySelector('.button-design-sample').shadowRoot.querySelector('button'),firstTile,'changing device or placement reuses thumbnails');
     id('previewMobile').click();assert.equal(w.SizeGuideSettings.isDirty(),false);id('previewDesktop').click();
     for(const design of w.SizeGuideButton.designs){
       w.document.querySelector(`[name="button-design"][value="${design.id}"]`).click();
       assert.equal(id('buttonLivePreview').dataset.design,design.id);
       assert.equal(id('buttonLivePreview').dataset.placement,'above_price');
     }
+    w.document.querySelector('[name="button-design"][value="solid"]').click();
+    assert.equal(id('buttonLivePreview').shadowRoot.querySelector('button').style.getPropertyValue('--sg-bg'),w.SizeGuideButton.defaults('solid').background_color);
+    w.document.querySelector('#buttonQuickIcons [data-icon="hanger"]').click();
+    assert.equal(w.document.querySelector('[name="button-icon"]:checked').value,'hanger');
     w.document.querySelector('[name="button-design"][value="card"]').click();
     w.document.querySelector('[name="button-placement"][value="image_top_right"]').click();
     assert.equal(id('buttonLivePreview').parentNode,id('previewImage'));
@@ -53,7 +94,7 @@ async function adminTests(){
     w.document.querySelector('[name="button-depth"][value="deep"]').click();
     w.document.querySelector('[name="button-icon"][value="shoe"]').click();
     {const doc=w.document,trigger=doc.querySelector('.icon-dd-trigger'),panel=doc.getElementById('buttonIconChoices');
-     assert.equal(doc.querySelectorAll('#buttonIconChoices input').length,16,'five classic icons, ten new tape and ruler shapes, and none');
+     assert.equal(doc.querySelectorAll('#buttonIconChoices input').length,24,'23 artwork choices plus no icon');
      assert.equal(panel.classList.contains('open'),false);assert.equal(trigger.getAttribute('aria-expanded'),'false');assert.equal(trigger.getAttribute('aria-controls'),'buttonIconChoices');
      assert.match(trigger.textContent,/حذاء/,'the trigger shows the chosen icon');assert.ok(trigger.querySelector('.dd-glyph svg'));
      trigger.click();assert.equal(panel.classList.contains('open'),true);assert.equal(trigger.getAttribute('aria-expanded'),'true');
@@ -94,7 +135,9 @@ async function adminTests(){
     await id('saveButtonSettings').onclick();
     assert.equal(writes.length,1);assert.equal(writes[0].id,'123');assert.equal(writes[0].settings.design,'card');
     assert.equal(writes[0].settings.placement,'image_top_right');assert.equal(writes[0].settings.depth,'deep');assert.equal(writes[0].settings.extra_buttons.length,1);assert.equal(writes[0].settings.extra_buttons[0].devices,'mobile');assert.equal(writes[0].settings.mobile_placement,'below_price');assert.equal(writes[0].settings.text_color,'#123456');assert.equal(w.SizeGuideSettings.isDirty(),false);
-    w.document.querySelector('[data-pane="colors"]').click();assert.equal(w.document.querySelector('.studio-pane[data-pane="colors"]').hidden,false);assert.equal(w.document.querySelector('.studio-pane[data-pane="design"]').hidden,true);
+    jump.value='buttonSection-colors';jump.dispatchEvent(new w.Event('change'));
+    assert.equal(w.document.activeElement.id,'buttonTitle-colors');
+    assert.ok([...id('buttonSettingsFields').querySelectorAll('.studio-pane')].every(pane=>!pane.hidden));
     input('button-hex-text_color','invalid');assert.equal(id('saveButtonSettings').disabled,true);
     assert.equal(w.SizeGuideSettings.isDirty(),true);
     id('resetButtonPalette').click();assert.equal(id('button-hex-text_color').checkValidity(),true);
@@ -203,5 +246,5 @@ async function dashboardIntegration(){
   }finally{dom.window.close();}
 }
 
-(async()=>{await adminTests();await widgetTests();await dashboardIntegration();console.log('Button DOM checks passed: sixteen designs, extra buttons, depth/size controls, colors, persistence, conflicts, preview, legacy settings, storefront, navigation and unsaved-change protection.');})()
+(async()=>{await adminTests();await widgetTests();await dashboardIntegration();console.log('Button DOM checks passed: fifty designs, extra buttons, depth/size controls, colors, persistence, conflicts, preview, legacy settings, storefront, navigation and unsaved-change protection.');})()
   .catch(error=>{console.error(error);process.exitCode=1;});

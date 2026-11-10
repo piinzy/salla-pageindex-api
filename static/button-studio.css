@@ -20,9 +20,6 @@
 #buttonSettings button.strip-add{background:transparent;color:var(--accent);border:1px dashed var(--accent);border-radius:12px;min-height:42px;padding:6px 15px;font-size:13px;box-shadow:none}
 #buttonSettings button.strip-add:disabled{opacity:.45;cursor:not-allowed}
 /* section tabs */
-#buttonSettings .studio-tabs{display:flex;gap:4px;padding:4px;margin-bottom:20px;background:var(--soft);border:1px solid var(--hair);border-radius:14px;overflow:auto}
-#buttonSettings .studio-tabs button{flex:1 0 auto;background:transparent;color:var(--sub);border:0;border-radius:10px;min-height:40px;padding:6px 14px;font-size:13px;font-weight:500;white-space:nowrap;box-shadow:none;transition:background-color .18s,color .18s,box-shadow .18s}
-#buttonSettings .studio-tabs button[aria-selected=true]{background:var(--surf);color:var(--accent);font-weight:700;box-shadow:0 1px 0 var(--shine) inset,0 2px 0 var(--hair),0 8px 14px -8px #0004}
 #buttonSettings .button-settings-fields{border:0;padding:0;margin:0;min-width:0}.button-settings-fields:disabled{opacity:.65}
 #buttonSettings .pane-title{font-size:16px;margin:0 0 14px;letter-spacing:0}#buttonSettings .sub-title{font-size:13px;margin:22px 0 10px;color:var(--sub);font-weight:500}
 #buttonSettings .studio-help{font-size:11.5px;line-height:1.9;color:var(--sub);margin:12px 0 0}
@@ -382,13 +379,10 @@ html[dir=rtl] #editor .switch input:checked+.knob:after{transform:translateX(-18
 :is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(4){animation-delay:.15s}:is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(5){animation-delay:.2s}
 :is(.kpis,.library-grid,.preset-grid,.theme-grid,.cat-grid)>:nth-child(n+6){animation-delay:.25s}
 /* tabs: the panel content cross-fades while the strip stays still */
-.studio-pane:not([hidden]){animation:fadeIn .2s ease-out}
 /* the moving pill behind the active item */
 .has-pill{position:relative}.has-pill>button{position:relative;z-index:1}
 .motion-pill{position:absolute;left:0;top:0;z-index:0;border-radius:12px;pointer-events:none;transform-origin:0 0;opacity:0;will-change:transform}
 aside nav.has-pill .motion-pill{background:#38449c}aside nav.has-pill button.active{background:transparent}
-#buttonSettings .studio-tabs.has-pill .motion-pill{background:var(--surf);border-radius:10px;box-shadow:0 1px 0 var(--shine) inset,0 2px 0 var(--hair),0 8px 14px -8px #0004}
-#buttonSettings .studio-tabs.has-pill button[aria-selected=true]{background:transparent;box-shadow:none}
 /* progress meter: only the fill moves */
 .meter{height:6px;border-radius:99px;background:var(--sh-soft);overflow:hidden;margin-top:6px}
 .meter>i{display:block;height:100%;width:100%;border-radius:99px;background:var(--sh-accent);transform:scaleX(0);transform-origin:right center;transition:transform .6s cubic-bezier(.16,1,.3,1)}
@@ -477,3 +471,103 @@ aside nav.has-pill .motion-pill{background:#38449c}aside nav.has-pill button.act
 .batch-group label{display:flex;gap:8px;align-items:center;font-weight:650}.batch-group input[type=checkbox]{width:auto}
 #batchMessage{min-height:1.4em}.batch-issue{color:var(--ink,#473c30);border-inline-start:3px solid #ae8656;padding-inline-start:7px}
 @media(max-width:620px){.batch-entry{grid-template-columns:minmax(0,1fr)}.batch-entry>div:first-child img{max-height:110px}.batch-help{width:100%}}
+
+/* Button settings: a merchant workspace beside a storefront-sized product preview. */
+#buttonSettings .studio-header{align-items:center;gap:12px;padding-bottom:16px}
+#buttonSettings .studio-header h2{font-size:clamp(23px,2.2vw,34px);line-height:1.3}
+#buttonSettings .studio-actions{display:grid;gap:3px}
+#buttonSettings .studio-savebar{position:static;margin:0;padding:0;border:0;background:transparent}
+#buttonSettings .studio-savebar button:not(.secondary){border-radius:7px;background:var(--accent);box-shadow:none}
+#buttonSettings #buttonSettingsState{margin:0;color:var(--sub);font-size:12px}
+#buttonSettings .button-settings-layout{grid-template-columns:minmax(0,.95fr) minmax(0,1.15fr);gap:clamp(14px,2vw,28px);margin-top:20px}
+#buttonSettings .studio-controls,#buttonSettings .button-settings-preview{min-width:0}
+#buttonSettings .design-heading,#buttonSettings .preview-header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#buttonSettings .design-heading .pane-title{margin:0}#buttonSettings .design-heading>span{font-size:.76rem;color:var(--sub)}
+#buttonSettings .button-design-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#buttonSettings .button-design-option,#buttonSettings .button-design-option.wide{grid-column:auto;border-radius:8px;gap:0;padding:0;overflow:hidden;box-shadow:none}
+#buttonSettings .button-design-option.selected{outline:1px solid var(--accent);border-color:var(--accent);box-shadow:none}
+#buttonSettings .button-design-option.selected:after{display:none}
+#buttonSettings .button-design-sample{min-height:85px;padding:8px;background:#f4f2ec;border:0;border-radius:0}
+#buttonSettings .button-design-head{min-height:33px;padding:5px 10px;border-block-start:1px solid var(--hair)}
+#buttonSettings .button-design-head input{accent-color:var(--accent)}
+#buttonSettings #buttonQuickIcons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 12px}
+#buttonSettings #buttonQuickIcons button{background:var(--surf);color:var(--text);border:1px solid var(--hair);border-radius:6px;display:flex;align-items:center;gap:6px;min-height:44px;font:inherit;font-size:12px;justify-content:center;padding:5px;box-shadow:none}
+#buttonSettings #buttonQuickIcons button[aria-pressed=true]{border-color:var(--accent);background:var(--soft)}
+#buttonSettings #buttonQuickIcons .icon{display:flex}#buttonSettings #buttonQuickIcons svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linejoin:round;stroke-linecap:round}
+#buttonSettings .button-settings-preview{position:sticky;top:12px;grid-row:auto;width:100%;max-width:none;border-radius:10px;box-shadow:none;align-self:start;padding:clamp(10px,1.5vw,18px)}
+#buttonSettings .preview-header{margin-bottom:4px}#buttonSettings .preview-header strong{font-size:16px}
+#buttonSettings .preview-products{gap:0;margin-bottom:10px}
+#buttonSettings .preview-products button{font-size:12px;border:none;border-radius:0;color:var(--sub);background:transparent;padding:3px 10px}
+#buttonSettings .preview-products button[aria-pressed=true]{background:transparent;border-block-end:1px solid var(--text);color:var(--text)}
+#buttonSettings .preview-stage{padding:clamp(6px,1vw,14px);background:#ece9e3;border-radius:6px;perspective:none}
+#buttonSettings .button-preview-product{min-height:0;border-radius:2px;color:#29251f;padding:14px;transform:none;transition:none;box-shadow:0 2px 10px #342c2014}
+#buttonSettings .button-preview-brand{display:flex;align-items:baseline;justify-content:space-between;border-color:#e4dfd8;padding-bottom:10px;margin-bottom:12px;color:#28221d}
+#buttonSettings .button-preview-brand span:first-child{font:11px/1.6 Tahoma,Arial,sans-serif;letter-spacing:0;color:#665e56}
+#buttonSettings .preview-product-grid{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(8px,1vw,14px)}
+#buttonSettings .preview-photo{aspect-ratio:2/3;border-radius:1px;background:#eeeae5;box-shadow:none}
+#buttonSettings .preview-photo>.sample-visual{display:block;width:100%;height:100%;object-fit:cover;object-position:center 15%}
+#buttonSettings .preview-product-info{padding-block:5px;min-width:0}
+#buttonSettings .preview-category,#buttonSettings .preview-caption{color:#706960;font-size:10px}
+#buttonSettings .preview-product-info h3{font-size:clamp(16px,1.45vw,23px);line-height:1.48;color:#2e2924;margin-bottom:5px}
+#buttonSettings .preview-price{color:#37312d;font-weight:500;font-size:16px;margin:3px 0}
+#buttonSettings .preview-tone{display:flex;align-items:center;gap:6px;margin-block:10px;color:#574f49;font-size:11px}
+#buttonSettings .preview-tone i{width:14px;height:14px;border-radius:50%;outline:1px solid #beb8b1;outline-offset:2px;margin-inline:2px}
+#buttonSettings .preview-options{border-block-start:1px solid #e4dfd8;margin-top:10px;padding-top:2px}
+#buttonSettings .button-preview-size-label{color:#49403a;font-size:12px}
+#buttonSettings .button-preview-sizes{gap:4px}
+#buttonSettings .button-preview-sizes button{font:11px/1 Arial,sans-serif;min-width:28px;min-height:34px;padding:5px;border:1px solid #d6d2ce;border-radius:1px;box-shadow:none;color:#302b28;background:#fff}
+#buttonSettings .button-preview-sizes button[aria-pressed=true]{border-color:#312a24;background:#f0ede8}
+#buttonSettings .preview-cart{background:#28231f;color:#fff;border-radius:1px;box-shadow:none;margin-top:12px;min-height:38px}
+#buttonSettings #buttonPlacementHint{margin:12px 0 1px}
+#buttonSettings .button-preview-product[data-device=mobile]{max-width:300px;min-height:0;padding:12px}
+#buttonSettings [data-device=mobile] .preview-product-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+#buttonSettings [data-device=mobile] .preview-photo{height:184px;aspect-ratio:auto}
+#buttonSettings [data-device=mobile] .preview-photo>.sample-visual{object-fit:contain}
+#buttonSettings [data-device=mobile] .preview-product-info{padding:0}#buttonSettings [data-device=mobile] .preview-caption{margin-block:4px 0}
+@media(max-width:969px){
+  #buttonSettings .button-settings-layout{grid-template-columns:minmax(0,1fr);gap:0;margin-top:12px}
+  #buttonSettings .button-settings-preview{position:static}
+}
+@media(max-width:480px){
+  #buttonSettings .studio-header{align-items:flex-start}#buttonSettings .studio-actions{width:100%}
+  #buttonSettings .studio-savebar{gap:6px}#buttonSettings .studio-savebar button{min-height:40px}
+  #buttonSettings .button-design-sample{padding:5px}
+}
+
+/* Continuous gallery; jumps move the viewport without changing selection. */
+#buttonSettings .shape-toolbar{position:sticky;top:0;z-index:12;display:flex;align-items:center;gap:8px;background:var(--surf);padding:8px 0;border-bottom:1px solid var(--hair)}
+#buttonSettings .shape-toolbar select{width:auto;max-width:55%;min-width:0;min-height:42px;font:inherit;font-size:13px}
+#buttonSettings .shape-toolbar button{min-height:42px;padding-inline:14px;font-size:13px}
+#buttonSettings #saveButtonSettings{margin-inline-start:auto}
+#buttonSettings #showProductPreview,#buttonSettings #backToShape{display:none}
+#buttonSettings .studio-actions{align-items:end;justify-items:end}
+#buttonSettings .studio-actions>button{font-size:12px;min-height:36px}
+#buttonSettings .shape-instruction{color:var(--sub);margin:5px 0 14px;font-size:13px}
+#buttonSettings .shape-gallery{display:block}
+#buttonSettings .shape-family{margin:0;padding:16px 0;border-top:1px solid var(--hair)}
+#buttonSettings .shape-family h4{display:flex;align-items:center;margin:0 0 9px;color:var(--text);font-size:14px;font-weight:650}
+#buttonSettings .shape-family .button-design-choices{grid-template-columns:repeat(auto-fit,minmax(min(100%,152px),1fr))}
+#buttonSettings .shape-family .button-design-sample{min-height:78px}
+#buttonSettings .studio-pane + .studio-pane{margin-block-start:24px;border-top:1px solid var(--hair);padding-block-start:20px}
+#buttonSettings :is(.studio-pane,.shape-family h4,.button-design-option,#buttonProductPreview){scroll-margin-top:76px}
+#buttonSettings .button-settings-preview{top:72px}
+@media(max-width:969px){
+  #buttonSettings .button-settings-layout{gap:20px}
+  #buttonSettings #showProductPreview,#buttonSettings #backToShape{display:inline-flex;align-items:center;justify-content:center}
+  #buttonSettings .button-settings-preview{grid-row:auto;position:static}
+  #buttonSettings #backToShape{margin-block:8px 0;min-height:44px;font-size:12px}
+}
+@media(max-width:540px){
+  #buttonSettings .shape-toolbar{gap:4px}
+  #buttonSettings .shape-toolbar button,#buttonSettings .shape-toolbar select{padding-inline:7px;min-height:44px;font-size:12px}
+  #buttonSettings .shape-toolbar select{width:100%;max-width:none;flex:1}
+  #buttonSettings .shape-family .button-design-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+#buttonSettings .shape-family h4{justify-content:space-between;gap:10px}
+#buttonSettings .shape-range,#buttonSettings .shape-number{font-variant-numeric:tabular-nums;font-weight:500;color:var(--sub);font-size:12px}
+#buttonSettings .shape-range{direction:ltr}
+#buttonSettings .shape-number{margin-inline-start:auto}
+#buttonSettings .shape-intro{display:flex;align-items:center;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;margin-bottom:12px}
+#buttonSettings .shape-intro .shape-instruction{margin:0}
+#buttonSettings #jumpNewButtons{min-height:40px;padding:5px 2px;color:var(--accent);background:transparent;box-shadow:none;border:0;font:inherit;font-size:13px;text-decoration:underline;text-underline-offset:.25em}

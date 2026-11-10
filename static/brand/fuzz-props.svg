@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 68">
+  <defs>
+    <linearGradient id="paw-fill" x2=".35" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#f2edff"/><stop offset=".44" stop-color="#c2c8fa"/><stop offset="1" stop-color="#9099d7"/>
+    </linearGradient>
+    <linearGradient id="brass" x2=".15" y2="1">
+      <stop stop-color="#ffe9ac"/><stop offset=".55" stop-color="#f4ce7e"/><stop offset="1" stop-color="#d7a559"/>
+    </linearGradient>
+    <linearGradient id="turquoise" x2=".3" y2="1">
+      <stop stop-color="#83dacd"/><stop offset=".56" stop-color="#4faca9"/><stop offset="1" stop-color="#34828c"/>
+    </linearGradient>
+    <linearGradient id="case" x2=".4" y2="1">
+      <stop stop-color="#59617f"/><stop offset="1" stop-color="#333a52"/>
+    </linearGradient>
+    <linearGradient id="glass" x2=".85" y2="1">
+      <stop stop-color="#faf6ff"/><stop offset="1" stop-color="#cfdbf2"/>
+    </linearGradient>
+    <linearGradient id="heart-fill" x2=".7" y2="1">
+      <stop stop-color="#ffb69f"/><stop offset=".46" stop-color="#f3808d"/><stop offset="1" stop-color="#be536e"/>
+    </linearGradient>
+
+    <!-- Shared grip in local coordinates. The inner lobe curls over the object. -->
+    <g id="paw">
+      <ellipse cx="2.4" cy="4.2" rx="3.5" ry="1.7" fill="#32385a" opacity=".24"/>
+      <path d="M-2.7 1.4c-.4-2.1.7-4 2.2-4.5.9-.3 1.9.1 2.4.9.4-.5 1-.6 1.6-.3 1.6.8 1.7 3.1.9 4.7-.6 1.3-1.7 2.2-3.3 2.2C-.9 4.4-2.2 3.3-2.7 1.4Z"
+            fill="url(#paw-fill)" stroke="#777eaf" stroke-width=".78" stroke-linejoin="round"/>
+      <path d="M-.95-1.5c.4-.65.95-.9 1.45-.85" fill="none" stroke="#faf6ff" stroke-width=".75" stroke-linecap="round"/>
+      <path d="M2.25-1.35c-.6.65-.8 1.4-.67 2.25" fill="none" stroke="#898bb7" stroke-width=".67" stroke-linecap="round"/>
+    </g>
+    <g id="cheeks" fill="#eb9daf" opacity=".67">
+      <ellipse cx="41.4" cy="31.9" rx="2.2" ry=".98"/><ellipse cx="58.6" cy="31.9" rx="2.2" ry=".98"/>
+    </g>
+  </defs>
+
+  <symbol id="ruler" viewBox="0 0 100 68">
+    <g transform="rotate(-5 50 49)">
+      <rect x="25.8" y="43.9" width="48.4" height="13.1" rx="2.4" fill="#3c3550" opacity=".22"/>
+      <rect x="25.7" y="41.8" width="48.6" height="13.5" rx="2.2" fill="url(#brass)" stroke="#916636" stroke-width="1"/>
+      <path d="M28 43h43.5" stroke="#fff1c4" stroke-width="1" stroke-linecap="round"/>
+      <path d="M32 43v5m3-5v2.7m3-2.7v3.3m3-3.3v2.7m3-2.7v5m3-5v2.7m3-2.7v3.3m3-3.3v2.7m3-2.7v5m3-5v2.7m3-2.7v3.3m3-3.3v2.7m3-2.7v5"
+            stroke="#7c5830" stroke-width="1.1"/>
+      <path d="M30 53.55h40" stroke="#e3b16a" stroke-width=".9" stroke-linecap="round"/>
+      <use xlink:href="#paw" transform="translate(27 49) rotate(-8)"/>
+      <use xlink:href="#paw" transform="translate(73 49) scale(-1 1) rotate(-8)"/>
+    </g>
+  </symbol>
+
+  <symbol id="books" viewBox="0 0 100 68">
+    <ellipse cx="50" cy="58" rx="22.1" ry="2.1" fill="#393653" opacity=".22"/>
+    <path d="M30 49.8h37.7a2.5 2.5 0 0 1 2.5 2.5v4.5H30c-1.6 0-2.7-1.2-2.7-3.5s1-3.5 2.7-3.5Z" fill="#558e87" stroke="#345d63" stroke-width=".9"/>
+    <path d="M34 51.4h34.4v3.8H34c-1.3 0-1.3-3.8 0-3.8Z" fill="#f5e9cc"/>
+    <path d="M36 53.8h29" stroke="#caba99" stroke-width=".68"/>
+    <g transform="rotate(2 50 47.5)">
+      <path d="M33 43h37.9v7.1H33c-2.8 0-2.8-7.1 0-7.1Z" fill="#ba825f" stroke="#86593e" stroke-width=".85"/>
+      <path d="M34 44.5h30.6v4.05H34c-1.3 0-1.3-4.05 0-4.05Z" fill="#fff2d8"/>
+      <path d="M35 47.15h26" stroke="#d5c4a3" stroke-width=".68"/>
+    </g>
+    <g transform="rotate(-4 50 40)">
+      <path d="M32.1 36.1h33.8v7H32.1c-3 0-3-7 0-7Z" fill="#5e719f" stroke="#405176" stroke-width=".9"/>
+      <path d="M36 37.65h28.5v3.9H36c-1.3 0-1.3-3.9 0-3.9Z" fill="#f3eeda"/>
+      <path d="M33 37.2v4.4" stroke="#adb9db" stroke-width="1"/>
+    </g>
+    <use xlink:href="#paw" transform="translate(29.9 48.3) rotate(-9)"/>
+    <use xlink:href="#paw" transform="translate(69.6 48.3) scale(-1 1) rotate(-9)"/>
+  </symbol>
+
+  <symbol id="switch" viewBox="0 0 100 68">
+    <rect x="28.5" y="41.25" width="43" height="17.8" rx="8.9" fill="#373949" opacity=".22"/>
+    <rect x="28.4" y="38.9" width="43.2" height="18" rx="9" fill="url(#case)" stroke="#343951" stroke-width=".92"/>
+    <rect x="30.45" y="40.9" width="39.1" height="14" rx="7" fill="url(#turquoise)" stroke="#306977" stroke-width=".6"/>
+    <path d="M35 43.15a5.4 5.4 0 0 1 2.8-.85h20.4" fill="none" stroke="#b7ede0" stroke-width=".8" stroke-linecap="round"/>
+    <circle cx="61.6" cy="48.5" r="5.75" fill="#356b75" opacity=".6"/>
+    <circle cx="61.6" cy="47.7" r="5.7" fill="url(#glass)" stroke="#f7f6ff" stroke-width=".8"/>
+    <path d="m37 47.9 2.4 2.3 4.5-4.6" fill="none" stroke="#225159" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+    <use xlink:href="#paw" transform="translate(29.7 49.1) rotate(-8)"/>
+    <use xlink:href="#paw" transform="translate(70.3 49.1) scale(-1 1) rotate(-8)"/>
+  </symbol>
+
+  <symbol id="chart" viewBox="0 0 100 68">
+    <path d="M46.9 31.8q3.5 3.3 7.6-.7" fill="none" stroke="#4e487a" stroke-width="1.7" stroke-linecap="round"/>
+    <g transform="rotate(-3 50 48)">
+      <rect x="28.9" y="38.4" width="42.2" height="22.9" rx="3.4" fill="#393653" opacity=".22"/>
+      <rect x="28.8" y="36.7" width="42.4" height="23.1" rx="3.5" fill="url(#case)" stroke="#333b54" stroke-width=".9"/>
+      <path d="M32.3 39.1h35.4" stroke="#8a92ac" stroke-width=".7" opacity=".8" stroke-linecap="round"/>
+      <path d="M34.8 44.5H65m-30.2 6H65m-30.2 6H65" stroke="#7c879d" stroke-width=".65" opacity=".65"/>
+      <path d="m35.1 53.6 8.5-6 7 1.9 12.6-8.1v14.8H35.1Z" fill="#64a6a0" opacity=".49"/>
+      <path d="m35.1 53.6 8.5-6 7 1.9 12.6-8.1" fill="none" stroke="#b2e6cf" stroke-width="1.85" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="63.2" cy="41.4" r="1.95" fill="#ffdb9c" stroke="#55566e" stroke-width=".55"/>
+      <use xlink:href="#paw" transform="translate(29.9 50.1) rotate(-8)"/>
+      <use xlink:href="#paw" transform="translate(70.1 50.1) scale(-1 1) rotate(-8)"/>
+    </g>
+  </symbol>
+
+  <symbol id="preview" viewBox="0 0 100 68">
+    <ellipse cx="50" cy="61.15" rx="14" ry="1.6" fill="#393653" opacity=".21"/>
+    <path d="M47.2 54.5h5.6l.7 4.45h4.6q1.4 0 1.55 1.55H40.35q.15-1.55 1.55-1.55h4.6Z" fill="#686b93" stroke="#464868" stroke-width=".75" stroke-linejoin="round"/>
+    <rect x="28.1" y="35.5" width="43.8" height="20.9" rx="2.9" fill="url(#case)" stroke="#39425a" stroke-width=".95"/>
+    <rect x="30.4" y="37.7" width="39.2" height="15.5" rx="1.55" fill="url(#glass)"/>
+    <path d="M33.3 41.75h10.6" stroke="#69769a" stroke-width="1.5" stroke-linecap="round"/>
+    <rect x="33.1" y="45.2" width="25.8" height="5.9" rx=".7" fill="#a4accc"/>
+    <path d="M33.3 48.15h25.4m-17-2.8V51m8.4-5.65V51" stroke="#f1f0f7" stroke-width=".95"/>
+    <circle cx="64.9" cy="41.55" r="2" fill="#338a82"/>
+    <use xlink:href="#paw" transform="translate(29.6 48.7) rotate(-9)"/>
+    <use xlink:href="#paw" transform="translate(70.4 48.7) scale(-1 1) rotate(-9)"/>
+  </symbol>
+
+  <symbol id="heart" viewBox="0 0 100 68">
+    <use xlink:href="#cheeks"/>
+    <path d="M45.3 30.6c1.3 4.4 7.8 4.9 10.1-.3-2.8 1.85-6.9 2.04-10.1.3Z" fill="#4f406a" stroke="#4f406a" stroke-width=".8" stroke-linejoin="round"/>
+    <path d="M48.2 33.15c1.55.65 2.7.6 4.1-.13" fill="none" stroke="#eeb6ca" stroke-width=".78" stroke-linecap="round"/>
+    <ellipse cx="50" cy="59.1" rx="11.5" ry="1.8" fill="#483550" opacity=".19"/>
+    <path d="M50 60.1C46.5 57.6 33.1 50.6 33.1 43c0-4.65 3.15-7.25 7.35-7.25 4.7 0 7.6 2.65 9.55 5.4 2.25-3.5 5.5-5.4 9.3-5.4 4.5 0 7.6 2.95 7.6 7.25 0 7.5-12.3 14.5-16.9 17.1Z" fill="url(#heart-fill)" stroke="#a75270" stroke-width="1.05" stroke-linejoin="round"/>
+    <path d="M36.2 42.5c.25-2.2 1.75-3.65 4.05-3.85" fill="none" stroke="#ffd1bc" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M50.25 57.65c5-2.9 8.35-5.25 11.45-8.35" fill="none" stroke="#dc7589" stroke-width=".95" stroke-linecap="round"/>
+    <use xlink:href="#paw" transform="translate(36.15 48.25) rotate(-24)"/>
+    <use xlink:href="#paw" transform="translate(63.85 48.25) scale(-1 1) rotate(-24)"/>
+  </symbol>
+</svg>

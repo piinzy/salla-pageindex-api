@@ -1,0 +1,78 @@
+/* Keep the interactive illustration in the home header at every viewport width. */
+.landing-appearance {
+  position: absolute;
+  inset-inline-end: 6vw;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.appearance-label {color: var(--muted); font-weight: 700; font-size: 13px}
+.landing-appearance [data-ld-part] {
+  width: clamp(120px, 11vw, 160px);
+  flex: none;
+  --ld-accent: #eaa249;
+  --ld-fg: #273056;
+  --ld-muted: #8eacc7;
+}
+@media (max-width:940px) {
+  .top {justify-content: space-between; padding-inline: 22px}
+  .landing-appearance {position:static}
+}
+@media (max-width:480px) {
+  .appearance-label {display:none}
+  .landing-appearance [data-ld-part] {width:115px}
+}
+@media (max-width:320px) {
+  .top {padding-inline: 12px}
+  .brand {gap: 6px; font-size: 21px}
+}
+
+html[data-ui-theme="day"] {color-scheme:light}
+html[data-ui-theme="night"] {
+  color-scheme:dark;
+  --sky:#202840; --sky2:#29334b; --peri:#aabaff; --peri-d:#b0bfff;
+  --navy:#f3f2fb; --ink:#dfdefa; --mist:#141a28; --mist2:#30394f;
+  --muted:#bbc4d9; --line:#424d65;
+  --surface:#1d2536; --raised:#252e41; --dark-ink:#151c2b; --amber:#edcc8f;
+}
+[data-ui-theme="night"] .hero,
+[data-ui-theme="night"] .final {
+  background: radial-gradient(68% 75% at 52% 110%, #3e4668, transparent 73%),
+    radial-gradient(58% 66% at 100% 0%, #2b3754, transparent 76%),
+    linear-gradient(160deg, #151c2c, #20283e 60%, #262d44);
+}
+[data-ui-theme="night"] .hero::after {background:radial-gradient(ellipse at 49% 50%, #7888c311, transparent 55%)}
+[data-ui-theme="night"] :is(.lead,.final p,.links a) {color:#e0e3ef}
+[data-ui-theme="night"] :is(.note,.links h6) {color:var(--muted)}
+[data-ui-theme="night"] .chip {background:#273347;box-shadow:inset 0 0 0 1px #43516d;color:#e7ecff}
+[data-ui-theme="night"] .chip i {background:var(--amber)}
+[data-ui-theme="night"] .btn,
+[data-ui-theme="night"] .eyebrow,
+[data-ui-theme="night"] .sg,
+[data-ui-theme="night"] .plan .tag,
+[data-ui-theme="night"] .step::before,
+[data-ui-theme="night"] .seg button[aria-pressed=true] {color:var(--dark-ink)}
+[data-ui-theme="night"] .brand i {background:#c4cef8}
+[data-ui-theme="night"] .brand svg {color:var(--dark-ink)}
+[data-ui-theme="night"] .btn.ghost,[data-ui-theme="night"] .sg.out {
+  color:var(--navy); background:#283346; box-shadow:inset 0 0 0 1px #8c9ebb;
+}
+[data-ui-theme="night"] .dock {background:rgb(22 29 44 / .94)}
+[data-ui-theme="night"] .links:hover a {opacity:.82}
+[data-ui-theme="night"] :is(.card,.step,.demo,details.q,.plan.main) {
+  background:var(--raised);box-shadow:0 0 0 1px var(--line),0 14px 34px #060a1429;
+}
+[data-ui-theme="night"] .white,[data-ui-theme="night"] .plan {background:var(--surface)}
+[data-ui-theme="night"] .plan {box-shadow:inset 0 0 0 1px var(--line)}
+[data-ui-theme="night"] .plan.main {box-shadow:inset 0 0 0 1.5px #9cace6,0 16px 46px #060a1440}
+[data-ui-theme="night"] .seg {background:var(--surface)}
+[data-ui-theme="night"] .tbl thead th,
+[data-ui-theme="night"] .th .hd {color:var(--dark-ink)}
+[data-ui-theme="night"] .t-b .on {background:var(--mist2);color:var(--navy)}
+[data-ui-theme="night"] .t-c {background:#312e42}
+[data-ui-theme="night"] .t-c .on {background:#484158;color:#f1eafa}
+[data-ui-theme="night"] .sg.soft {color:var(--peri-d)}
+[data-ui-theme="night"] .sg.raise {color:var(--dark-ink);box-shadow:0 4px 0 #677db3}
+[data-ui-theme="night"] .sg.glass {background:linear-gradient(135deg,#343c57,#434b68);color:var(--navy);box-shadow:inset 0 0 0 1px #7e87a1}
+[data-ui-theme="night"] .plan li::before {background-color:#cbd5ef}
+[data-ui-theme="night"] details.q p a {color:#c1ceff}
