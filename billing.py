@@ -1,4 +1,4 @@
-"""Plans per store: a 7-day trial (3 AI photo reads), then 389 SAR/month (50 AI photo reads a month) with extra credits tied to the store."""
+"""Plans per store: a 7-day trial (3 AI photo reads), then 389 SAR/month or 3,890 SAR/year (50 AI photo reads a month either way) with extra credits tied to the store."""
 from datetime import datetime, timedelta, timezone
 import logging, os, re
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -9,7 +9,7 @@ from dashboard import query, authenticated, require_store
 logger = logging.getLogger('billing')
 router = APIRouter()
 
-PRICE, CURRENCY = 389, 'SAR'
+PRICE, ANNUAL_PRICE, CURRENCY = 389, 3890, 'SAR'   # the annual plan is configured in the Salla portal; paid_until comes from its events
 TRIAL_DAYS, TRIAL_AI, PAID_AI = 7, 3, 50
 GRACE_DAYS = 2   # a late renewal event should not cut a paying store off
 
