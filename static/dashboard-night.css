@@ -9,17 +9,17 @@ html:root[data-ui-theme="night"] {
   --field-edge: #74849d;
   --ink: #f0f2fb;
   --muted: #b5bfd2;
-  --green: #94dfcd;
-  --button-ink: #102c2b;
-  --accent: #94dfcd;
+  --green: #aab8ff;
+  --button-ink: #10143f;
+  --accent: #aab8ff;
   --focus: #d0bcff;
-  --tag-bg: #203c3d;
-  --tag-ink: #a8ebda;
+  --tag-bg: #2b327a;
+  --tag-ink: #c9d2ff;
   --warn-bg: #3b332c;
   --warn-ink: #f2d5a4;
   --danger-bg: #402d3c;
   --danger-ink: #ffc0ca;
-  --sh-ok: #94dfcd;
+  --sh-ok: #aab8ff;
   --sh-warn: #f2d5a4;
   --lilac: #d0bcff;
 }
@@ -72,7 +72,7 @@ html:root[data-ui-theme="day"][data-theme="dark"] {
 
 [data-ui-theme="night"] #home .hero {
   background: radial-gradient(ellipse at 89% 5%, #3d3a57 0, transparent 53%),
-              linear-gradient(114deg, #163537, #222c42 55%, #272a40);
+              linear-gradient(114deg, #1c2350, #222c42 55%, #272a40);
   border: 1px solid #41475c;
   color: var(--ink);
 }
