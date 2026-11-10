@@ -961,7 +961,7 @@ $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),
   if(first){setOpen(first,true);const tools=document.createElement('div'),b=document.createElement('button');tools.className='acc-tools';b.type='button';b.className='secondary';b.id='accAll';b.textContent='فتح كل الأقسام';
     const jumps=mk('div','editor-jumps');
     jumps.setAttribute('role','group');jumps.setAttribute('aria-label','الانتقال إلى قسم في محرر الجدول');
-    for(const [id,label] of [['dataCard','البيانات'],['customerCard','ميزات العميل'],['presetCard','المظهر'],['customCard','تخصيص متقدم']]){
+    for(const [id,label] of [['presetCard','المظهر'],['dataCard','البيانات'],['customerCard','ميزات العميل'],['importPanel','استيراد'],['customCard','تخصيص']]){
       const card=document.getElementById(id),jump=mk('button','secondary',label);
       jump.type='button';jump.setAttribute('aria-controls',card.querySelector('.acc-body').id);
       jump.setAttribute('aria-expanded',String(card===first));shortcuts.set(card,jump);
@@ -973,7 +973,7 @@ $('#sync').onclick=async()=>{$('#sync').disabled=true;try{await api('sync'+qs(),
       jumps.append(jump);
     }
     tools.append(jumps);
-    b.onclick=()=>{openAll=!openAll;b.textContent=openAll?'طيّ الأقسام':'فتح كل الأقسام';cards.forEach(c=>setOpen(c,openAll||c===first))};tools.append(b);first.before(tools)}
+    b.onclick=()=>{openAll=!openAll;b.textContent=openAll?'طيّ الأقسام':'فتح كل الأقسام';cards.forEach(c=>setOpen(c,openAll||c===first))};tools.append(b);cards[0].before(tools)}
   window.openEditorSection=card=>{if(card?.classList?.contains('acc')){if(!openAll)cards.forEach(c=>{if(c!==card)setOpen(c,false)});setOpen(card,true)}};
 })();
 

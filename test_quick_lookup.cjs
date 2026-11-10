@@ -58,7 +58,7 @@ function makeApp(url){
     await settle();assert.equal(app.errors.length,0,app.errors.map(e=>e.message).join('\n'));
 
     // ---- six sections only; the product-data tool, the sync log tab and the install tab are gone
-    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['home','catalog','batch','library','buttonSettings','stats'],'tab order');
+    assert.deepEqual(all('aside nav [data-tab]').map(b=>b.dataset.tab),['home','catalog','buttonSettings','batch','library','stats'],'tab order');
     assert.ok(all('aside nav [data-tab] svg.nav-ico').length===6,'icons are vector, not emoji');
     for(const gone of ['#quick','#install','#activity','#quickSearch','#quickResults'])assert.equal($(gone),null,gone+' was removed');
     assert.equal(hidden('#home'),false);assert.equal(hidden('#catalog'),true);assert.equal($('aside nav [data-tab="home"]').classList.contains('active'),true);
