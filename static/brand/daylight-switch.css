@@ -1,111 +1,22 @@
-/* UI by @Lattice_Node — ludion.ai/p/toggle-daylight (MIT) */
-[data-ld-part="toggle-daylight"] {
-  /* 固定しないトークン。世界の約20色は、この5色を明るさ違いで並べて作る */
-  --_bg: var(--ld-bg, #f5ecd9);
-  --_surface: var(--ld-surface, #8c9a62);
-  --_fg: var(--ld-fg, #1b2146);
-  --_muted: var(--ld-muted, #7f97b3);
-  --_accent: var(--ld-accent, #efa02c);
-  --_radius: var(--ld-radius, 9999px);
-  --_font: var(--ld-font, system-ui, sans-serif);
-  --_space: var(--ld-space, 8px);
-  --_shadow: var(--ld-shadow, 0 8px 24px rgb(27 33 70 / .2));
-  --_motion: var(--ld-motion, 200ms);
-
-  position: relative;
-  display: block;
-  box-sizing: border-box;
-  /* どの枠にも収まる。横長の丸（1 : 1.85）のまわりに、影と漏れる光の余白を含めた比率 */
-  width: min(100%, calc((100vh - 64px) * 1.6439));
-  aspect-ratio: 1.6439;
-  font-family: var(--_font);
-  color: var(--_fg);
-}
-
-/* 色を読むための見えない目印 */
-[data-ld-part="toggle-daylight"] .probe {
-  display: none;
-}
-
-[data-ld-part="toggle-daylight"] .vh {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-[data-ld-part="toggle-daylight"] .scene {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  /* 小数の表示倍率でも、ブラウザに補間させない。ピクセルをにじませないため */
-  image-rendering: pixelated;
-}
-
-/* 本物のスイッチ。絵は canvas が描き、ここは押す場所だけ */
-[data-ld-part="toggle-daylight"] .hit {
-  position: absolute;
-  top: 12.121%;
-  left: 7.373%;
-  width: 85.253%;
-  height: 75.758%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: var(--_radius);
-  background: transparent;
-  cursor: grab;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-[data-ld-part="toggle-daylight"] .hit:active {
-  cursor: grabbing;
-}
-
-[data-ld-part="toggle-daylight"] .hit:focus {
-  outline: none;
-}
-
-[data-ld-part="toggle-daylight"] .hit:focus-visible {
-  outline: 2px solid var(--_accent);
-  outline-offset: calc(var(--_space) * .5);
-  transition: outline-offset var(--_motion) ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-ld-part="toggle-daylight"] .hit:focus-visible {
-    transition: none;
-  }
-}
-
-/* A usable switch is visible even without WebGL or 2D canvas. */
-[data-ld-part]:not([data-rendered]) .scene {display:none}
-[data-ld-part]:not([data-rendered]) .hit {
-  background: linear-gradient(150deg, #ffde99, #f1a14d);
-  border: 1px solid #b77d47;
-  box-shadow: inset 0 1px 5px #7c533233;
-}
-[data-ld-part]:not([data-rendered]) .hit::after {
-  content: '';
-  position: absolute;
-  top: 11%; left: 8%; height: 78%; aspect-ratio: 1;
-  background: #fff1c8;
-  border-radius: 50%;
-  box-shadow: 0 2px 5px #301e3255;
-}
-[data-ui-theme="night"] [data-ld-part]:not([data-rendered]) .hit {
-  background: radial-gradient(circle at 24% 35%, #ffe4a6 0 1px, transparent 2px),
-    radial-gradient(circle at 42% 56%, #e8e6ff 0 1px, transparent 2px),
-    linear-gradient(155deg, #1c2944, #594e7d);
-  border-color: #8a91b4;
-}
-[data-ui-theme="night"] [data-ld-part]:not([data-rendered]) .hit::after {left:auto; right:8%; background:#eae3ff}
+/* Day and night switch: a pill with the family character flying between a day sky and a night sky.
+   Layout idea after the uploaded "lavallee-garden" toggle; the character, palette and code are ours. */
+[data-ld-part="toggle-daylight"]{position:relative;display:block;width:100%;aspect-ratio:2.6;min-width:0;color:#10143f}
+[data-ld-part="toggle-daylight"] .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+[data-ld-part="toggle-daylight"] .dn{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:3.1%;border:0;border-radius:999px;cursor:pointer;display:block;
+  background:linear-gradient(#fff,#cfd6f6 57%,#f1f2ff);box-shadow:inset 0 2px 1px #fff,0 10px 18px -10px rgba(40,52,150,.55),0 2px 4px rgba(40,52,150,.16);-webkit-tap-highlight-color:transparent;transition:background .5s,box-shadow .5s}
+[data-ld-part="toggle-daylight"] .dn:focus-visible{outline:3px solid #7f92ee;outline-offset:3px}
+[data-ld-part="toggle-daylight"] .dn[aria-checked="true"]{background:linear-gradient(#8e98cf,#3b4274 57%,#6b74ab);box-shadow:inset 0 2px 1px rgba(255,255,255,.35),0 10px 18px -10px rgba(5,8,30,.8),0 2px 4px rgba(5,8,30,.4)}
+.dn-track{container-type:size;position:relative;display:block;width:100%;height:100%;overflow:hidden;border-radius:inherit;
+  background:radial-gradient(ellipse at 72% 0,#f4f7ff,transparent 70%),linear-gradient(180deg,#bfcbfb,#a3b3f6);box-shadow:inset 0 3px 7px rgba(60,72,170,.35);transition:background .6s}
+.dn-track::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 110%,#3a4170,#171c46);opacity:0;transition:opacity .7s}
+.dn-track::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .7s .1s;
+  background:radial-gradient(circle at 14% 28%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 30% 70%,#dfe5ff 0 1px,transparent 1.6px),radial-gradient(circle at 44% 24%,#fff 0 1.2px,transparent 1.8px),radial-gradient(circle at 52% 66%,#c9d2ff 0 1px,transparent 1.6px),radial-gradient(circle at 36% 46%,#fff 0 .9px,transparent 1.5px)}
+.dn[aria-checked="true"] .dn-track::before,.dn[aria-checked="true"] .dn-track::after{opacity:1}
+.dn-trail{position:absolute;inset:0;width:100%;height:100%;color:#6f82e4;opacity:.55;transition:color .6s}
+.dn[aria-checked="true"] .dn-trail{color:#c9d2ff}
+.dn-fly{position:absolute;left:7cqh;top:7cqh;width:86cqh;height:86cqh;transition:left .8s cubic-bezier(.4,0,.18,1)}
+.dn[aria-checked="true"] .dn-fly{left:calc(100cqw - 93cqh)}
+.dn-sprite{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none;filter:drop-shadow(0 2px 3px rgba(30,40,120,.35))}
+.dn-flight .dn-sprite{animation:dn-arc .8s ease-in-out}
+@keyframes dn-arc{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-12%) rotate(var(--tilt,8deg))}}
+@media(prefers-reduced-motion:reduce){.dn-fly,.dn-track::before,.dn-track::after,.dn{transition:none}.dn-flight .dn-sprite{animation:none}}
