@@ -42,38 +42,30 @@
     }
     return data;
   }
-  function navigate(tab) {
-    if (!connected) return;
+  const TABS = ['home', 'catalog', 'batch', 'library', 'buttonSettings', 'stats'];
+  function markTabs(tab) {
     const selected = tab === 'editor' ? 'catalog' : tab;
-    sdk.page.setTitle(titles[tab] || 'دليل المقاسات');
-    navValues.forEach(value => sdk.nav.updateNavItem({value, active:value === 'size-guide-' + selected}));
-  }
-  async function setupNavigation() {
-    const hostPath = '/embedded/app/' + appId + '/size-guide';
-    for (const tab of ['home', 'catalog', 'batch', 'library', 'buttonSettings', 'stats']) {
-      const value = 'size-guide-' + tab;
-      try {
-        await sdk.nav.addNavItem({title:titles[tab], value, url:hostPath, active:tab === 'home'});
-        navValues.add(value);
-      } catch { /* In-content links remain available if this host lacks injected tabs. */ }
-    }
-    sdk.nav.onNavItemClick(async ({value}) => {
-      const tab = value.replace(/^size-guide-/, '');
-      if (!['home','catalog','batch','library','buttonSettings','stats'].includes(tab)) return;
-      if (!(await mayLeave())) { navigate(view); return; }
-      dirty = false; show(tab);
-      try { if (tab === 'catalog') await loadProducts(); }
-      catch (error) { toast(error.message); }
+    document.querySelectorAll('.embedded-tabs button').forEach(button => {
+      const on = button.dataset.go === selected;
+      button.classList.toggle('active', on); button.setAttribute('aria-current', on ? 'page' : 'false');
     });
-    // Task links are also useful when a merchant lands deep in the editor.
-    // Only when the host could not add its own tabs: otherwise its side menu is the navigation and a second row would just add clutter.
-    if (navValues.size) return;
-    const links = document.createElement('div'); links.className = 'embedded-help-links';
-    for (const tab of ['home', 'catalog', 'batch', 'library', 'buttonSettings', 'stats']) {
-      const button = document.createElement('button'); button.className = 'secondary'; button.textContent = titles[tab];
-      button.onclick = () => document.querySelector('[data-tab="' + tab + '"]').click(); links.append(button);
+  }
+  function navigate(tab) {
+    markTabs(tab);
+    if (!connected) return;
+    sdk.page.setTitle(titles[tab] || 'دليل المقاسات');
+  }
+  /* The sections live inside the app, in one tidy bar under Salla's header, instead of being injected into Salla's own top bar. */
+  function setupNavigation() {
+    const host = document.querySelector('#workspaceTop > .top');
+    if (!host || host.querySelector('.embedded-tabs')) return;
+    const nav = document.createElement('nav'); nav.className = 'embedded-tabs'; nav.setAttribute('aria-label', 'أقسام التطبيق');
+    for (const tab of TABS) {
+      const button = document.createElement('button'); button.type = 'button'; button.dataset.go = tab; button.textContent = titles[tab];
+      button.onclick = () => document.querySelector('[data-tab="' + tab + '"]')?.click();
+      nav.append(button);
     }
-    document.querySelector('main').append(links);
+    host.prepend(nav); markTabs('home');
   }
   async function start(boot) {
     status('جارٍ التحقق من حساب متجرك…', true);
@@ -100,7 +92,7 @@
       await boot();
       document.getElementById('embeddedStatus')?.remove();
       sdk.page.setTitle('دليل المقاسات'); sdk.ready();
-      await setupNavigation();
+      try { setupNavigation(); } catch { /* The sections stay reachable from the page itself. */ }
     } catch (error) {
       session = ''; connected = false;
       document.getElementById('app').classList.add('hidden');
@@ -109,7 +101,7 @@
     }
   }
   window.SizeGuideEmbedded = {
-    start, request, navigate,
+    start, request, navigate, setupNavigation,
     toast(message) { if (!connected) return false; sdk.ui.toast.info(message); return true; },
     async confirm(message) {
       if (!connected) return false;

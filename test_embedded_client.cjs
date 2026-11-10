@@ -61,18 +61,18 @@ function setup({exchangeOk=true, framed=true}={}) {
     const x = {tag,children:[],dataset:{},classList:{add(){},remove(){}},
       append(...items){this.children.push(...items);for(const v of items)if(v.id)nodes.set(v.id,v);},
       prepend(...items){this.children.unshift(...items);for(const v of items)if(v.id)nodes.set(v.id,v);},
-      replaceChildren(){this.children=[];},setAttribute(){},remove(){nodes.delete(this.id);},click(){}};
+      replaceChildren(){this.children=[];},setAttribute(){},remove(){nodes.delete(this.id);},click(){},querySelector(){return null;}};
     elements.push(x);return x;
   }
   const body=element('body'),main=element('main'),app=element();nodes.set('app',app);
   const document={documentElement:{dataset:{}},body,createElement:element,
-    getElementById:id=>nodes.get(id),querySelector:selector=>selector==='main'?main:element()};
+    getElementById:id=>nodes.get(id),querySelectorAll:()=>[],querySelector:selector=>selector==='main'?main:element()};
   let themeCallback;
   const sdk={init:async()=>({layout:{theme:'dark'}}),onThemeChange:fn=>{themeCallback=fn;},
     auth:{getToken:()=> 'temporary-salla-token',refresh:()=>calls.push('refresh')},
     page:{setTitle:()=>{}},ready:()=>calls.push('ready'),isReady:()=>true,destroy:()=>calls.push('destroy'),
     ui:{toast:{info:()=>{},error:()=>{}},confirm:async()=>({confirmed:false})},
-    nav:{addNavItem:async()=>{},updateNavItem:()=>{},onNavItemClick:()=>{}}};
+    nav:{addNavItem:async()=>{calls.push('host-nav');},updateNavItem:()=>{},onNavItemClick:()=>{}}};
   const window={parent:{},SallaEmbeddedSDK:{embedded:sdk}};if(!framed)window.parent=window;
   let apiStatus=200;
   const context=vm.createContext({window,document,URL,URLSearchParams,Headers,
@@ -85,7 +85,7 @@ function setup({exchangeOk=true, framed=true}={}) {
       return {ok:apiStatus===200,status:apiStatus,json:async()=>apiStatus===200?{ok:true}:{detail:'Expired'}};
     }});
   vm.runInContext(source,context);
-  return {client:window.SizeGuideEmbedded,calls,document,main,nodes,theme:v=>themeCallback(v),failApi:()=>{apiStatus=401;}};
+  return {client:window.SizeGuideEmbedded,calls,document,main,nodes,elements,theme:v=>themeCallback(v),failApi:()=>{apiStatus=401;}};
 }
 
 (async()=>{
@@ -93,6 +93,8 @@ function setup({exchangeOk=true, framed=true}={}) {
   const ok=setup();
   await ok.client.start(async()=>ok.calls.push('boot'));
   assert.ok(ok.calls.indexOf('boot')<ok.calls.indexOf('ready'));
+  assert.ok(!ok.calls.includes('host-nav'),'sections live inside the app, not in Salla\'s top bar');
+  assert.ok(ok.elements.some(x=>x.tag==='nav'&&x.className==='embedded-tabs'&&x.children.length===6),'one in-app bar with the six sections');
   assert.equal(ok.document.documentElement.dataset.theme,'dark');
   ok.theme('light');assert.equal(ok.document.documentElement.dataset.theme,'light');
   assert.ok(ok.calls.some(c=>c.url==='/salla/embedded?theme=dark'));
