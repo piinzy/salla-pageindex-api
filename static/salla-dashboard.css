@@ -5,8 +5,8 @@
 :root[data-theme=dark]{color-scheme:dark;--bg:#202223;--surface:#292b2c;--surface-soft:#303334;--ink:#eef2f3;--muted:#b0b9bc;--green:#a9b8ff;--button-ink:#10143f;--line:#454a4c;--accent:#a9b8ff;--tag-bg:#2b327a;--tag-ink:#a9b8ff;--warn-bg:#283062;--warn-ink:#d3dbff;--danger-bg:#482a30;--danger-ink:#ffb4bd;--focus:#a9b8ff}
 body.embedded{font-family:PingARLT,Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
 .embedded aside,.embedded .intro .eyebrow,.embedded #login{display:none!important}
-.embedded #workspaceTop > .top{display:flex;justify-content:flex-end;padding-block-end:8px}
-.embedded #workspaceTop > .top > :first-child,.embedded #workspaceTop > .top #store{display:none}
+.embedded #workspaceTop > .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 18px;padding-block-end:12px}
+.embedded #workspaceTop > .top > div:not(.workspace-actions),.embedded #workspaceTop > .top #store{display:none}
 .embedded #workspaceTop > .top .workspace-appearance{border-inline-start:0;padding-inline-start:0}
 
 .embedded main{margin:0;max-width:none;width:100%;padding:24px 28px 36px}
@@ -50,3 +50,11 @@ body.embedded{font-family:PingARLT,Tahoma,Arial,sans-serif;background:var(--bg);
 :root{--sh-ok:#4d5fcf}:root[data-theme=dark]{--sh-ok:#98aaf3}
 /* official Salla surfaces and fonts, with the app accent (selected states, primary buttons, tags) in the family blue */
 .embedded .tag{background:var(--tag-bg);color:var(--tag-ink)}
+
+/* In-app section bar: replaces the tabs that used to be injected into Salla's top bar. */
+.embedded-tabs{display:flex;gap:4px;flex-wrap:wrap;background:var(--surface-soft);border:1px solid var(--line);border-radius:16px;padding:4px}
+.embedded-tabs button{display:block;width:auto;margin:0;text-align:center;background:transparent;color:var(--muted);border:0;border-radius:12px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s,color .2s}
+.embedded-tabs button:hover{color:var(--ink)}
+.embedded-tabs button.active{background:var(--green);color:var(--button-ink);box-shadow:0 6px 14px -8px var(--green)}
+.embedded-tabs button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media(max-width:700px){.embedded-tabs{width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.embedded-tabs button{flex:none;padding:8px 13px;font-size:13px}}
