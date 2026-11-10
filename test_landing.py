@@ -12,7 +12,7 @@ class LandingTests(unittest.TestCase):
             about=self.c.get('/about');privacy=self.c.get('/privacy')
         self.assertEqual((about.status_code,privacy.status_code),(200,200))
         self.assertIn('text/html',about.headers['content-type'])
-        self.assertIn('دليلك بلس',about.text);self.assertIn('389',about.text);self.assertIn('7 أيام',about.text)
+        self.assertIn('دليلك بلس',about.text);self.assertIn('389',about.text);self.assertIn('3,890',about.text);self.assertIn('الاشتراك السنوي',about.text);self.assertIn('7 أيام',about.text)
         self.assertIn('mailto:help@example.com',about.text);self.assertIn('mailto:help@example.com',privacy.text)
         self.assertNotIn('{{',about.text+privacy.text,'every placeholder is filled')
         self.assertIn('لا نخزّن أسماء العملاء',privacy.text)
