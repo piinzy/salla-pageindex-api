@@ -15,12 +15,12 @@ html:root[data-ui-theme="night"] {
   --focus: #d0bcff;
   --tag-bg: #2b327a;
   --tag-ink: #c9d2ff;
-  --warn-bg: #3b332c;
-  --warn-ink: #f2d5a4;
+  --warn-bg: #283062;
+  --warn-ink: #d3dbff;
   --danger-bg: #402d3c;
   --danger-ink: #ffc0ca;
   --sh-ok: #aab8ff;
-  --sh-warn: #f2d5a4;
+  --sh-warn: #c9d2ff;
   --lilac: #d0bcff;
 }
 
