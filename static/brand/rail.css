@@ -1,26 +1,27 @@
 /* The standalone admin's side rail: a floating dark card, icons and labels, and one active tab that bulges into the card's inner
    edge with curved shoulders. A single drop slides between sections (the spring pill from ui-motion). Collapsible to icons only. */
-body:not(.embedded){--rail-w:236px;--rail-gap:16px;--rail-accent:#5b6ddd}
+body:not(.embedded){--rail-w:236px;--rail-gap:16px;--rail-accent:#5b6ddd;--rail-bg:#fff;--rail-line:#e3e7fb;--rail-ink:#10143f;--rail-muted:#6b7199;--rail-chip:#eef0ff;--rail-logo-bg:#10143f;--rail-logo-ink:#fff;--rail-btn-bg:#10143f;--rail-btn-ink:#fff;--rail-shadow:0 22px 50px -26px rgba(60,72,180,.45)}
+html[data-ui-theme="night"] body:not(.embedded){--rail-bg:var(--bg,#101522);--rail-line:#2a3150;--rail-ink:#f1f2ff;--rail-muted:#a9b1d6;--rail-chip:#1f2540;--rail-logo-bg:#fff;--rail-logo-ink:#10143f;--rail-btn-bg:#fff;--rail-btn-ink:#10143f;--rail-shadow:0 22px 50px -26px rgba(0,0,0,.8)}
 body:not(.embedded) #app aside{position:fixed;inset:var(--rail-gap) var(--rail-gap) var(--rail-gap) auto;width:var(--rail-w);height:auto;padding:22px 0 20px;border-radius:32px;z-index:30;
-  display:flex;flex-direction:column;color:#b4bdee;background:linear-gradient(180deg,#171d57,#0d1034);box-shadow:0 26px 60px -22px rgba(16,20,63,.75),inset 0 1px 0 rgba(255,255,255,.08);
+  display:flex;flex-direction:column;color:var(--rail-muted);background:var(--rail-bg);border:1px solid var(--rail-line);box-shadow:var(--rail-shadow);
   transition:width .45s cubic-bezier(.3,1,.4,1)}
 body:not(.embedded) #app main{margin-right:calc(var(--rail-w) + var(--rail-gap) * 2);transition:margin-right .45s cubic-bezier(.3,1,.4,1)}
 .rail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 20px 0 14px}
-#app aside .brand{display:flex;align-items:center;gap:12px;direction:rtl;text-align:start;font:700 21px/1.2 'DM Sans',PingARLT,Arial,sans-serif;letter-spacing:0;color:#fff;white-space:nowrap;overflow:hidden}
-#app aside .brand i{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#fff;color:#10143f}
+#app aside .brand{display:flex;align-items:center;gap:12px;direction:rtl;text-align:start;font:700 21px/1.2 'DM Sans',PingARLT,Arial,sans-serif;letter-spacing:0;color:var(--rail-ink);white-space:nowrap;overflow:hidden}
+#app aside .brand i{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:var(--rail-logo-bg);color:var(--rail-logo-ink)}
 #app aside .brand svg{width:24px;height:24px}
-#app aside .brand span{color:#fff}
-.rail-toggle{flex:none;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#c4ccf7;cursor:pointer;transition:background .2s,transform .45s cubic-bezier(.3,1,.4,1)}
-.rail-toggle:hover{background:rgba(255,255,255,.16);color:#fff}
+#app aside .brand span{color:var(--rail-ink)}
+.rail-toggle{flex:none;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:var(--rail-chip);color:var(--rail-muted);cursor:pointer;transition:background .2s,color .2s,transform .45s cubic-bezier(.3,1,.4,1)}
+.rail-toggle:hover{color:var(--rail-ink)}
 .rail-toggle svg{width:16px;height:16px;display:block}
 .rail-toggle:focus-visible{outline:2px solid #98aaf3;outline-offset:2px}
 body:not(.embedded) #app aside nav{position:relative;display:flex;flex-direction:column;gap:14px;margin:34px 0 0;padding:0}
 #app aside nav button,#app aside nav button.active{position:relative;z-index:1;display:flex;align-items:center;gap:14px;width:calc(100% - 22px);margin:0 22px 0 0;padding:14px 18px;
   border:0;border-start-start-radius:100px;border-end-start-radius:100px;border-start-end-radius:0;border-end-end-radius:0;background:transparent!important;box-shadow:none!important;
-  color:#aab4e8;font:500 15px/1.3 'DM Sans',PingARLT,Arial,sans-serif;text-align:start;cursor:pointer;overflow:visible;transition:color .25s}
+  color:var(--rail-muted);font:500 15px/1.3 'DM Sans',PingARLT,Arial,sans-serif;text-align:start;cursor:pointer;overflow:visible;transition:color .25s}
 #app aside nav button::before{display:none}
-#app aside nav button:hover{color:#fff}
-#app aside nav button.active{color:#fff;font-weight:700}
+#app aside nav button:hover{color:var(--rail-ink)}
+#app aside nav button.active,#app aside nav button.active:hover{color:#fff;font-weight:700}
 #app aside nav button .nav-ico{flex:none;width:22px;height:22px;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
 #app aside nav button:hover .nav-ico{transform:scale(1.14)}
 #app aside nav button.active .nav-ico{transform:scale(1.05)}
@@ -30,8 +31,8 @@ body:not(.embedded) #app aside nav{position:relative;display:flex;flex-direction
 #app aside nav.has-pill .motion-pill::before{top:-28px;background:radial-gradient(circle at 100% 0,transparent 27.5px,var(--rail-accent) 28.5px)}
 #app aside nav.has-pill .motion-pill::after{bottom:-28px;background:radial-gradient(circle at 100% 100%,transparent 27.5px,var(--rail-accent) 28.5px)}
 body:not(.embedded) #app aside footer{position:static;margin-top:auto;padding:0 22px;font-size:0;line-height:1}
-#app aside footer #logout{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:0;padding:12px 10px;border:0;border-radius:15px;background:#fff;color:#10143f;font:700 14px/1 'DM Sans',PingARLT,Arial,sans-serif;cursor:pointer;
-  box-shadow:0 10px 22px -12px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s}
+#app aside footer #logout{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:0;padding:12px 10px;border:0;border-radius:15px;background:var(--rail-btn-bg);color:var(--rail-btn-ink);font:700 14px/1 'DM Sans',PingARLT,Arial,sans-serif;cursor:pointer;
+  box-shadow:0 10px 22px -12px rgba(16,20,63,.5);transition:transform .2s,box-shadow .2s}
 #app aside footer #logout:hover{transform:translateY(-2px);box-shadow:0 14px 26px -12px rgba(0,0,0,.65)}
 #app aside footer #logout svg{width:18px;height:18px;flex:none}
 /* icons only */
@@ -44,8 +45,6 @@ body:not(.embedded) #app.rail{--rail-w:84px}
 #app.rail aside nav.has-pill .motion-pill::before,#app.rail aside nav.has-pill .motion-pill::after{display:none}
 #app.rail aside footer{padding:0 16px}
 #app.rail aside footer #logout{height:52px;padding:0;border-radius:16px}
-/* night */
-html[data-ui-theme="night"] body:not(.embedded) #app aside{background:linear-gradient(180deg,#161b45,#090b22);box-shadow:0 26px 60px -22px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.07)}
 /* phones: the rail becomes a plain bar with scrolling tabs */
 @media(max-width:900px){
   body:not(.embedded) #app aside{position:static;width:auto;inset:auto;margin:10px;padding:14px;border-radius:24px}
