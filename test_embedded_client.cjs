@@ -94,7 +94,7 @@ function setup({exchangeOk=true, framed=true}={}) {
   await ok.client.start(async()=>ok.calls.push('boot'));
   assert.ok(ok.calls.indexOf('boot')<ok.calls.indexOf('ready'));
   assert.ok(!ok.calls.includes('host-nav'),'sections live inside the app, not in Salla\'s top bar');
-  assert.ok(ok.elements.some(x=>x.tag==='nav'&&x.className==='embedded-tabs'&&x.children.length===6),'one in-app bar with the six sections');
+  assert.ok(ok.elements.some(x=>x.tag==='nav'&&x.className==='embedded-tabs'&&x.children.filter(c=>c.tag==='button').length===6),'one in-app bar with the six sections');
   assert.equal(ok.document.documentElement.dataset.theme,'dark');
   ok.theme('light');assert.equal(ok.document.documentElement.dataset.theme,'light');
   assert.ok(ok.calls.some(c=>c.url==='/salla/embedded?theme=dark'));

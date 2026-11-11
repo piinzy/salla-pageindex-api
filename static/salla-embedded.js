@@ -43,12 +43,25 @@
     return data;
   }
   const TABS = ['home', 'catalog', 'buttonSettings', 'batch', 'library', 'stats'];
+  // The glass drop sits under the active section. It is measured, so it follows resizes, fonts and the bar being shown.
+  let glassTab = '';
+  function placeGlass(animate) {
+    const nav = document.querySelector('.embedded-tabs'), glass = nav?.querySelector?.('.glass'), active = nav?.querySelector?.('button.active');
+    if (!glass || !active || !active.offsetWidth) return;
+    const changed = glassTab && glassTab !== active.dataset.go;
+    glass.style.setProperty('--x', active.offsetLeft + 'px'); glass.style.setProperty('--w', active.offsetWidth + 'px');
+    if (!glass.classList.contains('ready')) { glass.style.transition = 'none'; glass.getBoundingClientRect(); glass.style.transition = ''; glass.classList.add('ready'); }
+    if (animate && changed) { glass.classList.remove('moving'); void glass.offsetWidth; glass.classList.add('moving'); }
+    glassTab = active.dataset.go;
+    active.scrollIntoView?.({inline: 'nearest', block: 'nearest'});
+  }
   function markTabs(tab) {
     const selected = tab === 'editor' ? 'catalog' : tab;
     document.querySelectorAll('.embedded-tabs button').forEach(button => {
       const on = button.dataset.go === selected;
       button.classList.toggle('active', on); button.setAttribute('aria-current', on ? 'page' : 'false');
     });
+    placeGlass(true);
   }
   function navigate(tab) {
     markTabs(tab);
@@ -65,7 +78,10 @@
       button.onclick = () => document.querySelector('[data-tab="' + tab + '"]')?.click();
       nav.append(button);
     }
+    const glass = document.createElement('span'); glass.className = 'glass'; glass.setAttribute('aria-hidden', 'true'); nav.prepend(glass);
     host.prepend(nav); markTabs('home');
+    if (window.ResizeObserver) new ResizeObserver(() => placeGlass(false)).observe(nav); else window.addEventListener?.('resize', () => placeGlass(false));
+    document.fonts?.ready?.then(() => placeGlass(false));
   }
   async function start(boot) {
     status('جارٍ التحقق من حساب متجرك…', true);
