@@ -65,10 +65,6 @@ html:root[data-ui-theme="day"][data-theme="dark"] {
 }
 [data-ui-theme="night"] aside .brand i { background: var(--tag-ink); color: var(--button-ink); }
 [data-ui-theme="night"] aside :is(.subbrand, footer, nav button) { color: var(--muted); }
-[data-ui-theme="night"] aside nav button.active { background: #31394f !important; color: var(--ink); box-shadow: none; }
-[data-ui-theme="night"] aside nav button.active::before { background: var(--lilac) !important; }
-[data-ui-theme="night"] aside nav.has-pill .motion-pill { background: #31394f; }
-[data-ui-theme="night"] aside nav.has-pill button.active { background: transparent !important; }
 
 [data-ui-theme="night"] #home .hero {
   background: radial-gradient(ellipse at 89% 5%, #3d3a57 0, transparent 53%),

@@ -110,7 +110,7 @@
     function show() { el.style.opacity = '1'; }
     function snap() {
       const t = target(); if (!t) { el.style.opacity = '0'; return; }
-      if (!base) { base = t.slice(); el.style.width = t[2] + 'px'; el.style.height = t[3] + 'px'; }
+      if (!base || Math.abs(base[2] - t[2]) > .5 || Math.abs(base[3] - t[3]) > .5) { base = t.slice(); el.style.width = t[2] + 'px'; el.style.height = t[3] + 'px'; }
       cancelAnimationFrame(frame); cur = t.slice(); vel = [0, 0, 0, 0]; apply(cur); show();
     }
     function go() {
